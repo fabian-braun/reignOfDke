@@ -1,5 +1,7 @@
 package examplefuncsplayer;
 
+import java.util.Random;
+
 import battlecode.common.Direction;
 import battlecode.common.Robot;
 import battlecode.common.RobotController;
@@ -15,6 +17,7 @@ public class RobotPlayer {
 				Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST };
 
 		int rand = 0;
+		Random r = new Random();
 		while (true) {
 			rand = ((rand + 191) * 103) % 101;
 			if (rc.getType() == RobotType.HQ) {
@@ -55,10 +58,7 @@ public class RobotPlayer {
 							}
 							// Move in a random direction
 						} else if (action < 80) {
-							// causes exeption: Direction moveDirection =
-							// directions[rand
-							// .nextInt(8)];
-							Direction moveDirection = directions[rand % 8];
+							Direction moveDirection = directions[r.nextInt(8)];
 							if (rc.canMove(moveDirection)) {
 								rc.move(moveDirection);
 							}
