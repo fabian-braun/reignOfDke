@@ -1,9 +1,4 @@
-package io;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+package simplePastr;
 
 /**
  * Singleton for all console output
@@ -14,34 +9,11 @@ import java.util.Properties;
 public class Log {
 
 	private static Log instance;
-	private static final String CONFIG_FILE = "configuration.properties";
 	private boolean enabled;
 
 	/** Don't let anyone else instantiate this class */
 	private Log() {
 		enabled = true;
-		// read configuration
-		Properties prop = new Properties();
-		InputStream input = null;
-		try {
-			input = new FileInputStream(CONFIG_FILE);
-			prop.load(input);
-			if ("false".equals(prop.getProperty("debug"))) {
-				enabled = false;
-			}
-			info("debug log is " + (enabled ? "enabled" : "disabled"));
-		} catch (IOException ex) {
-			error("config " + CONFIG_FILE
-					+ " file can not be read! Verbose logging is enabled");
-			enabled = true;
-		} finally {
-			if (input != null) {
-				try {
-					input.close();
-				} catch (IOException e) {
-				}
-			}
-		}
 	}
 
 	/**

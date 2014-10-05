@@ -1,10 +1,13 @@
 package simplePastr;
 
+import java.util.Map;
+
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.RobotType;
 import battlecode.common.TerrainTile;
 
 public class HQ extends AbstractRobotType {
@@ -24,18 +27,23 @@ public class HQ extends AbstractRobotType {
 
 	@Override
 	protected void act() throws GameActionException {
+		Map<SoldierRole, Integer> roleCount = Channel.getSoldierRoleCount(rc);
+		Map<RobotType, Integer> typeCount = Channel.getRobotTypeCount(rc);
+
 		// Check if a robot is spawnable and spawn one if it is
-		if (rc.isActive() && rc.senseRobotCount() < GameConstants.MAX_ROBOTS) {
-			Direction toEnemy = rc.getLocation().directionTo(
-					rc.senseEnemyHQLocation());
-			if (rc.senseObjectAtLocation(rc.getLocation().add(toEnemy)) == null) {
-				rc.spawn(toEnemy);
+		if (rc.senseRobotCount() < GameConstants.MAX_ROBOTS) {
+			if (roleCount.get(SoldierRole.PASTR_BUILDER) < 1
+					&& typeCount.get(RobotType.PASTR) < 1) {
+				Channel.demandSoldierRole(rc, SoldierRole.PASTR_BUILDER);
+			} else {
+				Channel.demandSoldierRole(rc, SoldierRole.PROTECTOR);
+			}
+			Direction spawnAt = myHq.directionTo(otherHq);
+			if (rc.isActive()
+					&& rc.senseObjectAtLocation(rc.getLocation().add(spawnAt)) == null) {
+				rc.spawn(spawnAt);
 			}
 		}
-	}
-
-	private void analyzeMap() {
-		generatePastrRating();
 	}
 
 	private void generatePastrRating() {
@@ -123,7 +131,7 @@ public class HQ extends AbstractRobotType {
 		mapRepresentation[myHq.y][myHq.x] = 'H';
 		mapRepresentation[otherHq.y][otherHq.x] = 'E';
 		printMap();
-		analyzeMap();
+		generatePastrRating();
 		printMapAnalysis();
 		Channel.broadcastBestPastrLocation(rc, bestForPastr);
 	}

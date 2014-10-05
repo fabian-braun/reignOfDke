@@ -52,29 +52,7 @@ public class PathFinderSimple extends PathFinder {
 			}
 			if (dist < bestRating) {
 				bestRating = dist;
-				if (next.x > current.x) {
-					if (next.y > current.y) {
-						dir = Direction.SOUTH_EAST;
-					} else if (next.y == current.y) {
-						dir = Direction.EAST;
-					} else {
-						dir = Direction.NORTH_EAST;
-					}
-				} else if (next.x == current.x) {
-					if (next.y > current.y) {
-						dir = Direction.SOUTH;
-					} else {
-						dir = Direction.NORTH;
-					}
-				} else {
-					if (next.y > current.y) {
-						dir = Direction.SOUTH_WEST;
-					} else if (next.y == current.y) {
-						dir = Direction.WEST;
-					} else {
-						dir = Direction.NORTH_WEST;
-					}
-				}
+				dir = current.directionTo(next);
 			}
 		}
 		return dir;

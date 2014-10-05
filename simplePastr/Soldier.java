@@ -14,7 +14,7 @@ import battlecode.common.RobotType;
 public class Soldier extends AbstractRobotType {
 
 	private boolean inactive = false;
-	private boolean pastrBuilder = false;
+	private SoldierRole role;
 	private PathFinder pathFinder;
 	private Random randall;
 	MapLocation bestPastrLocation = new MapLocation(0, 0);
@@ -33,22 +33,36 @@ public class Soldier extends AbstractRobotType {
 		if (rc.isConstructing()) {
 			inactive = true;
 		}
-		// Construct a PASTR
-		if (pastrBuilder) {
+		switch (role) {
+		case ATTACKER:
+			break;
+		case NOISE_TOWER_BUILDER:
+			break;
+		case PASTR_BUILDER:
 			actPastrBuilder();
-		} else {
+			break;
+		case PROTECTOR:
 			actProtector();
+			break;
+		default:
+			break;
 		}
 	}
 
 	@Override
 	protected void init() throws GameActionException {
 		bestPastrLocation = Channel.getBestPastrLocation(rc);
-
-		// TODO: change communication. HQ says which should be created
-		this.pastrBuilder = Channel.requestSoldierRole(rc,
-				SoldierRole.PASTR_BUILDER);
+		role = Channel.requestSoldierRole(rc);
+		rc.setIndicatorString(0, role.toString());
+		Channel.announceSoldierRole(rc, role);
 		pathFinder = new PathFinderSimple(rc);
+	}
+
+	private void visit(MapLocation loc) {
+		for (MapLocation old : visited.keySet()) {
+			visited.put(old, visited.get(old) + 1);
+		}
+		visited.put(loc, 0);
 	}
 
 	private void actPastrBuilder() throws GameActionException {
@@ -64,13 +78,6 @@ public class Soldier extends AbstractRobotType {
 				rc.move(dir);
 			}
 		}
-	}
-
-	private void visit(MapLocation loc) {
-		for (MapLocation old : visited.keySet()) {
-			visited.put(old, visited.get(old) + 1);
-		}
-		visited.put(loc, 0);
 	}
 
 	private void actProtector() throws GameActionException {
