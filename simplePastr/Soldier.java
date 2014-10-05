@@ -10,6 +10,7 @@ import battlecode.common.Robot;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
+import battlecode.common.Team;
 
 public class Soldier extends AbstractRobotType {
 
@@ -63,6 +64,47 @@ public class Soldier extends AbstractRobotType {
 			visited.put(old, visited.get(old) + 1);
 		}
 		visited.put(loc, 0);
+	}
+	
+	private void actAttacker() throws GameActionException{
+		Team we = rc.getTeam();
+		Team opponent = we.opponent();
+		MapLocation currentLoc = rc.getLocation();
+		visit(currentLoc);
+
+		MapLocation[] nextToAttack = new MapLocation[100];
+		//opponent's pastr?
+		MapLocation[] pastrOpponentAll = rc.sensePastrLocations(opponent);
+		if(pastrOpponentAll != null){
+			nextToAttack = pastrOpponentAll.clone();
+		}else{
+			//communicating opponents? 
+			MapLocation[] robotsOpponentAll = rc.senseBroadcastingRobotLocations(opponent);
+			if(robotsOpponentAll != null){
+				nextToAttack = robotsOpponentAll.clone();
+			}else{
+				nextToAttack[0] = rc.senseEnemyHQLocation();
+			}
+		}		
+		
+		if(nextToAttack != null){	
+			//find direction of where to attack next
+			MapLocation target = nextToAttack[0];
+			Direction nextDir = pathFinder.getNextDirection(visited, target, currentLoc);
+			while(target == null || !rc.canMove(nextDir)){
+				target = nextToAttack[(int) (nextToAttack.length * Math.random())];
+				nextDir = pathFinder.getNextDirection(visited, target, currentLoc);
+			}
+		
+			if(!rc.canAttackSquare(target)){
+				rc.sneak(nextDir);
+			}else{
+				rc.attackSquare(target);
+			}
+			
+		}else{
+			actProtector();
+		}
 	}
 
 	private void actPastrBuilder() throws GameActionException {
