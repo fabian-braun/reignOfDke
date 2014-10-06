@@ -36,6 +36,7 @@ public class Soldier extends AbstractRobotType {
 		}
 		switch (role) {
 		case ATTACKER:
+			actAttacker();
 			break;
 		case NOISE_TOWER_BUILDER:
 			break;
@@ -65,44 +66,46 @@ public class Soldier extends AbstractRobotType {
 		}
 		visited.put(loc, 0);
 	}
-	
-	private void actAttacker() throws GameActionException{
+
+	private void actAttacker() throws GameActionException {
 		Team we = rc.getTeam();
 		Team opponent = we.opponent();
 		MapLocation currentLoc = rc.getLocation();
 		visit(currentLoc);
 
-		MapLocation[] nextToAttack = new MapLocation[100];
-		//opponent's pastr?
+		MapLocation[] nextToAttack = null;
+		// opponent's pastr?
 		MapLocation[] pastrOpponentAll = rc.sensePastrLocations(opponent);
-		if(pastrOpponentAll != null){
+		if (pastrOpponentAll != null) {
 			nextToAttack = pastrOpponentAll.clone();
-		}else{
-			//communicating opponents? 
-			MapLocation[] robotsOpponentAll = rc.senseBroadcastingRobotLocations(opponent);
-			if(robotsOpponentAll != null){
+		} else {
+			// communicating opponents?
+			MapLocation[] robotsOpponentAll = rc
+					.senseBroadcastingRobotLocations(opponent);
+			if (robotsOpponentAll != null) {
 				nextToAttack = robotsOpponentAll.clone();
-			}else{
-				nextToAttack[0] = rc.senseEnemyHQLocation();
 			}
-		}		
-		
-		if(nextToAttack != null){	
-			//find direction of where to attack next
+		}
+
+		if (nextToAttack != null) {
+			// find direction of where to attack next
 			MapLocation target = nextToAttack[0];
-			Direction nextDir = pathFinder.getNextDirection(visited, target, currentLoc);
-			while(target == null || !rc.canMove(nextDir)){
-				target = nextToAttack[(int) (nextToAttack.length * Math.random())];
-				nextDir = pathFinder.getNextDirection(visited, target, currentLoc);
+			Direction nextDir = pathFinder.getNextDirection(visited, target,
+					currentLoc);
+			while (target == null || !rc.canMove(nextDir)) {
+				target = nextToAttack[(int) (nextToAttack.length * Math
+						.random())];
+				nextDir = pathFinder.getNextDirection(visited, target,
+						currentLoc);
 			}
-		
-			if(!rc.canAttackSquare(target)){
+
+			if (!rc.canAttackSquare(target)) {
 				rc.sneak(nextDir);
-			}else{
+			} else {
 				rc.attackSquare(target);
 			}
-			
-		}else{
+
+		} else {
 			actProtector();
 		}
 	}
