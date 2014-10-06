@@ -36,6 +36,7 @@ public class Soldier extends AbstractRobotType {
 		}
 		switch (role) {
 		case ATTACKER:
+			actAttacker();
 			break;
 		case NOISE_TOWER_BUILDER:
 			break;
@@ -72,7 +73,7 @@ public class Soldier extends AbstractRobotType {
 		MapLocation currentLoc = rc.getLocation();
 		visit(currentLoc);
 
-		MapLocation[] nextToAttack = new MapLocation[100];
+		MapLocation[] nextToAttack = null;
 		// opponent's pastr?
 		MapLocation[] pastrOpponentAll = rc.sensePastrLocations(opponent);
 		if (pastrOpponentAll != null) {
@@ -83,8 +84,6 @@ public class Soldier extends AbstractRobotType {
 					.senseBroadcastingRobotLocations(opponent);
 			if (robotsOpponentAll != null) {
 				nextToAttack = robotsOpponentAll.clone();
-			} else {
-				nextToAttack[0] = rc.senseEnemyHQLocation();
 			}
 		}
 
