@@ -130,9 +130,9 @@ public class HQ extends AbstractRobotType {
 		otherHq = rc.senseEnemyHQLocation();
 		mapRepresentation[myHq.y][myHq.x] = 'H';
 		mapRepresentation[otherHq.y][otherHq.x] = 'E';
-		printMap();
+		// printMap();
 		generatePastrRating();
-		printMapAnalysis();
+		// printMapAnalysis();
 		Channel.broadcastBestPastrLocation(rc, bestForPastr);
 	}
 }
