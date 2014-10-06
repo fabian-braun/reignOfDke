@@ -36,8 +36,8 @@ public class HQ extends AbstractRobotType {
 					&& typeCount.get(RobotType.PASTR) < 1) {
 				Channel.demandSoldierRole(rc, SoldierRole.PASTR_BUILDER);
 			} else {
-				Channel.demandSoldierRole(rc, SoldierRole.ATTACKER);
-				// Channel.demandSoldierRole(rc, SoldierRole.PROTECTOR);
+				// Channel.demandSoldierRole(rc, SoldierRole.ATTACKER);
+				Channel.demandSoldierRole(rc, SoldierRole.PROTECTOR);
 			}
 			Direction spawnAt = myHq.directionTo(otherHq);
 			if (rc.isActive()
@@ -58,11 +58,11 @@ public class HQ extends AbstractRobotType {
 					continue;
 				}
 				double sumCowGrowth = 0;
-				for (int ylocal = y - 1; ylocal < y + 1; ylocal++) {
-					for (int xlocal = x - 1; xlocal < x + 1; xlocal++) {
+				for (int ylocal = y - 1; ylocal <= y + 1; ylocal++) {
+					for (int xlocal = x - 1; xlocal <= x + 1; xlocal++) {
 						if (ylocal > 0 && xlocal > 0 && ylocal < height
 								&& xlocal < width) {
-							sumCowGrowth += mapCowGrowth[y][x];
+							sumCowGrowth += mapCowGrowth[x][y];
 						}
 					}
 				}
@@ -133,7 +133,7 @@ public class HQ extends AbstractRobotType {
 		mapRepresentation[otherHq.y][otherHq.x] = 'E';
 		// printMap();
 		generatePastrRating();
-		// printMapAnalysis();
+		printMapAnalysis();
 		Channel.broadcastBestPastrLocation(rc, bestForPastr);
 	}
 }
