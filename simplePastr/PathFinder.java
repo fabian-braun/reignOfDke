@@ -34,7 +34,7 @@ public abstract class PathFinder {
 	}
 
 	public static final int distance(int y1, int x1, int y2, int x2) {
-		return Math.abs((y2 - y1)) + Math.abs((x2 - x1));
+		return Math.abs(y2 - y1) + Math.abs(x2 - x1);
 	}
 
 	public static final int distance(MapLocation loc1, MapLocation loc2) {

@@ -4,7 +4,6 @@ import java.util.Map;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
-import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
@@ -31,7 +30,9 @@ public class HQ extends AbstractRobotType {
 		Map<RobotType, Integer> typeCount = Channel.getRobotTypeCount(rc);
 
 		// Check if a robot is spawnable and spawn one if it is
-		if (rc.senseRobotCount() < GameConstants.MAX_ROBOTS) {
+		// if (rc.senseRobotCount() < GameConstants.MAX_ROBOTS) { TODO:
+		// uncomment
+		if (rc.senseRobotCount() < 1) {
 			if (roleCount.get(SoldierRole.PASTR_BUILDER) < 1
 					&& typeCount.get(RobotType.PASTR) < 1) {
 				Channel.demandSoldierRole(rc, SoldierRole.PASTR_BUILDER);
@@ -60,14 +61,15 @@ public class HQ extends AbstractRobotType {
 				double sumCowGrowth = 0;
 				for (int ylocal = y - 1; ylocal <= y + 1; ylocal++) {
 					for (int xlocal = x - 1; xlocal <= x + 1; xlocal++) {
-						if (ylocal > 0 && xlocal > 0 && ylocal < height
+						if (ylocal >= 0 && xlocal >= 0 && ylocal < height
 								&& xlocal < width) {
+							// mapCowGrowth has x before y.. this is no bug
 							sumCowGrowth += mapCowGrowth[x][y];
 						}
 					}
 				}
-				mapPastrRating[y][x] = PathFinder.distance(y, x, otherHq.y,
-						otherHq.x) * sumCowGrowth;
+				mapPastrRating[y][x] = PathFinder.distance(
+						new MapLocation(x, y), otherHq) * sumCowGrowth;
 				if (mapPastrRating[y][x] > currentBestRating) {
 					currentBestRating = mapPastrRating[y][x];
 					bestForPastr = new MapLocation(x, y);
@@ -77,34 +79,7 @@ public class HQ extends AbstractRobotType {
 	}
 
 	private void printMap() {
-		System.out.println("map:");
-		for (int y = 0; y < mapRepresentation.length; y++) {
-			for (int x = 0; x < mapRepresentation[y].length; x++) {
-				System.out.print(mapRepresentation[y][x]);
-			}
-			System.out.println();
-		}
-	}
-
-	private void printMapAnalysis() {
-		System.out.println("map:");
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				System.out.print(String.format("%5.0f", mapPastrRating[y][x]));
-			}
-			System.out.println();
-		}
-		System.out.println("best Pastr Rating at y=" + bestForPastr.y + " x="
-				+ bestForPastr.x);
-	}
-
-	@Override
-	protected void init() throws GameActionException {
-		height = rc.getMapHeight();
-		width = rc.getMapWidth();
-
 		mapRepresentation = new char[height][width];
-		mapCowGrowth = rc.senseCowGrowth();
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
 				TerrainTile tile = rc.senseTerrainTile(new MapLocation(x, y));
@@ -127,13 +102,40 @@ public class HQ extends AbstractRobotType {
 				}
 			}
 		}
-		myHq = rc.senseHQLocation();
-		otherHq = rc.senseEnemyHQLocation();
 		mapRepresentation[myHq.y][myHq.x] = 'H';
 		mapRepresentation[otherHq.y][otherHq.x] = 'E';
+		System.out.println("map:");
+		for (int y = 0; y < mapRepresentation.length; y++) {
+			for (int x = 0; x < mapRepresentation[y].length; x++) {
+				System.out.print(mapRepresentation[y][x]);
+			}
+			System.out.println();
+		}
+	}
+
+	private void printMapAnalysis() {
+		System.out.println("map:");
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				System.out.print(String.format("%5.0f", mapPastrRating[y][x]));
+			}
+			System.out.println();
+		}
+		System.out.println("best Pastr Rating at " + bestForPastr.toString());
+		System.out.println("other hq is at " + otherHq.toString());
+	}
+
+	@Override
+	protected void init() throws GameActionException {
+		height = rc.getMapHeight();
+		width = rc.getMapWidth();
+		mapCowGrowth = rc.senseCowGrowth();
+		myHq = rc.senseHQLocation();
+		otherHq = rc.senseEnemyHQLocation();
+
 		// printMap();
 		generatePastrRating();
-		printMapAnalysis();
+		// printMapAnalysis();
 		Channel.broadcastBestPastrLocation(rc, bestForPastr);
 	}
 }
