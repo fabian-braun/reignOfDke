@@ -65,44 +65,48 @@ public class Soldier extends AbstractRobotType {
 		}
 		visited.put(loc, 0);
 	}
-	
-	private void actAttacker() throws GameActionException{
+
+	private void actAttacker() throws GameActionException {
 		Team we = rc.getTeam();
 		Team opponent = we.opponent();
 		MapLocation currentLoc = rc.getLocation();
 		visit(currentLoc);
 
 		MapLocation[] nextToAttack = new MapLocation[100];
-		//opponent's pastr?
+		// opponent's pastr?
 		MapLocation[] pastrOpponentAll = rc.sensePastrLocations(opponent);
-		if(pastrOpponentAll != null){
+		if (pastrOpponentAll != null) {
 			nextToAttack = pastrOpponentAll.clone();
-		}else{
-			//communicating opponents? 
-			MapLocation[] robotsOpponentAll = rc.senseBroadcastingRobotLocations(opponent);
-			if(robotsOpponentAll != null){
+		} else {
+			// communicating opponents?
+			MapLocation[] robotsOpponentAll = rc
+					.senseBroadcastingRobotLocations(opponent);
+			if (robotsOpponentAll != null) {
 				nextToAttack = robotsOpponentAll.clone();
-			}else{
+			} else {
 				nextToAttack[0] = rc.senseEnemyHQLocation();
 			}
-		}		
-		
-		if(nextToAttack != null){	
-			//find direction of where to attack next
+		}
+
+		if (nextToAttack != null) {
+			// find direction of where to attack next
 			MapLocation target = nextToAttack[0];
-			Direction nextDir = pathFinder.getNextDirection(visited, target, currentLoc);
-			while(target == null || !rc.canMove(nextDir)){
-				target = nextToAttack[(int) (nextToAttack.length * Math.random())];
-				nextDir = pathFinder.getNextDirection(visited, target, currentLoc);
+			Direction nextDir = pathFinder.getNextDirection(visited, target,
+					currentLoc);
+			while (target == null || !rc.canMove(nextDir)) {
+				target = nextToAttack[(int) (nextToAttack.length * Math
+						.random())];
+				nextDir = pathFinder.getNextDirection(visited, target,
+						currentLoc);
 			}
-		
-			if(!rc.canAttackSquare(target)){
+
+			if (!rc.canAttackSquare(target)) {
 				rc.sneak(nextDir);
-			}else{
+			} else {
 				rc.attackSquare(target);
 			}
-			
-		}else{
+
+		} else {
 			actProtector();
 		}
 	}
@@ -124,12 +128,18 @@ public class Soldier extends AbstractRobotType {
 
 	private void actProtector() throws GameActionException {
 		MapLocation currentLoc = rc.getLocation();
-		visit(currentLoc);
-		if (PathFinder.distance(currentLoc, bestPastrLocation) > 10) {
+		if (PathFinder.distance(currentLoc, bestPastrLocation) > 4) {
+			visit(currentLoc);
 			Direction dir = pathFinder.getNextDirection(visited,
 					bestPastrLocation, currentLoc);
+			rc.yield();
 			if (rc.canMove(dir)) {
 				rc.move(dir);
+			} else {
+				dir = C.DIRECTIONS[randall.nextInt(C.DIRECTIONS.length)];
+				if (rc.canMove(dir)) {
+					rc.move(dir);
+				}
 			}
 		} else {
 			Robot[] nearbyEnemies = rc.senseNearbyGameObjects(Robot.class, 10,
