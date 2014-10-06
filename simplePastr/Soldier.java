@@ -1,7 +1,6 @@
 package simplePastr;
 
 import java.util.HashMap;
-import java.util.Random;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -17,13 +16,11 @@ public class Soldier extends AbstractRobotType {
 	private boolean inactive = false;
 	private SoldierRole role;
 	private PathFinder pathFinder;
-	private Random randall;
 	MapLocation bestPastrLocation = new MapLocation(0, 0);
 	HashMap<MapLocation, Integer> visited = new HashMap<MapLocation, Integer>();
 
 	public Soldier(RobotController rc) {
 		super(rc);
-		randall = new Random(rc.getRobot().getID());
 	}
 
 	@Override
@@ -155,7 +152,7 @@ public class Soldier extends AbstractRobotType {
 					rc.sneak(toEnemy);
 				} else {
 					// move randomly
-					Direction moveDirection = directions[randall.nextInt(8)];
+					Direction moveDirection = C.DIRECTIONS[randall.nextInt(8)];
 					if (rc.canMove(moveDirection)) {
 						rc.move(moveDirection);
 					}
