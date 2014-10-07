@@ -85,21 +85,30 @@ public class Soldier extends AbstractRobotType {
 		}
 
 		if (nextToAttack.length != 0) {
-			// find direction of where to attack next
+			boolean shoot = false;
+
+			// attack any pastr in range
 			MapLocation target = nextToAttack[0];
-			Direction nextDir = pathFinder.getNextDirection(visited, target,
-					currentLoc);
-			while (target == null || !rc.canMove(nextDir)) {
-				target = nextToAttack[(int) (nextToAttack.length * Math
-						.random())];
-				nextDir = pathFinder.getNextDirection(visited, target,
-						currentLoc);
+			for (int i = 0; i < nextToAttack.length; i++) {
+				target = nextToAttack[i];
+				if (rc.canAttackSquare(target)) {
+					rc.attackSquare(target);
+					shoot = true;
+					break;
+				}
 			}
 
-			if (!rc.canAttackSquare(target)) {
-				rc.sneak(nextDir);
-			} else {
-				rc.attackSquare(target);
+			if (!shoot) {
+				Direction nextDir = pathFinder.getNextDirection(visited,
+						target, currentLoc);
+
+				while (!rc.canMove(nextDir) && !rc.canAttackSquare(target)) {
+					nextDir = C.DIRECTIONS[(int) (C.DIRECTIONS.length * Math
+							.random())];
+				}
+				if (rc.canMove(nextDir)) {
+					rc.sneak(nextDir);
+				}
 			}
 
 		} else {

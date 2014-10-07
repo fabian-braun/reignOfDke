@@ -4,6 +4,7 @@ import java.util.Map;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
@@ -32,17 +33,21 @@ public class HQ extends AbstractRobotType {
 		// Check if a robot is spawnable and spawn one if it is
 		// if (rc.senseRobotCount() < GameConstants.MAX_ROBOTS) { TODO:
 		// uncomment
-		if (rc.senseRobotCount() < 1) {
+		if (rc.senseRobotCount() < GameConstants.MAX_ROBOTS) {
 			if (roleCount.get(SoldierRole.PASTR_BUILDER) < 1
 					&& typeCount.get(RobotType.PASTR) < 1) {
 				Channel.demandSoldierRole(rc, SoldierRole.PASTR_BUILDER);
 			} else {
-				// Channel.demandSoldierRole(rc, SoldierRole.ATTACKER);
-				Channel.demandSoldierRole(rc, SoldierRole.PROTECTOR);
+				Channel.demandSoldierRole(rc, SoldierRole.ATTACKER);
+				// Channel.demandSoldierRole(rc, SoldierRole.PROTECTOR);
 			}
 			Direction spawnAt = myHq.directionTo(otherHq);
-			if (rc.isActive()
-					&& rc.senseObjectAtLocation(rc.getLocation().add(spawnAt)) == null) {
+			if (rc.isActive()) {
+				int i = 0;
+				while (!rc.canMove(spawnAt)) {
+					spawnAt = C.DIRECTIONS[i % C.DIRECTIONS.length];
+					i++;
+				}
 				rc.spawn(spawnAt);
 			}
 		}
