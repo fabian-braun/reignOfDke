@@ -87,7 +87,7 @@ public class Soldier extends AbstractRobotType {
 			}
 		}
 
-		if (nextToAttack != null) {
+		if (nextToAttack.length != 0) {
 			// find direction of where to attack next
 			MapLocation target = nextToAttack[0];
 			Direction nextDir = pathFinder.getNextDirection(visited, target,
