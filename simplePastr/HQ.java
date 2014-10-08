@@ -37,9 +37,10 @@ public class HQ extends AbstractRobotType {
 			if (roleCount.get(SoldierRole.PASTR_BUILDER) < 1
 					&& typeCount.get(RobotType.PASTR) < 1) {
 				Channel.demandSoldierRole(rc, SoldierRole.PASTR_BUILDER);
-			} else {
+			} else if (randall.nextBoolean()) {
 				Channel.demandSoldierRole(rc, SoldierRole.ATTACKER);
-				// Channel.demandSoldierRole(rc, SoldierRole.PROTECTOR);
+			} else {
+				Channel.demandSoldierRole(rc, SoldierRole.PROTECTOR);
 			}
 			Direction spawnAt = myHq.directionTo(otherHq);
 			if (rc.isActive()) {

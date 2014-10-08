@@ -102,9 +102,9 @@ public class Soldier extends AbstractRobotType {
 				Direction nextDir = pathFinder.getNextDirection(visited,
 						target, currentLoc);
 
-				while (!rc.canMove(nextDir) && !rc.canAttackSquare(target)) {
-					nextDir = C.DIRECTIONS[(int) (C.DIRECTIONS.length * Math
-							.random())];
+				int i = 0;
+				while (!rc.canMove(nextDir) && i < 8) {
+					nextDir = C.DIRECTIONS[i++];
 				}
 				if (rc.canMove(nextDir)) {
 					rc.sneak(nextDir);
