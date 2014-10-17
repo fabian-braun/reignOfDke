@@ -77,6 +77,8 @@ public class PathFinderMLineBug {
 		MapLocation temp = new MapLocation(current.x, current.y);
 		while (!temp.equals(target)) {
 			mTiles.add(temp);
+			// awesome trick:
+			mTiles.add(new MapLocation(temp.x + 1, temp.y));
 			temp = temp.add(temp.directionTo(target));
 			System.out.println(temp);
 		}
