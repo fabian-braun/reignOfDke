@@ -53,6 +53,7 @@ public class PathFinderMLineBug {
 			// check if mLine reached again
 			if (mTiles.contains(current)
 					&& PathFinder.distance(current, target) < minDistance) {
+				minDistance = PathFinder.distance(rc.getLocation(), target);
 				System.out.println("mLine found at " + current);
 				obstacleMode = false;
 			}
@@ -63,7 +64,6 @@ public class PathFinderMLineBug {
 				rc.move(moveTo);
 			} else {
 				System.out.println("mLine left at " + rc.getLocation());
-				minDistance = PathFinder.distance(rc.getLocation(), target);
 				obstacleMode = true;
 				lastDir = prioDirClockwise.get((prioDirClockwise
 						.indexOf(moveTo) + 2) % 8);
