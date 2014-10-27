@@ -16,6 +16,7 @@ public class Soldier extends AbstractRobotType {
 	private boolean inactive = false;
 	private SoldierRole role;
 	private PathFinder pathFinder;
+	private PathFinderMLineBug intelligPathFinder;
 	MapLocation bestPastrLocation = new MapLocation(0, 0);
 	HashMap<MapLocation, Integer> visited = new HashMap<MapLocation, Integer>();
 
@@ -55,6 +56,8 @@ public class Soldier extends AbstractRobotType {
 		rc.setIndicatorString(0, role.toString());
 		Channel.announceSoldierRole(rc, role);
 		pathFinder = new PathFinderSimple(rc);
+		intelligPathFinder = new PathFinderMLineBug(rc);
+		intelligPathFinder.setTarget(rc.getLocation(), bestPastrLocation);
 	}
 
 	private void visit(MapLocation loc) {
@@ -116,18 +119,28 @@ public class Soldier extends AbstractRobotType {
 		}
 	}
 
+	// private void actPastrBuilder() throws GameActionException {
+	// MapLocation currentLoc = rc.getLocation();
+	// if (currentLoc.x == bestPastrLocation.x
+	// && currentLoc.y == bestPastrLocation.y) {
+	// rc.construct(RobotType.PASTR);
+	// } else {
+	// visit(currentLoc);
+	// Direction dir = pathFinder.getNextDirection(visited,
+	// bestPastrLocation, currentLoc);
+	// if (rc.canMove(dir)) {
+	// rc.move(dir);
+	// }
+	// }
+	// }
+
 	private void actPastrBuilder() throws GameActionException {
 		MapLocation currentLoc = rc.getLocation();
 		if (currentLoc.x == bestPastrLocation.x
 				&& currentLoc.y == bestPastrLocation.y) {
 			rc.construct(RobotType.PASTR);
 		} else {
-			visit(currentLoc);
-			Direction dir = pathFinder.getNextDirection(visited,
-					bestPastrLocation, currentLoc);
-			if (rc.canMove(dir)) {
-				rc.move(dir);
-			}
+			intelligPathFinder.move();
 		}
 	}
 
