@@ -37,38 +37,6 @@ public class PathFinderMLineBug extends PathFinder {
 		updateMLine();
 	}
 
-	public boolean move() throws GameActionException {
-		if (obstacleMode) { // move around obstacle
-			int nextDirToTry = (prioDirClockwise.indexOf(lastDir) + 8 - 2) % 8;
-			while (!rc.canMove(prioDirClockwise.get(nextDirToTry))) {
-				nextDirToTry++;
-				nextDirToTry %= 8;
-			}
-			lastDir = prioDirClockwise.get(nextDirToTry);
-			rc.move(prioDirClockwise.get(nextDirToTry));
-			MapLocation current = rc.getLocation();
-			// check if mLine reached again
-			if (mTiles.contains(current)
-					&& PathFinder.distance(current, target) < minDistance) {
-				minDistance = PathFinder.distance(rc.getLocation(), target);
-				System.out.println("mLine found at " + current);
-				obstacleMode = false;
-			}
-		} else { // move on mLine
-			// TODO: bytecode check and maybe yield
-			Direction moveTo = rc.getLocation().directionTo(target);
-			if (rc.canMove(moveTo)) {
-				rc.move(moveTo);
-			} else {
-				System.out.println("mLine left at " + rc.getLocation());
-				obstacleMode = true;
-				lastDir = prioDirClockwise.get((prioDirClockwise
-						.indexOf(moveTo) + 2) % 8);
-			}
-		}
-		return true;
-	}
-
 	private void updateMLine() {
 		mTiles.clear();
 		MapLocation current = rc.getLocation();
@@ -78,9 +46,56 @@ public class PathFinderMLineBug extends PathFinder {
 			// awesome trick:
 			mTiles.add(new MapLocation(temp.x + 1, temp.y));
 			temp = temp.add(temp.directionTo(target));
-			System.out.println(temp);
 		}
 		mTiles.add(target);
+	}
+
+	private Direction getNextAroundObstacle() {
+		int nextDirToTry = (prioDirClockwise.indexOf(lastDir) + 8 - 2) % 8;
+		while (!rc.canMove(prioDirClockwise.get(nextDirToTry))) {
+			nextDirToTry++;
+			nextDirToTry %= 8;
+		}
+		return prioDirClockwise.get(nextDirToTry);
+
+	}
+
+	private Direction getNextOnMLine() {
+		return rc.getLocation().directionTo(target);
+	}
+
+	public boolean move() throws GameActionException {
+		MapLocation current = rc.getLocation();
+		Direction moveTo;
+		if (obstacleMode) { // move around obstacle
+			// check if mLine reached again
+			if (mTiles.contains(current)
+					&& PathFinder.distance(current, target) < minDistance) {
+				minDistance = PathFinder.distance(rc.getLocation(), target);
+				System.out.println("mLine found at " + current);
+				obstacleMode = false;
+				moveTo = getNextOnMLine();
+			} else {
+				moveTo = getNextAroundObstacle();
+			}
+		} else { // move on mLine
+			moveTo = getNextOnMLine();
+			if (!rc.canMove(moveTo)) {
+				System.out.println("mLine left at " + rc.getLocation());
+				obstacleMode = true;
+				lastDir = prioDirClockwise.get((prioDirClockwise
+						.indexOf(moveTo) + 2) % 8);
+				moveTo = getNextAroundObstacle();
+			}
+		}
+		// TODO: bytecode check and maybe yield
+		if (rc.canMove(moveTo)) {
+			lastDir = moveTo;
+			rc.move(moveTo);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	@Override
