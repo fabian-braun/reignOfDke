@@ -1,6 +1,4 @@
-package simplePastr;
-
-import java.util.HashMap;
+package teamreignofdke;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -15,10 +13,9 @@ public class Soldier extends AbstractRobotType {
 
 	private boolean inactive = false;
 	private SoldierRole role;
-	private PathFinder pathFinder;
-	private PathFinderMLineBug intelligPathFinder;
+	private PathFinderSnailTrail pathFinderSnailTrail;
+	private PathFinderMLineBug pathFinderMLineBug;
 	MapLocation bestPastrLocation = new MapLocation(0, 0);
-	HashMap<MapLocation, Integer> visited = new HashMap<MapLocation, Integer>();
 
 	public Soldier(RobotController rc) {
 		super(rc);
@@ -55,23 +52,15 @@ public class Soldier extends AbstractRobotType {
 		role = Channel.requestSoldierRole(rc);
 		rc.setIndicatorString(0, role.toString());
 		Channel.announceSoldierRole(rc, role);
-		pathFinder = new PathFinderSimple(rc);
-		intelligPathFinder = new PathFinderMLineBug(rc);
-		intelligPathFinder.setTarget(rc.getLocation(), bestPastrLocation);
-	}
-
-	private void visit(MapLocation loc) {
-		for (MapLocation old : visited.keySet()) {
-			visited.put(old, visited.get(old) + 1);
-		}
-		visited.put(loc, 0);
+		pathFinderSnailTrail = new PathFinderSnailTrail(rc);
+		pathFinderMLineBug = new PathFinderMLineBug(rc);
+		pathFinderSnailTrail.setTarget(bestPastrLocation);
+		pathFinderMLineBug.setTarget(bestPastrLocation);
 	}
 
 	private void actAttacker() throws GameActionException {
 		Team we = rc.getTeam();
 		Team opponent = we.opponent();
-		MapLocation currentLoc = rc.getLocation();
-		visit(currentLoc);
 
 		MapLocation[] nextToAttack = null;
 		// opponent's pastr?
@@ -102,15 +91,13 @@ public class Soldier extends AbstractRobotType {
 			}
 
 			if (!shoot) {
-				Direction nextDir = pathFinder.getNextDirection(visited,
-						target, currentLoc);
-
-				int i = 0;
-				while (!rc.canMove(nextDir) && i < 8) {
-					nextDir = C.DIRECTIONS[i++];
-				}
-				if (rc.canMove(nextDir)) {
-					rc.sneak(nextDir);
+				if (!pathFinderSnailTrail.move()) {
+					for (Direction dir : C.DIRECTIONS) {
+						if (rc.canMove(dir)) {
+							rc.move(dir);
+							break;
+						}
+					}
 				}
 			}
 
@@ -119,46 +106,20 @@ public class Soldier extends AbstractRobotType {
 		}
 	}
 
-	// private void actPastrBuilder() throws GameActionException {
-	// MapLocation currentLoc = rc.getLocation();
-	// if (currentLoc.x == bestPastrLocation.x
-	// && currentLoc.y == bestPastrLocation.y) {
-	// rc.construct(RobotType.PASTR);
-	// } else {
-	// visit(currentLoc);
-	// Direction dir = pathFinder.getNextDirection(visited,
-	// bestPastrLocation, currentLoc);
-	// if (rc.canMove(dir)) {
-	// rc.move(dir);
-	// }
-	// }
-	// }
-
 	private void actPastrBuilder() throws GameActionException {
 		MapLocation currentLoc = rc.getLocation();
 		if (currentLoc.x == bestPastrLocation.x
 				&& currentLoc.y == bestPastrLocation.y) {
 			rc.construct(RobotType.PASTR);
 		} else {
-			intelligPathFinder.move();
+			pathFinderMLineBug.move();
 		}
 	}
 
 	private void actProtector() throws GameActionException {
 		MapLocation currentLoc = rc.getLocation();
 		if (PathFinder.distance(currentLoc, bestPastrLocation) > 4) {
-			visit(currentLoc);
-			Direction dir = pathFinder.getNextDirection(visited,
-					bestPastrLocation, currentLoc);
-			rc.yield();
-			if (rc.canMove(dir)) {
-				rc.move(dir);
-			} else {
-				dir = C.DIRECTIONS[randall.nextInt(C.DIRECTIONS.length)];
-				if (rc.canMove(dir)) {
-					rc.move(dir);
-				}
-			}
+			pathFinderSnailTrail.move();
 		} else {
 			Robot[] nearbyEnemies = rc.senseNearbyGameObjects(Robot.class, 10,
 					rc.getTeam().opponent());

@@ -1,4 +1,4 @@
-package simplePastr;
+package teamreignofdke;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -10,14 +10,12 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
-public class PathFinderMLineBug {
+public class PathFinderMLineBug extends PathFinder {
 
 	private Direction lastDir = Direction.NONE;
 	private int minDistance = Integer.MAX_VALUE;
 	private RobotController rc;
 	private MapLocation target;
-	private int width;
-	private int height;
 	private boolean obstacleMode = false;
 	private Set<MapLocation> mTiles = new HashSet<MapLocation>();
 	private static final List<Direction> prioDirClockwise = Arrays
@@ -26,21 +24,20 @@ public class PathFinderMLineBug {
 					Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST });
 
 	public PathFinderMLineBug(RobotController rc) {
+		super(rc);
 		this.rc = rc;
-		this.width = rc.getMapWidth();
-		this.height = rc.getMapHeight();
 		// init target to middle of map
-		setTarget(rc.getLocation(), new MapLocation(width / 2, height / 2));
+		setTarget(new MapLocation(width / 2, height / 2));
 	}
 
-	public void setTarget(MapLocation current, MapLocation target) {
+	public void setTarget(MapLocation target) {
 		obstacleMode = false;
 		this.target = target;
 		minDistance = Integer.MAX_VALUE;
 		updateMLine();
 	}
 
-	public void move() throws GameActionException {
+	public boolean move() throws GameActionException {
 		if (obstacleMode) { // move around obstacle
 			int nextDirToTry = (prioDirClockwise.indexOf(lastDir) + 8 - 2) % 8;
 			while (!rc.canMove(prioDirClockwise.get(nextDirToTry))) {
@@ -69,6 +66,7 @@ public class PathFinderMLineBug {
 						.indexOf(moveTo) + 2) % 8);
 			}
 		}
+		return true;
 	}
 
 	private void updateMLine() {
@@ -83,5 +81,11 @@ public class PathFinderMLineBug {
 			System.out.println(temp);
 		}
 		mTiles.add(target);
+	}
+
+	@Override
+	public boolean sneak() throws GameActionException {
+		// TODO to be implemented...
+		return true;
 	}
 }

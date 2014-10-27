@@ -1,8 +1,6 @@
-package simplePastr;
+package teamreignofdke;
 
-import java.util.HashMap;
-
-import battlecode.common.Direction;
+import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.TerrainTile;
@@ -12,17 +10,24 @@ public abstract class PathFinder {
 	protected final TerrainTile[][] map;
 	protected final MapLocation hqSelfLoc;
 	protected final MapLocation hqEnemLoc;
+	protected final int height;
+	protected final int width;
+	protected final RobotController rc;
 
-	public PathFinder(TerrainTile[][] map, MapLocation hqSelfLoc,
-			MapLocation hqEnemLoc) {
+	public PathFinder(RobotController rc, TerrainTile[][] map,
+			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int height, int width) {
+		this.rc = rc;
 		this.map = map;
 		this.hqSelfLoc = hqSelfLoc;
 		this.hqEnemLoc = hqEnemLoc;
+		this.height = height;
+		this.width = width;
 	}
 
 	public PathFinder(RobotController rc) {
-		int height = rc.getMapHeight();
-		int width = rc.getMapWidth();
+		this.rc = rc;
+		height = rc.getMapHeight();
+		width = rc.getMapWidth();
 		map = new TerrainTile[height][width];
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
@@ -41,12 +46,18 @@ public abstract class PathFinder {
 		return distance(loc1.y, loc1.x, loc2.y, loc2.x);
 	}
 
-	public abstract Direction getNextDirection(
-			HashMap<MapLocation, Integer> lastVisited, MapLocation target,
-			MapLocation current);
-
 	public boolean isHqLocation(MapLocation loc) {
 		return loc.equals(hqEnemLoc) || loc.equals(hqSelfLoc);
 	}
+
+	public TerrainTile[][] getTerrain() {
+		return map;
+	}
+
+	public abstract boolean move() throws GameActionException;
+
+	public abstract boolean sneak() throws GameActionException;
+
+	public abstract void setTarget(MapLocation target);
 
 }

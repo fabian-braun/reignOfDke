@@ -1,4 +1,4 @@
-package simplePastr;
+package teamreignofdke;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,8 +9,6 @@ import battlecode.common.RobotController;
 import battlecode.common.RobotType;
 
 public class Channel {
-
-	private static final Log log = Log.getInstance();
 
 	/* CHANNEL DEFINITIONS: [0..65535] */
 	public static final int chBestPastrLocation = 65535;
@@ -99,7 +97,7 @@ public class Channel {
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}
-		log.error("reading from channel chNextSoldierRole"
+		System.err.println("reading from channel chNextSoldierRole"
 				+ " failed. Assume SoldierRole.ATTACKER");
 		return SoldierRole.ATTACKER;
 	}
