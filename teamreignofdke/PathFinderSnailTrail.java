@@ -1,29 +1,31 @@
-package simplePastr;
+package teamreignofdke;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import battlecode.common.Direction;
+import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.TerrainTile;
 
-public class PathFinderSimple extends PathFinder {
+public class PathFinderSnailTrail extends PathFinder {
 
-	public PathFinderSimple(TerrainTile[][] map, MapLocation hqSelfLoc,
-			MapLocation hqEnemLoc) {
-		super(map, hqEnemLoc, hqEnemLoc);
+	private HashMap<MapLocation, Integer> lastVisited = new HashMap<MapLocation, Integer>();
+	private MapLocation target;
+
+	public PathFinderSnailTrail(RobotController rc, TerrainTile[][] map,
+			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int height, int width) {
+		super(rc, map, hqEnemLoc, hqEnemLoc, height, width);
 	}
 
-	public PathFinderSimple(RobotController rc) {
+	public PathFinderSnailTrail(RobotController rc) {
 		super(rc);
 	}
 
-	@Override
-	public Direction getNextDirection(
-			HashMap<MapLocation, Integer> lastVisited, MapLocation target,
-			MapLocation current) {
+	private Direction getNextDirection() {
+		MapLocation current = rc.getLocation();
 		List<MapLocation> possibleLocs = new ArrayList<MapLocation>();
 		possibleLocs.add(new MapLocation(current.x - 1, current.y - 1));
 		possibleLocs.add(new MapLocation(current.x - 1, current.y));
@@ -56,6 +58,32 @@ public class PathFinderSimple extends PathFinder {
 			}
 		}
 		return dir;
+	}
+
+	@Override
+	public boolean move() throws GameActionException {
+		Direction dir = getNextDirection();
+		if (rc.canMove(dir)) {
+			rc.move(dir);
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean sneak() throws GameActionException {
+		Direction dir = getNextDirection();
+		if (rc.canMove(dir)) {
+			rc.sneak(dir);
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public void setTarget(MapLocation target) {
+		lastVisited.clear();
+		this.target = target;
 	}
 
 }

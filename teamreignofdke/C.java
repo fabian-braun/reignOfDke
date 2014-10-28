@@ -1,4 +1,4 @@
-package simplePastr;
+package teamreignofdke;
 
 import battlecode.common.Direction;
 
