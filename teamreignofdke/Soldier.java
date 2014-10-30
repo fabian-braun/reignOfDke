@@ -34,6 +34,7 @@ public class Soldier extends AbstractRobotType {
 			actAttacker();
 			break;
 		case NOISE_TOWER_BUILDER:
+			actNoiseTowerBuilder();
 			break;
 		case PASTR_BUILDER:
 			actPastrBuilder();
@@ -112,6 +113,24 @@ public class Soldier extends AbstractRobotType {
 				&& currentLoc.y == bestPastrLocation.y) {
 			rc.construct(RobotType.PASTR);
 		} else {
+			pathFinderMLineBug.move();
+		}
+	}
+
+	/**
+	 * Act as a noise tower builder.
+	 * 
+	 * @throws GameActionException
+	 */
+	private void actNoiseTowerBuilder() throws GameActionException {
+		// Get our current location
+		MapLocation currentLocation = rc.getLocation();
+		// Check if we are adjacent to the best PASTR location
+		if (currentLocation.isAdjacentTo(bestPastrLocation)) {
+			// Construct our noise tower here
+			rc.construct(RobotType.NOISETOWER);
+		} else {
+			// Move
 			pathFinderMLineBug.move();
 		}
 	}

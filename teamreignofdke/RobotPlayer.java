@@ -9,7 +9,7 @@ public class RobotPlayer {
 		AbstractRobotType robot;
 		switch (rc.getType()) {
 		case NOISETOWER:
-			robot = null;
+			robot = new NoiseTower(rc);
 			break;
 		case PASTR:
 			robot = new Pastr(rc);

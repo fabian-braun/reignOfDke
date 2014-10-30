@@ -31,12 +31,16 @@ public class HQ extends AbstractRobotType {
 		Map<RobotType, Integer> typeCount = Channel.getRobotTypeCount(rc);
 
 		// Check if a robot is spawnable and spawn one if it is
-		// if (rc.senseRobotCount() < GameConstants.MAX_ROBOTS) { TODO:
-		// uncomment
 		if (rc.senseRobotCount() < GameConstants.MAX_ROBOTS) {
 			if (roleCount.get(SoldierRole.PASTR_BUILDER) < 1
 					&& typeCount.get(RobotType.PASTR) < 1) {
 				Channel.demandSoldierRole(rc, SoldierRole.PASTR_BUILDER);
+				// If we don't have a noise-tower-builder and also don't have a
+				// noise tower yet
+			} else if (roleCount.get(SoldierRole.NOISE_TOWER_BUILDER) < 1
+					&& typeCount.get(RobotType.NOISETOWER) < 1) {
+				// Demand a noise-tower-builder
+				Channel.demandSoldierRole(rc, SoldierRole.NOISE_TOWER_BUILDER);
 			} else if (randall.nextBoolean()) {
 				Channel.demandSoldierRole(rc, SoldierRole.ATTACKER);
 			} else {
