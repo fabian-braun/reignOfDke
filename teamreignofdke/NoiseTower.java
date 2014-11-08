@@ -172,8 +172,8 @@ public class NoiseTower extends AbstractRobotType {
 	private void addNearbyGrowthLocation(
 			HashMap<Double, List<MapLocation>> nearbyMap, MapLocation location) {
 		// Check if the coordinates exist
-		if (location.x >= 0 && location.y >= 0 && location.x <= mapWidth
-				&& location.y <= mapHeight) {
+		if (location.x >= 0 && location.y >= 0 && location.x < mapWidth
+				&& location.y < mapHeight) {
 			// Read cow growth
 			double cowGrowth = mapCowGrowth[location.x][location.y];
 			// If we don't have an entry in our hashmap yet, create one
