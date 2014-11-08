@@ -1,0 +1,16 @@
+This document contains the tasks that the HQ can assign to the soldiers.
+They should be denoted the following way:
+
+- task name
+	- description
+	- what information has to be communicated to the soldiers
+	- what information does the HQ need from the soldiers to assign this task
+	
+
+
+	
+	
+	
+general needed information from the soldiers for the hq:
+- current count of soldiers
+- current count of opponent soldiers
