@@ -16,6 +16,8 @@ public class Soldier extends AbstractRobotType {
 	private PathFinderSnailTrail pathFinderSnailTrail;
 	private PathFinderMLineBug pathFinderMLineBug;
 	MapLocation bestPastrLocation = new MapLocation(0, 0);
+	private Team us;
+	private Team opponent;
 
 	public Soldier(RobotController rc) {
 		super(rc);
@@ -49,6 +51,7 @@ public class Soldier extends AbstractRobotType {
 
 	@Override
 	protected void init() throws GameActionException {
+		Channel.announceSoldierType(rc, RobotType.SOLDIER);
 		bestPastrLocation = Channel.getBestPastrLocation(rc);
 		role = Channel.requestSoldierRole(rc);
 		rc.setIndicatorString(0, role.toString());
@@ -57,49 +60,67 @@ public class Soldier extends AbstractRobotType {
 		pathFinderMLineBug = new PathFinderMLineBug(rc);
 		pathFinderSnailTrail.setTarget(bestPastrLocation);
 		pathFinderMLineBug.setTarget(bestPastrLocation);
+		us = rc.getTeam();
+		opponent = us.opponent();
 	}
 
 	private void actAttacker() throws GameActionException {
-		Team we = rc.getTeam();
-		Team opponent = we.opponent();
-
 		MapLocation[] nextToAttack = null;
-		// opponent's pastr?
-		MapLocation[] pastrOpponentAll = rc.sensePastrLocations(opponent);
-		if (pastrOpponentAll != null) {
-			nextToAttack = pastrOpponentAll.clone();
+
+		Robot[] soldiersInRange = rc.senseNearbyGameObjects(Robot.class,
+				RobotType.SOLDIER.sensorRadiusSquared, opponent);
+
+		if (soldiersInRange.length > 0) {
+			nextToAttack = new MapLocation[soldiersInRange.length];
+			int k = 0;
+			for (Robot robot : soldiersInRange) {
+				RobotInfo info = rc.senseRobotInfo(robot);
+				if (info.type == RobotType.HQ) {
+					nextToAttack[k] = new MapLocation(Integer.MAX_VALUE / 2,
+							Integer.MAX_VALUE / 2);
+				} else {
+					nextToAttack[k] = info.location;
+				}
+				k++;
+			}
 		} else {
-			// communicating opponents?
-			MapLocation[] robotsOpponentAll = rc
-					.senseBroadcastingRobotLocations(opponent);
-			if (robotsOpponentAll != null) {
-				nextToAttack = robotsOpponentAll.clone();
+			// opponent's pastr?
+			MapLocation[] pastrLocationsOpponent = rc.sensePastrLocations(opponent);
+			if (pastrLocationsOpponent.length > 0) {
+				nextToAttack = pastrLocationsOpponent;
+			} else {
+				// communicating opponents?
+				MapLocation[] robotsOpponentAll = rc
+						.senseBroadcastingRobotLocations(opponent);
+				if (robotsOpponentAll.length > 0) {
+					nextToAttack = robotsOpponentAll;
+				}
 			}
 		}
 
-		if (nextToAttack.length != 0) {
-			boolean shoot = false;
-
-			// attack any pastr in range
+		if (nextToAttack.length > 0) {
 			MapLocation target = nextToAttack[0];
-			for (int i = 0; i < nextToAttack.length; i++) {
-				target = nextToAttack[i];
-				if (rc.canAttackSquare(target)) {
-					rc.attackSquare(target);
-					shoot = true;
+
+			// find closest target
+			int minDistance = Integer.MAX_VALUE;
+			for (int i = 0; i < nextToAttack.length; i += 2) {
+				int distance = PathFinder.distance(nextToAttack[i],
+						rc.getLocation());
+				if (distance < minDistance) {
+					target = nextToAttack[i];
+					minDistance = distance;
+				}
+				if (minDistance < RobotType.SOLDIER.attackRadiusMaxSquared) {
 					break;
 				}
 			}
-
-			if (!shoot) {
-				if (!pathFinderSnailTrail.move()) {
-					for (Direction dir : C.DIRECTIONS) {
-						if (rc.canMove(dir)) {
-							rc.move(dir);
-							break;
-						}
-					}
+			if (rc.canAttackSquare(target)) {
+				rc.attackSquare(target);
+			} else {
+				if (!pathFinderSnailTrail.getTarget().equals(target)) {
+					pathFinderSnailTrail.setTarget(target);
 				}
+				pathFinderSnailTrail.move();
 			}
 
 		} else {
@@ -156,7 +177,7 @@ public class Soldier extends AbstractRobotType {
 					// move randomly
 					Direction moveDirection = C.DIRECTIONS[randall.nextInt(8)];
 					if (rc.canMove(moveDirection)) {
-						rc.move(moveDirection);
+						rc.sneak(moveDirection);
 					}
 				}
 			}

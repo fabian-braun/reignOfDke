@@ -86,4 +86,8 @@ public class PathFinderSnailTrail extends PathFinder {
 		this.target = target;
 	}
 
+	@Override
+	public MapLocation getTarget() {
+		return target;
+	}
 }

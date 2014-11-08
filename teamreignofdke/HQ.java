@@ -20,6 +20,7 @@ public class HQ extends AbstractRobotType {
 	private MapLocation myHq;
 	private MapLocation otherHq;
 	private MapLocation bestForPastr;
+	private int boundaryBeforePastr = 10;
 
 	public HQ(RobotController rc) {
 		super(rc);
@@ -33,15 +34,21 @@ public class HQ extends AbstractRobotType {
 		// Check if a robot is spawnable and spawn one if it is
 		if (rc.senseRobotCount() < GameConstants.MAX_ROBOTS) {
 			if (roleCount.get(SoldierRole.PASTR_BUILDER) < 1
-					&& typeCount.get(RobotType.PASTR) < 1) {
+					&& typeCount.get(RobotType.PASTR) < 1
+					&& typeCount.get(RobotType.SOLDIER) > boundaryBeforePastr) {
+				// printMap();
+				generatePastrRating();
+				// printMapAnalysis();
+				Channel.broadcastBestPastrLocation(rc, bestForPastr);
 				Channel.demandSoldierRole(rc, SoldierRole.PASTR_BUILDER);
 				// If we don't have a noise-tower-builder and also don't have a
 				// noise tower yet
 			} else if (roleCount.get(SoldierRole.NOISE_TOWER_BUILDER) < 1
-					&& typeCount.get(RobotType.NOISETOWER) < 1) {
+					&& typeCount.get(RobotType.NOISETOWER) < 1
+					&& typeCount.get(RobotType.SOLDIER) > boundaryBeforePastr) {
 				// Demand a noise-tower-builder
 				Channel.demandSoldierRole(rc, SoldierRole.NOISE_TOWER_BUILDER);
-			} else if (randall.nextBoolean()) {
+			} else if (randall.nextInt(3) > 0) {
 				Channel.demandSoldierRole(rc, SoldierRole.ATTACKER);
 			} else {
 				Channel.demandSoldierRole(rc, SoldierRole.PROTECTOR);
@@ -49,21 +56,29 @@ public class HQ extends AbstractRobotType {
 			Direction spawnAt = myHq.directionTo(otherHq);
 			if (rc.isActive()) {
 				int i = 0;
-				while (!rc.canMove(spawnAt)) {
-					spawnAt = C.DIRECTIONS[i % C.DIRECTIONS.length];
+				while (!rc.canMove(spawnAt) && i < C.DIRECTIONS.length) {
+					spawnAt = C.DIRECTIONS[i];
 					i++;
 				}
-				rc.spawn(spawnAt);
+				if (rc.canMove(spawnAt)) {
+					rc.spawn(spawnAt);
+				}
 			}
 		}
 	}
 
 	private void generatePastrRating() {
+		if (bestForPastr != null) {
+			// already found previously
+			return;
+		}
 		mapPastrRating = new double[height][width];
 		double currentBestRating = 0;
 		bestForPastr = new MapLocation(0, 0);
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
+		int xStep = width / 25 + 1;
+		int yStep = height / 25 + 1;
+		for (int y = 2; y < height; y += yStep) {
+			for (int x = 2; x < width; x += xStep) {
 				TerrainTile tile = rc.senseTerrainTile(new MapLocation(x, y));
 				if (tile != TerrainTile.NORMAL && tile != TerrainTile.ROAD) {
 					continue;
@@ -86,6 +101,22 @@ public class HQ extends AbstractRobotType {
 				}
 			}
 		}
+	}
+
+	@Override
+	protected void init() throws GameActionException {
+		height = rc.getMapHeight();
+		width = rc.getMapWidth();
+		mapCowGrowth = rc.senseCowGrowth();
+		myHq = rc.senseHQLocation();
+		otherHq = rc.senseEnemyHQLocation();
+
+		// location between our HQ and opponent's HQ:
+		MapLocation temporaryTarget = new MapLocation(
+				(myHq.x * 3 / 4 + otherHq.x / 4),
+				(myHq.y * 3 / 4 + otherHq.y / 4));
+
+		Channel.broadcastBestPastrLocation(rc, temporaryTarget);
 	}
 
 	private void printMap() {
@@ -135,17 +166,4 @@ public class HQ extends AbstractRobotType {
 		System.out.println("other hq is at " + otherHq.toString());
 	}
 
-	@Override
-	protected void init() throws GameActionException {
-		height = rc.getMapHeight();
-		width = rc.getMapWidth();
-		mapCowGrowth = rc.senseCowGrowth();
-		myHq = rc.senseHQLocation();
-		otherHq = rc.senseEnemyHQLocation();
-
-		// printMap();
-		generatePastrRating();
-		// printMapAnalysis();
-		Channel.broadcastBestPastrLocation(rc, bestForPastr);
-	}
 }

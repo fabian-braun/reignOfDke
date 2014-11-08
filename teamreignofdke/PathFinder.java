@@ -60,4 +60,6 @@ public abstract class PathFinder {
 
 	public abstract void setTarget(MapLocation target);
 
+	public abstract MapLocation getTarget();
+
 }

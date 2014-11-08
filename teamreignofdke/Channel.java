@@ -127,9 +127,8 @@ public class Channel {
 	public static void announceSoldierType(RobotController rc, RobotType type) {
 		int chCurrent;
 		switch (type) {
-		case HQ:
-			// should never happen... otherwise misc channel
-			chCurrent = chMisc;
+		case SOLDIER:
+			chCurrent = chCurrentSoldierCount;
 			break;
 		case NOISETOWER:
 			chCurrent = chCurrentNoiseTowerCount;
@@ -137,8 +136,9 @@ public class Channel {
 		case PASTR:
 			chCurrent = chCurrentPastrCount;
 			break;
-		default: // case SOLDIER
-			chCurrent = chCurrentSoldierCount;
+		default: // case HQ
+			// should never happen... otherwise misc channel
+			chCurrent = chMisc;
 		}
 		try {
 			rc.broadcast(chCurrent, rc.readBroadcast(chCurrent) + 1);
