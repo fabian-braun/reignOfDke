@@ -28,7 +28,17 @@ the soldiers choose to perform a task or deny it based on the distance to the ta
 - SELF_DESTRUCT_PASTR
 	- destroy our own pastr to prevent, that the opponent gains milk
 	- the location of our pastr
+	- 
 	
+- PROTECT_PREVENTIVE
+	- protect a certain location, before opponent has reached it
+	- location which should be protected
+	- 
+
+- RESCUE_OR_DESTRUCT_PASTR
+	- move to pastr and kill all enemies around. If pastr is close to death kill it yourself.
+	- location where pastr is located
+	- 
 	
 general needed information from the soldiers for the hq:
 - current count of soldiers
