@@ -12,16 +12,25 @@ import battlecode.common.TerrainTile;
 
 public class PathFinderSnailTrail extends PathFinder {
 
+	protected final TerrainTile[][] map;
+
 	private HashMap<MapLocation, Integer> lastVisited = new HashMap<MapLocation, Integer>();
 	private MapLocation target;
 
 	public PathFinderSnailTrail(RobotController rc, TerrainTile[][] map,
 			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int height, int width) {
 		super(rc, map, hqEnemLoc, hqEnemLoc, height, width);
+		this.map = map;
 	}
 
 	public PathFinderSnailTrail(RobotController rc) {
 		super(rc);
+		map = new TerrainTile[height][width];
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				map[y][x] = rc.senseTerrainTile(new MapLocation(x, y));
+			}
+		}
 	}
 
 	private Direction getNextDirection() {

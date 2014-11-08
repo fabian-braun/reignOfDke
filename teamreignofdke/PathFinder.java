@@ -7,7 +7,6 @@ import battlecode.common.TerrainTile;
 
 public abstract class PathFinder {
 
-	protected final TerrainTile[][] map;
 	protected final MapLocation hqSelfLoc;
 	protected final MapLocation hqEnemLoc;
 	protected final int height;
@@ -17,7 +16,6 @@ public abstract class PathFinder {
 	public PathFinder(RobotController rc, TerrainTile[][] map,
 			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int height, int width) {
 		this.rc = rc;
-		this.map = map;
 		this.hqSelfLoc = hqSelfLoc;
 		this.hqEnemLoc = hqEnemLoc;
 		this.height = height;
@@ -28,12 +26,6 @@ public abstract class PathFinder {
 		this.rc = rc;
 		height = rc.getMapHeight();
 		width = rc.getMapWidth();
-		map = new TerrainTile[height][width];
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				map[y][x] = rc.senseTerrainTile(new MapLocation(x, y));
-			}
-		}
 		hqSelfLoc = rc.senseHQLocation();
 		hqEnemLoc = rc.senseEnemyHQLocation();
 	}
@@ -48,10 +40,6 @@ public abstract class PathFinder {
 
 	public boolean isHqLocation(MapLocation loc) {
 		return loc.equals(hqEnemLoc) || loc.equals(hqSelfLoc);
-	}
-
-	public TerrainTile[][] getTerrain() {
-		return map;
 	}
 
 	public abstract boolean move() throws GameActionException;

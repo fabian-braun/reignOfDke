@@ -80,8 +80,8 @@ public class NoiseTower extends AbstractRobotType {
 		MapLocation location = locations.get(randall.nextInt(locations.size()));
 
 		// Debug
-		System.out.println(String.format("Attacking [%d,%d]", location.x,
-				location.y));
+		// System.out.println(String.format("Attacking [%d,%d]", location.x,
+		// location.y));
 
 		// Attack that location
 		rc.attackSquareLight(location);
@@ -103,7 +103,8 @@ public class NoiseTower extends AbstractRobotType {
 		myLocation = rc.getLocation();
 
 		// Debug
-		System.out.println(String.format("%d,%d", myLocation.x, myLocation.y));
+		// System.out.println(String.format("%d,%d", myLocation.x,
+		// myLocation.y));
 
 		// Create a hashmap, indexed by cowgrowth to store the nearby locations
 		// in. Start 4 squares away from our own location to avoid shooting too

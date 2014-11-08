@@ -85,7 +85,7 @@ public class PathFinderMLineBug extends PathFinder {
 			if (mTiles.contains(current)
 					&& PathFinder.distance(current, target) < minDistance) {
 				minDistance = PathFinder.distance(rc.getLocation(), target);
-				System.out.println("mLine found at " + current);
+				// System.out.println("mLine found at " + current);
 				obstacleMode = false;
 				moveTo = getNextOnMLine();
 			} else {
@@ -94,7 +94,7 @@ public class PathFinderMLineBug extends PathFinder {
 		} else { // move on mLine
 			moveTo = getNextOnMLine();
 			if (!rc.canMove(moveTo)) {
-				System.out.println("mLine left at " + rc.getLocation());
+				// System.out.println("mLine left at " + rc.getLocation());
 				obstacleMode = true;
 				decideTurnDirection();
 				lastDir = currentTurnDirection.get((currentTurnDirection

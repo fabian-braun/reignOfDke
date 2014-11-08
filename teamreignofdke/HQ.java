@@ -48,7 +48,8 @@ public class HQ extends AbstractRobotType {
 					&& typeCount.get(RobotType.SOLDIER) > boundaryBeforePastr) {
 				// Demand a noise-tower-builder
 				Channel.demandSoldierRole(rc, SoldierRole.NOISE_TOWER_BUILDER);
-			} else if (randall.nextInt(3) > 0) {
+			} else if (randall.nextInt(3) > 0
+					|| roleCount.get(SoldierRole.PROTECTOR) > 4) {
 				Channel.demandSoldierRole(rc, SoldierRole.ATTACKER);
 			} else {
 				Channel.demandSoldierRole(rc, SoldierRole.PROTECTOR);

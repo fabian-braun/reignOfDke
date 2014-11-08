@@ -15,14 +15,24 @@ public class Soldier extends AbstractRobotType {
 	private SoldierRole role;
 	private PathFinderSnailTrail pathFinderSnailTrail;
 	private PathFinderMLineBug pathFinderMLineBug;
+	private PathFinderGreedy pathFinderGreedy;
 	MapLocation bestPastrLocation = new MapLocation(0, 0);
 	private Team us;
 	private Team opponent;
+	private boolean fleeMode = false;
+	private boolean kamikazeMode = false;
+	private static final double HEALTH_ABOUT_TO_DIE = 40;
+	private static final double HEALTH_REGENERATED = 50;
 
 	public Soldier(RobotController rc) {
 		super(rc);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see teamreignofdke.AbstractRobotType#act()
+	 */
 	@Override
 	protected void act() throws GameActionException {
 		if (inactive || !rc.isActive()) {
@@ -49,6 +59,11 @@ public class Soldier extends AbstractRobotType {
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see teamreignofdke.AbstractRobotType#init()
+	 */
 	@Override
 	protected void init() throws GameActionException {
 		Channel.announceSoldierType(rc, RobotType.SOLDIER);
@@ -60,17 +75,26 @@ public class Soldier extends AbstractRobotType {
 		pathFinderMLineBug = new PathFinderMLineBug(rc);
 		pathFinderSnailTrail.setTarget(bestPastrLocation);
 		pathFinderMLineBug.setTarget(bestPastrLocation);
+		pathFinderGreedy = new PathFinderGreedy(rc, randall);
 		us = rc.getTeam();
 		opponent = us.opponent();
 	}
 
+	/**
+	 * Act as an attacker
+	 * 
+	 * @throws GameActionException
+	 */
 	private void actAttacker() throws GameActionException {
+		if (kamikaze()) {
+			return;
+		}
 		MapLocation[] nextToAttack = null;
 
 		Robot[] soldiersInRange = rc.senseNearbyGameObjects(Robot.class,
 				RobotType.SOLDIER.sensorRadiusSquared, opponent);
 
-		if (soldiersInRange.length > 0) {
+		if (notNull(soldiersInRange)) {
 			nextToAttack = new MapLocation[soldiersInRange.length];
 			int k = 0;
 			for (Robot robot : soldiersInRange) {
@@ -85,20 +109,21 @@ public class Soldier extends AbstractRobotType {
 			}
 		} else {
 			// opponent's pastr?
-			MapLocation[] pastrLocationsOpponent = rc.sensePastrLocations(opponent);
-			if (pastrLocationsOpponent.length > 0) {
+			MapLocation[] pastrLocationsOpponent = rc
+					.sensePastrLocations(opponent);
+			if (notNull(pastrLocationsOpponent)) {
 				nextToAttack = pastrLocationsOpponent;
 			} else {
 				// communicating opponents?
 				MapLocation[] robotsOpponentAll = rc
 						.senseBroadcastingRobotLocations(opponent);
-				if (robotsOpponentAll.length > 0) {
+				if (notNull(robotsOpponentAll)) {
 					nextToAttack = robotsOpponentAll;
 				}
 			}
 		}
 
-		if (nextToAttack.length > 0) {
+		if (notNull(nextToAttack)) {
 			MapLocation target = nextToAttack[0];
 
 			// find closest target
@@ -118,9 +143,9 @@ public class Soldier extends AbstractRobotType {
 				rc.attackSquare(target);
 			} else {
 				if (!pathFinderSnailTrail.getTarget().equals(target)) {
-					pathFinderSnailTrail.setTarget(target);
+					pathFinderMLineBug.setTarget(target);
 				}
-				pathFinderSnailTrail.move();
+				pathFinderMLineBug.move();
 			}
 
 		} else {
@@ -128,6 +153,11 @@ public class Soldier extends AbstractRobotType {
 		}
 	}
 
+	/**
+	 * Act as a pastr builder
+	 * 
+	 * @throws GameActionException
+	 */
 	private void actPastrBuilder() throws GameActionException {
 		MapLocation currentLoc = rc.getLocation();
 		if (currentLoc.x == bestPastrLocation.x
@@ -156,10 +186,18 @@ public class Soldier extends AbstractRobotType {
 		}
 	}
 
+	/**
+	 * Act as a protector
+	 * 
+	 * @throws GameActionException
+	 */
 	private void actProtector() throws GameActionException {
+		if (flee()) {
+			return;
+		}
 		MapLocation currentLoc = rc.getLocation();
 		if (PathFinder.distance(currentLoc, bestPastrLocation) > 4) {
-			pathFinderSnailTrail.move();
+			pathFinderMLineBug.move();
 		} else {
 			Robot[] nearbyEnemies = rc.senseNearbyGameObjects(Robot.class, 10,
 					rc.getTeam().opponent());
@@ -182,6 +220,87 @@ public class Soldier extends AbstractRobotType {
 				}
 			}
 		}
+	}
 
+	/**
+	 * checks if the current health is lower than HEALTH_ABOUT_TO_DIE. If that
+	 * is true the flee mode is entered. In the flee mode the soldier moves away
+	 * from the closest opponent.
+	 * 
+	 * @return
+	 * @throws GameActionException
+	 */
+	private boolean flee() throws GameActionException {
+		if (rc.getHealth() < HEALTH_ABOUT_TO_DIE && !fleeMode) {
+			fleeMode = true;
+			Robot[] soldiersInRange = rc.senseNearbyGameObjects(Robot.class,
+					RobotType.SOLDIER.sensorRadiusSquared, opponent);
+			MapLocation fleeTo = null;
+			if (notNull(soldiersInRange)) {
+				MapLocation enemyLoc = rc.senseRobotInfo(soldiersInRange[0]).location;
+				MapLocation myLoc = rc.getLocation();
+				fleeTo = new MapLocation(myLoc.x - (enemyLoc.x - myLoc.x),
+						myLoc.x - (enemyLoc.x - myLoc.x));
+				System.out.println("Flee from " + myLoc + " to " + fleeTo
+						+ " because of enemy at " + enemyLoc);
+			} else {
+				fleeTo = rc.senseHQLocation();
+			}
+			pathFinderGreedy.setTarget(fleeTo);
+			rc.setIndicatorString(1, "AAAAAAAAAAAAAAAH");
+		} else if (rc.getHealth() > HEALTH_REGENERATED && fleeMode) {
+			fleeMode = false;
+			return fleeMode;
+		} else if (fleeMode) {
+			pathFinderGreedy.move();
+		}
+		return fleeMode;
+	}
+
+	/**
+	 * checks if the current health is lower than HEALTH_ABOUT_TO_DIE. If that
+	 * is true the kamikaze mode is entered. In the kamikaze mode the soldier
+	 * moves on tile in the direction of the opponent and self destructs itself.
+	 * 
+	 * @return
+	 * @throws GameActionException
+	 */
+	private boolean kamikaze() throws GameActionException {
+		if (rc.getHealth() < HEALTH_ABOUT_TO_DIE && !kamikazeMode) {
+			kamikazeMode = true;
+			Robot[] soldiersInRange = rc.senseNearbyGameObjects(Robot.class,
+					RobotType.SOLDIER.sensorRadiusSquared, opponent);
+			MapLocation fleeTo = null;
+			if (notNull(soldiersInRange)) {
+				fleeTo = rc.senseRobotInfo(soldiersInRange[0]).location;
+			} else {
+				rc.selfDestruct();
+			}
+			pathFinderGreedy.setTarget(fleeTo);
+			rc.setIndicatorString(1, "AAAAAAAAAAAAAAAH");
+		} else if (rc.getHealth() > HEALTH_REGENERATED && kamikazeMode) {
+			kamikazeMode = false;
+			return kamikazeMode;
+		} else if (kamikazeMode) {
+			pathFinderGreedy.move();
+			rc.selfDestruct();
+		}
+		return kamikazeMode;
+	}
+
+	/**
+	 * checks if the given array is null or empty
+	 * 
+	 * @param array
+	 * @return
+	 */
+	public static final <T> boolean notNull(T[] array) {
+		if (array == null) {
+			return false;
+		}
+		if (array.length < 1) {
+			return false;
+		}
+		return true;
 	}
 }

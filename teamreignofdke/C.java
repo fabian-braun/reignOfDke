@@ -2,6 +2,11 @@ package teamreignofdke;
 
 import battlecode.common.Direction;
 
+/**
+ *
+ * this class serves as a container for constants
+ *
+ */
 public class C {
 
 	public static final Direction[] DIRECTIONS = { Direction.NORTH,
