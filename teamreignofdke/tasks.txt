@@ -10,6 +10,16 @@ They should be denoted the following way:
 	
 the soldiers choose to perform a task or deny it based on the distance to the target location and the task	
 
+- BUILD_PASTR
+	- move to a given location and build a PASTR
+	- targetLocation (best Location for PASTR building)
+	-
+	
+- BUILD_NOISETOWER
+	- move close to a PASTR and build a Noisetower next to it
+	- location of PASTR
+	-
+
 - PREPARE_FOR_ATTACK
 	- move to a location close to the target until the swarm at that location has reached a certain size
 	- target location and/or concentration location; number of required soldiers
