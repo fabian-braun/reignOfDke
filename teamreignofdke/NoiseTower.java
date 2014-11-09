@@ -50,6 +50,22 @@ public class NoiseTower extends AbstractRobotType {
 	private int mapWidth;
 
 	/**
+	 * This field represents the location we attacked last.
+	 */
+	private MapLocation lastAttackedLocation;
+
+	/**
+	 * This field defines whether or not to write debug information to the
+	 * output.
+	 */
+	private final boolean debug = false;
+
+	/**
+	 * This field represents a range within which we do not want to be shooting.
+	 */
+	private final int closeRange = 4;
+
+	/**
 	 * Constructs an instance of the <code>NoiseTower</code> class.
 	 * 
 	 * @param rc
@@ -75,16 +91,66 @@ public class NoiseTower extends AbstractRobotType {
 			return;
 		}
 
-		// Get a random location from the locations with the maximum cow growth
-		// around us
-		MapLocation location = locations.get(randall.nextInt(locations.size()));
+		MapLocation attackingLocation;
 
-		// Debug
-		System.out.println(String.format("Attacking [%d,%d]", location.x,
-				location.y));
+		// If we do not have a location that we attacked last, randomly select a
+		// new one
+		if (lastAttackedLocation == null) {
+			// Get a random location from the locations with the maximum cow
+			// growth around us
+			attackingLocation = locations
+					.get(randall.nextInt(locations.size()));
 
-		// Attack that location
-		rc.attackSquareLight(location);
+			// Debug
+			if (debug) {
+				System.out.println(String.format(
+						"Initiating attack on [%d,%d]", attackingLocation.x,
+						attackingLocation.y));
+			}
+		} else {
+			// Otherwise, we attack a location slightly closer to us than the
+			// last one
+			attackingLocation = getCloserLocation(lastAttackedLocation,
+					closeRange);
+
+			// Check if we found anything
+			if (attackingLocation == null) {
+				// If not, get a random one
+				attackingLocation = locations.get(randall.nextInt(locations
+						.size()));
+
+				// Debug
+				if (debug) {
+					System.out.println(String.format(
+							"Initiating attack on [%d,%d]",
+							attackingLocation.x, attackingLocation.y));
+				}
+			} else if (debug) {
+				// Debug
+				System.out.println(String.format("Attacking closer on [%d,%d]",
+						attackingLocation.x, attackingLocation.y));
+			}
+		}
+
+		// Check if we can attack this location
+		if (rc.canAttackSquare(attackingLocation)) {
+			// Attack that location
+			rc.attackSquareLight(attackingLocation);
+		}
+
+		// Save the location
+		lastAttackedLocation = attackingLocation;
+
+		// Clear the last attacked location if it was closer than closeRange
+		// squares to
+		// us, since we do not want to shoot at any location in a range of one
+		// less than closeRange of
+		// our own
+		List<MapLocation> neighboursCloseRange = getNeighbours(
+				lastAttackedLocation, closeRange);
+		if (neighboursCloseRange.contains(myLocation)) {
+			lastAttackedLocation = null;
+		}
 	}
 
 	/**
@@ -103,7 +169,10 @@ public class NoiseTower extends AbstractRobotType {
 		myLocation = rc.getLocation();
 
 		// Debug
-		System.out.println(String.format("%d,%d", myLocation.x, myLocation.y));
+		if (debug) {
+			System.out.println(String.format("%d,%d", myLocation.x,
+					myLocation.y));
+		}
 
 		// Create a hashmap, indexed by cowgrowth to store the nearby locations
 		// in. Start 4 squares away from our own location to avoid shooting too
@@ -153,8 +222,10 @@ public class NoiseTower extends AbstractRobotType {
 		}
 
 		// Debug
-		System.out.println(String.format("max: %f, size: %d", max,
-				growth.get(max).size()));
+		if (debug) {
+			System.out.println(String.format("max: %f, size: %d", max, growth
+					.get(max).size()));
+		}
 
 		// Store all locations with the maximum cow growth around us
 		locations = new ArrayList<MapLocation>(growth.get(max).size());
@@ -172,8 +243,7 @@ public class NoiseTower extends AbstractRobotType {
 	private void addNearbyGrowthLocation(
 			HashMap<Double, List<MapLocation>> nearbyMap, MapLocation location) {
 		// Check if the coordinates exist
-		if (location.x >= 0 && location.y >= 0 && location.x <= mapWidth
-				&& location.y <= mapHeight) {
+		if (isXOnMap(location.x) && isYOnMap(location.y)) {
 			// Read cow growth
 			double cowGrowth = mapCowGrowth[location.x][location.y];
 			// If we don't have an entry in our hashmap yet, create one
@@ -183,5 +253,114 @@ public class NoiseTower extends AbstractRobotType {
 			// Add the location
 			nearbyMap.get(cowGrowth).add(location);
 		}
+	}
+
+	/**
+	 * Determine a location closer to the location of the
+	 * <code>NoiseTower</code> from a specified location.
+	 * 
+	 * @param location
+	 *            The location to find a closer location for.
+	 * @return <code>MapLocation</code> representing a closer location.
+	 */
+	private MapLocation getCloserLocation(MapLocation location, int closeRange) {
+		int x = 0;
+		// If the x is more than closeRange away from our own x
+		if (location.x < myLocation.x - closeRange) {
+			// Go one towards us
+			x = location.x + 1;
+		} else if (location.x > myLocation.x + closeRange) {
+			x = location.x - 1;
+		} else {
+			return null;
+		}
+
+		int y = 0;
+		// If the y is more than closeRange away from our own y
+		if (location.y < myLocation.y - closeRange) {
+			// Go one towards us
+			y = location.y + 1;
+		} else if (location.y > myLocation.y + closeRange) {
+			y = location.y - 1;
+		} else {
+			return null;
+		}
+
+		// Return our closer location
+		return new MapLocation(x, y);
+	}
+
+	/**
+	 * Creates a list of locations adjacent to a location a specific distance
+	 * away.
+	 * 
+	 * @param from
+	 *            The location to get the adjacent locations for.
+	 * @param distance
+	 *            The distance away from the origin location that the neighbours
+	 *            should be.
+	 * @return List of <code>MapLocation</code>
+	 */
+	private List<MapLocation> getNeighbours(MapLocation from, int distance) {
+		// Initialise a list to write to
+		List<MapLocation> neighbours = new ArrayList<MapLocation>();
+
+		// Check in each direction and try to add it
+		addNeighbour(neighbours, new MapLocation(from.x - distance, from.y
+				- distance));
+		addNeighbour(neighbours, new MapLocation(from.x - distance, from.y));
+		addNeighbour(neighbours, new MapLocation(from.x - distance, from.y
+				+ distance));
+		addNeighbour(neighbours, new MapLocation(from.x, from.y - distance));
+		addNeighbour(neighbours, new MapLocation(from.x, from.y + distance));
+		addNeighbour(neighbours, new MapLocation(from.x + distance, from.y
+				- distance));
+		addNeighbour(neighbours, new MapLocation(from.x + distance, from.y));
+		addNeighbour(neighbours, new MapLocation(from.x + distance, from.y
+				+ distance));
+
+		// Return the list
+		return neighbours;
+	}
+
+	/**
+	 * Adds a location to a list of locations, if the specified location exists.
+	 * 
+	 * @param neighbours
+	 *            The list of locations.
+	 * @param potentialNeighbour
+	 *            The location to be added to the list
+	 */
+	private void addNeighbour(List<MapLocation> neighbours,
+			MapLocation potentialNeighbour) {
+		// Check if the location's x and y are within the map boundaries
+		if (isXOnMap(potentialNeighbour.x) && isYOnMap(potentialNeighbour.y)) {
+			// Add it to the list
+			neighbours.add(potentialNeighbour);
+		}
+	}
+
+	/**
+	 * Check if an x coordinate is within the boundaries of the current map.
+	 * 
+	 * @param x
+	 *            The x coordinate to check.
+	 * @return Whether or not the coordinate is on the map.
+	 */
+	private boolean isXOnMap(int x) {
+		// Using width because of x
+		return x >= 0 && x < mapWidth;
+	}
+
+	/**
+	 * Check if a y coordinate is within the boundaries of the current map.
+	 * 
+	 * @param y
+	 *            The y coordinate to check.
+	 * @return Whether or not the coordinate is on the map.
+	 */
+	private boolean isYOnMap(int y) {
+		// Using height because of y
+		return y >= 0 && y < mapHeight;
 	}
 }
