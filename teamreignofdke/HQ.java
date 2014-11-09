@@ -1,5 +1,7 @@
 package teamreignofdke;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import battlecode.common.Direction;
@@ -15,6 +17,7 @@ public class HQ extends AbstractRobotType {
 	private char[][] mapRepresentation;
 	private double[][] mapCowGrowth;
 	private double[][] mapPastrRating;
+	private int[][] realDistanceFromHQ;
 	private int height;
 	private int width;
 	private MapLocation myHq;
@@ -68,6 +71,68 @@ public class HQ extends AbstractRobotType {
 		}
 	}
 
+	private void generateRealDistanceMap() {
+		realDistanceFromHQ = new int[height][width];
+		realDistanceFromHQ = evaluateNeighbours(realDistanceFromHQ, myHq);
+		realDistanceFromHQ[myHq.y][myHq.x] = -1;
+	}
+
+	private int[][] evaluateNeighbours(int[][] map, MapLocation current) {
+		if (map[current.y][current.x] != 0) {
+			return map;
+		} else {
+			TerrainTile terrain = rc.senseTerrainTile(new MapLocation(
+					current.x, current.y));
+			if (terrain == TerrainTile.VOID || terrain == TerrainTile.OFF_MAP) {
+				map[current.y][current.x] = -1;
+				return map;
+			}
+		}
+		List<MapLocation> neighbours = getNeighbours(current);
+		for (MapLocation neighbour : neighbours) {
+			if (map[neighbour.y][neighbour.x] == 0) {
+				System.out.println("update distance to "
+						+ (map[current.y][current.x] + 1));
+				map[neighbour.y][neighbour.x] = map[current.y][current.x] + 1;
+			}
+		}
+		for (MapLocation neighbour : neighbours) {
+			// recursion
+			if (isXonMap(neighbour.x) && isYonMap(neighbour.y)) {
+				map = evaluateNeighbours(map, neighbour);
+			}
+		}
+		return map;
+	}
+
+	private boolean isXonMap(int x) {
+		return x >= 0 && x < width;
+	}
+
+	private boolean isYonMap(int y) {
+		return y >= 0 && y < height;
+	}
+
+	private List<MapLocation> getNeighbours(MapLocation from) {
+		List<MapLocation> neighbours = new ArrayList<MapLocation>();
+		addNeighbour(neighbours, new MapLocation(from.x - 1, from.y - 1));
+		addNeighbour(neighbours, new MapLocation(from.x - 1, from.y));
+		addNeighbour(neighbours, new MapLocation(from.x - 1, from.y + 1));
+		addNeighbour(neighbours, new MapLocation(from.x, from.y - 1));
+		addNeighbour(neighbours, new MapLocation(from.x, from.y + 1));
+		addNeighbour(neighbours, new MapLocation(from.x + 1, from.y - 1));
+		addNeighbour(neighbours, new MapLocation(from.x + 1, from.y));
+		addNeighbour(neighbours, new MapLocation(from.x + 1, from.y + 1));
+		return neighbours;
+	}
+
+	private void addNeighbour(List<MapLocation> neighbours,
+			MapLocation potentialNeighbour) {
+		if (isXonMap(potentialNeighbour.x) && isYonMap(potentialNeighbour.y)) {
+			neighbours.add(potentialNeighbour);
+		}
+	}
+
 	private void generatePastrRating() {
 		if (bestForPastr != null) {
 			// already found previously
@@ -118,6 +183,10 @@ public class HQ extends AbstractRobotType {
 				(myHq.y * 3 / 4 + otherHq.y / 4));
 
 		Channel.broadcastBestPastrLocation(rc, temporaryTarget);
+
+		generateRealDistanceMap();
+		printMapAnalysisDistance();
+
 	}
 
 	private void printMap() {
@@ -164,6 +233,18 @@ public class HQ extends AbstractRobotType {
 			System.out.println();
 		}
 		System.out.println("best Pastr Rating at " + bestForPastr.toString());
+		System.out.println("other hq is at " + otherHq.toString());
+	}
+
+	private void printMapAnalysisDistance() {
+		System.out.println("map:");
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				System.out.print(String.format("%03d ",
+						realDistanceFromHQ[y][x]));
+			}
+			System.out.println();
+		}
 		System.out.println("other hq is at " + otherHq.toString());
 	}
 
