@@ -42,6 +42,14 @@ public abstract class PathFinder {
 		return loc.equals(hqEnemLoc) || loc.equals(hqSelfLoc);
 	}
 
+	public boolean isXonMap(int x) {
+		return x >= 0 && x < width;
+	}
+
+	public boolean isYonMap(int y) {
+		return y >= 0 && y < height;
+	}
+
 	public abstract boolean move() throws GameActionException;
 
 	public abstract boolean sneak() throws GameActionException;
