@@ -6,7 +6,7 @@ They should be denoted the following way:
 	- what information has to be communicated to the soldiers
 	- what information does the HQ need from the soldiers to assign this task
 
-
+lalala
 	
 the soldiers choose to perform a task or deny it based on the distance to the target location and the task	
 
