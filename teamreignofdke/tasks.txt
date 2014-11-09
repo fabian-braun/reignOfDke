@@ -18,7 +18,7 @@ the soldiers choose to perform a task or deny it based on the distance to the ta
 	- location of PASTR
 	-
 
-- PREPARE_FOR_ATTACK
+- ACCUMULATE
 	- move to a location close to the target until the swarm at that location has reached a certain size
 	- target location and/or concentration location; number of required soldiers
 	- number of soldiers which have reached the target and are waiting there
@@ -45,7 +45,7 @@ the soldiers choose to perform a task or deny it based on the distance to the ta
 
 - RESCUE_OR_DESTRUCT_PASTR
 	- move to pastr and kill all enemies around. If pastr is close to death kill it yourself.
-	- location where pastr is located
+	- location where pastr is located; pastr's current HP (is broadcasted by pastr)
 	- 
 	
 general needed information from the soldiers for the hq:
