@@ -22,6 +22,11 @@ public class PathFinderMLineBug extends PathFinder {
 			.asList(new Direction[] { Direction.NORTH, Direction.NORTH_EAST,
 					Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
 					Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST });
+	private static final List<Direction> prioDirCounterClockwise = Arrays
+			.asList(new Direction[] { Direction.NORTH, Direction.NORTH_WEST,
+					Direction.WEST, Direction.SOUTH_WEST, Direction.SOUTH,
+					Direction.SOUTH_EAST, Direction.EAST, Direction.NORTH_EAST });
+	private List<Direction> currentTurnDirection = prioDirClockwise;
 
 	public PathFinderMLineBug(RobotController rc) {
 		super(rc);
@@ -30,6 +35,7 @@ public class PathFinderMLineBug extends PathFinder {
 		setTarget(new MapLocation(width / 2, height / 2));
 	}
 
+	@Override
 	public void setTarget(MapLocation target) {
 		obstacleMode = false;
 		this.target = target;
@@ -51,20 +57,27 @@ public class PathFinderMLineBug extends PathFinder {
 	}
 
 	private Direction getNextAroundObstacle() {
-		int nextDirToTry = (prioDirClockwise.indexOf(lastDir) + 8 - 2) % 8;
-		while (!rc.canMove(prioDirClockwise.get(nextDirToTry))) {
+		int nextDirToTry = (currentTurnDirection.indexOf(lastDir) + 8 - 2) % 8;
+		while (!rc.canMove(currentTurnDirection.get(nextDirToTry))) {
 			nextDirToTry++;
 			nextDirToTry %= 8;
 		}
-		return prioDirClockwise.get(nextDirToTry);
+		return currentTurnDirection.get(nextDirToTry);
+	}
 
+	private void decideTurnDirection() {
+		if (rc.getRobot().getID() % 2 < 1) {
+			currentTurnDirection = prioDirClockwise;
+		} else {
+			currentTurnDirection = prioDirCounterClockwise;
+		}
 	}
 
 	private Direction getNextOnMLine() {
 		return rc.getLocation().directionTo(target);
 	}
 
-	public boolean move() throws GameActionException {
+	public Direction getNextDirection() {
 		MapLocation current = rc.getLocation();
 		Direction moveTo;
 		if (obstacleMode) { // move around obstacle
@@ -72,7 +85,7 @@ public class PathFinderMLineBug extends PathFinder {
 			if (mTiles.contains(current)
 					&& PathFinder.distance(current, target) < minDistance) {
 				minDistance = PathFinder.distance(rc.getLocation(), target);
-				System.out.println("mLine found at " + current);
+				// System.out.println("mLine found at " + current);
 				obstacleMode = false;
 				moveTo = getNextOnMLine();
 			} else {
@@ -81,13 +94,21 @@ public class PathFinderMLineBug extends PathFinder {
 		} else { // move on mLine
 			moveTo = getNextOnMLine();
 			if (!rc.canMove(moveTo)) {
-				System.out.println("mLine left at " + rc.getLocation());
+				// System.out.println("mLine left at " + rc.getLocation());
 				obstacleMode = true;
-				lastDir = prioDirClockwise.get((prioDirClockwise
+				decideTurnDirection();
+				lastDir = currentTurnDirection.get((currentTurnDirection
 						.indexOf(moveTo) + 2) % 8);
 				moveTo = getNextAroundObstacle();
 			}
 		}
+		return moveTo;
+
+	}
+
+	@Override
+	public boolean move() throws GameActionException {
+		Direction moveTo = getNextDirection();
 		// TODO: bytecode check and maybe yield
 		if (rc.canMove(moveTo)) {
 			lastDir = moveTo;
@@ -100,7 +121,19 @@ public class PathFinderMLineBug extends PathFinder {
 
 	@Override
 	public boolean sneak() throws GameActionException {
-		// TODO to be implemented...
-		return true;
+		Direction moveTo = getNextDirection();
+		// TODO: bytecode check and maybe yield
+		if (rc.canMove(moveTo)) {
+			lastDir = moveTo;
+			rc.sneak(moveTo);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public MapLocation getTarget() {
+		return target;
 	}
 }

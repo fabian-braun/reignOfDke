@@ -15,12 +15,24 @@ public class Soldier extends AbstractRobotType {
 	private SoldierRole role;
 	private PathFinderSnailTrail pathFinderSnailTrail;
 	private PathFinderMLineBug pathFinderMLineBug;
+	private PathFinderGreedy pathFinderGreedy;
 	MapLocation bestPastrLocation = new MapLocation(0, 0);
+	private Team us;
+	private Team opponent;
+	private boolean fleeMode = false;
+	private boolean kamikazeMode = false;
+	private static final double HEALTH_ABOUT_TO_DIE = 40;
+	private static final double HEALTH_REGENERATED = 50;
 
 	public Soldier(RobotController rc) {
 		super(rc);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see teamreignofdke.AbstractRobotType#act()
+	 */
 	@Override
 	protected void act() throws GameActionException {
 		if (inactive || !rc.isActive()) {
@@ -34,6 +46,7 @@ public class Soldier extends AbstractRobotType {
 			actAttacker();
 			break;
 		case NOISE_TOWER_BUILDER:
+			actNoiseTowerBuilder();
 			break;
 		case PASTR_BUILDER:
 			actPastrBuilder();
@@ -46,8 +59,14 @@ public class Soldier extends AbstractRobotType {
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see teamreignofdke.AbstractRobotType#init()
+	 */
 	@Override
 	protected void init() throws GameActionException {
+		Channel.announceSoldierType(rc, RobotType.SOLDIER);
 		bestPastrLocation = Channel.getBestPastrLocation(rc);
 		role = Channel.requestSoldierRole(rc);
 		rc.setIndicatorString(0, role.toString());
@@ -56,49 +75,77 @@ public class Soldier extends AbstractRobotType {
 		pathFinderMLineBug = new PathFinderMLineBug(rc);
 		pathFinderSnailTrail.setTarget(bestPastrLocation);
 		pathFinderMLineBug.setTarget(bestPastrLocation);
+		pathFinderGreedy = new PathFinderGreedy(rc, randall);
+		us = rc.getTeam();
+		opponent = us.opponent();
 	}
 
+	/**
+	 * Act as an attacker
+	 * 
+	 * @throws GameActionException
+	 */
 	private void actAttacker() throws GameActionException {
-		Team we = rc.getTeam();
-		Team opponent = we.opponent();
-
+		if (kamikaze()) {
+			return;
+		}
 		MapLocation[] nextToAttack = null;
-		// opponent's pastr?
-		MapLocation[] pastrOpponentAll = rc.sensePastrLocations(opponent);
-		if (pastrOpponentAll != null) {
-			nextToAttack = pastrOpponentAll.clone();
+
+		Robot[] soldiersInRange = rc.senseNearbyGameObjects(Robot.class,
+				RobotType.SOLDIER.sensorRadiusSquared, opponent);
+
+		if (notNull(soldiersInRange)) {
+			nextToAttack = new MapLocation[soldiersInRange.length];
+			int k = 0;
+			for (Robot robot : soldiersInRange) {
+				RobotInfo info = rc.senseRobotInfo(robot);
+				if (info.type == RobotType.HQ) {
+					nextToAttack[k] = new MapLocation(Integer.MAX_VALUE / 2,
+							Integer.MAX_VALUE / 2);
+				} else {
+					nextToAttack[k] = info.location;
+				}
+				k++;
+			}
 		} else {
-			// communicating opponents?
-			MapLocation[] robotsOpponentAll = rc
-					.senseBroadcastingRobotLocations(opponent);
-			if (robotsOpponentAll != null) {
-				nextToAttack = robotsOpponentAll.clone();
+			// opponent's pastr?
+			MapLocation[] pastrLocationsOpponent = rc
+					.sensePastrLocations(opponent);
+			if (notNull(pastrLocationsOpponent)) {
+				nextToAttack = pastrLocationsOpponent;
+			} else {
+				// communicating opponents?
+				MapLocation[] robotsOpponentAll = rc
+						.senseBroadcastingRobotLocations(opponent);
+				if (notNull(robotsOpponentAll)) {
+					nextToAttack = robotsOpponentAll;
+				}
 			}
 		}
 
-		if (nextToAttack.length != 0) {
-			boolean shoot = false;
-
-			// attack any pastr in range
+		if (notNull(nextToAttack)) {
 			MapLocation target = nextToAttack[0];
-			for (int i = 0; i < nextToAttack.length; i++) {
-				target = nextToAttack[i];
-				if (rc.canAttackSquare(target)) {
-					rc.attackSquare(target);
-					shoot = true;
+
+			// find closest target
+			int minDistance = Integer.MAX_VALUE;
+			for (int i = 0; i < nextToAttack.length; i += 2) {
+				int distance = PathFinder.distance(nextToAttack[i],
+						rc.getLocation());
+				if (distance < minDistance) {
+					target = nextToAttack[i];
+					minDistance = distance;
+				}
+				if (minDistance < RobotType.SOLDIER.attackRadiusMaxSquared) {
 					break;
 				}
 			}
-
-			if (!shoot) {
-				if (!pathFinderSnailTrail.move()) {
-					for (Direction dir : C.DIRECTIONS) {
-						if (rc.canMove(dir)) {
-							rc.move(dir);
-							break;
-						}
-					}
+			if (rc.canAttackSquare(target)) {
+				rc.attackSquare(target);
+			} else {
+				if (!pathFinderSnailTrail.getTarget().equals(target)) {
+					pathFinderMLineBug.setTarget(target);
 				}
+				pathFinderMLineBug.move();
 			}
 
 		} else {
@@ -106,6 +153,11 @@ public class Soldier extends AbstractRobotType {
 		}
 	}
 
+	/**
+	 * Act as a pastr builder
+	 * 
+	 * @throws GameActionException
+	 */
 	private void actPastrBuilder() throws GameActionException {
 		MapLocation currentLoc = rc.getLocation();
 		if (currentLoc.x == bestPastrLocation.x
@@ -116,10 +168,36 @@ public class Soldier extends AbstractRobotType {
 		}
 	}
 
+	/**
+	 * Act as a noise tower builder.
+	 * 
+	 * @throws GameActionException
+	 */
+	private void actNoiseTowerBuilder() throws GameActionException {
+		// Get our current location
+		MapLocation currentLocation = rc.getLocation();
+		// Check if we are adjacent to the best PASTR location
+		if (currentLocation.isAdjacentTo(bestPastrLocation)) {
+			// Construct our noise tower here
+			rc.construct(RobotType.NOISETOWER);
+		} else {
+			// Move
+			pathFinderMLineBug.move();
+		}
+	}
+
+	/**
+	 * Act as a protector
+	 * 
+	 * @throws GameActionException
+	 */
 	private void actProtector() throws GameActionException {
+		if (flee()) {
+			return;
+		}
 		MapLocation currentLoc = rc.getLocation();
 		if (PathFinder.distance(currentLoc, bestPastrLocation) > 4) {
-			pathFinderSnailTrail.move();
+			pathFinderMLineBug.move();
 		} else {
 			Robot[] nearbyEnemies = rc.senseNearbyGameObjects(Robot.class, 10,
 					rc.getTeam().opponent());
@@ -137,11 +215,92 @@ public class Soldier extends AbstractRobotType {
 					// move randomly
 					Direction moveDirection = C.DIRECTIONS[randall.nextInt(8)];
 					if (rc.canMove(moveDirection)) {
-						rc.move(moveDirection);
+						rc.sneak(moveDirection);
 					}
 				}
 			}
 		}
+	}
 
+	/**
+	 * checks if the current health is lower than HEALTH_ABOUT_TO_DIE. If that
+	 * is true the flee mode is entered. In the flee mode the soldier moves away
+	 * from the closest opponent.
+	 * 
+	 * @return
+	 * @throws GameActionException
+	 */
+	private boolean flee() throws GameActionException {
+		if (rc.getHealth() < HEALTH_ABOUT_TO_DIE && !fleeMode) {
+			fleeMode = true;
+			Robot[] soldiersInRange = rc.senseNearbyGameObjects(Robot.class,
+					RobotType.SOLDIER.sensorRadiusSquared, opponent);
+			MapLocation fleeTo = null;
+			if (notNull(soldiersInRange)) {
+				MapLocation enemyLoc = rc.senseRobotInfo(soldiersInRange[0]).location;
+				MapLocation myLoc = rc.getLocation();
+				fleeTo = new MapLocation(myLoc.x - (enemyLoc.x - myLoc.x),
+						myLoc.x - (enemyLoc.x - myLoc.x));
+				System.out.println("Flee from " + myLoc + " to " + fleeTo
+						+ " because of enemy at " + enemyLoc);
+			} else {
+				fleeTo = rc.senseHQLocation();
+			}
+			pathFinderGreedy.setTarget(fleeTo);
+			rc.setIndicatorString(1, "AAAAAAAAAAAAAAAH");
+		} else if (rc.getHealth() > HEALTH_REGENERATED && fleeMode) {
+			fleeMode = false;
+			return fleeMode;
+		} else if (fleeMode) {
+			pathFinderGreedy.move();
+		}
+		return fleeMode;
+	}
+
+	/**
+	 * checks if the current health is lower than HEALTH_ABOUT_TO_DIE. If that
+	 * is true the kamikaze mode is entered. In the kamikaze mode the soldier
+	 * moves on tile in the direction of the opponent and self destructs itself.
+	 * 
+	 * @return
+	 * @throws GameActionException
+	 */
+	private boolean kamikaze() throws GameActionException {
+		if (rc.getHealth() < HEALTH_ABOUT_TO_DIE && !kamikazeMode) {
+			kamikazeMode = true;
+			Robot[] soldiersInRange = rc.senseNearbyGameObjects(Robot.class,
+					RobotType.SOLDIER.sensorRadiusSquared, opponent);
+			MapLocation fleeTo = null;
+			if (notNull(soldiersInRange)) {
+				fleeTo = rc.senseRobotInfo(soldiersInRange[0]).location;
+			} else {
+				rc.selfDestruct();
+			}
+			pathFinderGreedy.setTarget(fleeTo);
+			rc.setIndicatorString(1, "AAAAAAAAAAAAAAAH");
+		} else if (rc.getHealth() > HEALTH_REGENERATED && kamikazeMode) {
+			kamikazeMode = false;
+			return kamikazeMode;
+		} else if (kamikazeMode) {
+			pathFinderGreedy.move();
+			rc.selfDestruct();
+		}
+		return kamikazeMode;
+	}
+
+	/**
+	 * checks if the given array is null or empty
+	 * 
+	 * @param array
+	 * @return
+	 */
+	public static final <T> boolean notNull(T[] array) {
+		if (array == null) {
+			return false;
+		}
+		if (array.length < 1) {
+			return false;
+		}
+		return true;
 	}
 }

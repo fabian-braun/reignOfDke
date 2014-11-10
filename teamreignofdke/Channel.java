@@ -26,6 +26,12 @@ public class Channel {
 	// channel is used for any nonsense info
 	public static final int chMisc = 0;
 
+	/**
+	 * broadcast the location which is optimal for herding cows
+	 * 
+	 * @param rc
+	 * @param bestLocation
+	 */
 	public static void broadcastBestPastrLocation(RobotController rc,
 			MapLocation bestLocation) {
 		int data = bestLocation.x * 1000 + bestLocation.y;
@@ -36,6 +42,12 @@ public class Channel {
 		}
 	}
 
+	/**
+	 * retreive the location which is optimal for herding cows
+	 * 
+	 * @param rc
+	 * @return
+	 */
 	public static MapLocation getBestPastrLocation(RobotController rc) {
 		int data = 0;
 		try {
@@ -47,6 +59,13 @@ public class Channel {
 		return bestLocation;
 	}
 
+	/**
+	 * this method should be called by the control unit. It overrides the
+	 * SoldierRole which is incorporated by the next produced unit
+	 * 
+	 * @param rc
+	 * @param role
+	 */
 	public static void demandSoldierRole(RobotController rc, SoldierRole role) {
 		try {
 			rc.broadcast(chNextSoldierRole, role.ordinal());
@@ -55,6 +74,12 @@ public class Channel {
 		}
 	}
 
+	/**
+	 * this method returns the number of soldiers for each {@link SoldierRole}
+	 * 
+	 * @param rc
+	 * @return
+	 */
 	public static Map<SoldierRole, Integer> getSoldierRoleCount(
 			RobotController rc) {
 		HashMap<SoldierRole, Integer> result = new HashMap<SoldierRole, Integer>();
@@ -75,6 +100,12 @@ public class Channel {
 		return result;
 	}
 
+	/**
+	 * this method returns the number of robots for each {@link RobotType}
+	 * 
+	 * @param rc
+	 * @return
+	 */
 	public static Map<RobotType, Integer> getRobotTypeCount(RobotController rc) {
 		HashMap<RobotType, Integer> result = new HashMap<RobotType, Integer>();
 		try {
@@ -90,6 +121,13 @@ public class Channel {
 		return result;
 	}
 
+	/**
+	 * this method should be used by soldiers. It returns the Role which should
+	 * be incorporated by the requesting soldier.
+	 * 
+	 * @param rc
+	 * @return
+	 */
 	public static SoldierRole requestSoldierRole(RobotController rc) {
 		try {
 			int ordinal = rc.readBroadcast(chNextSoldierRole);
@@ -102,6 +140,13 @@ public class Channel {
 		return SoldierRole.ATTACKER;
 	}
 
+	/**
+	 * this method should be used by soldiers. They have to announce the
+	 * {@link SoldierRole} that they incorporate.
+	 * 
+	 * @param rc
+	 * @param role
+	 */
 	public static void announceSoldierRole(RobotController rc, SoldierRole role) {
 		int chCurrent;
 		switch (role) {
@@ -124,12 +169,18 @@ public class Channel {
 		}
 	}
 
+	/**
+	 * this method should be used by any robot. They have to announce the
+	 * {@link RobotType} that they incorporate.
+	 * 
+	 * @param rc
+	 * @param role
+	 */
 	public static void announceSoldierType(RobotController rc, RobotType type) {
 		int chCurrent;
 		switch (type) {
-		case HQ:
-			// should never happen... otherwise misc channel
-			chCurrent = chMisc;
+		case SOLDIER:
+			chCurrent = chCurrentSoldierCount;
 			break;
 		case NOISETOWER:
 			chCurrent = chCurrentNoiseTowerCount;
@@ -137,8 +188,9 @@ public class Channel {
 		case PASTR:
 			chCurrent = chCurrentPastrCount;
 			break;
-		default: // case SOLDIER
-			chCurrent = chCurrentSoldierCount;
+		default: // case HQ
+			// should never happen... otherwise misc channel
+			chCurrent = chMisc;
 		}
 		try {
 			rc.broadcast(chCurrent, rc.readBroadcast(chCurrent) + 1);
