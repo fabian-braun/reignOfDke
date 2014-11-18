@@ -79,7 +79,7 @@ public class HQ extends AbstractRobotType {
 		Channel.broadcastBestPastrLocation(rc, temporaryTarget);
 
 		mapAnalyzer = new MapAnalyzer(rc, myHq, otherHq, height, width);
-		mapAnalyzer.generateRealDistanceMap();
-		mapAnalyzer.printMapAnalysisDistance();
+		// mapAnalyzer.generateRealDistanceMap();
+		// mapAnalyzer.printMapAnalysisDistance();
 	}
 }
