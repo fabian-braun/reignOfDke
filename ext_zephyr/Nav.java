@@ -1,6 +1,13 @@
-package zephyr;
+package ext_zephyr;
 
-import battlecode.common.*;
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.Robot;
+import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
+import battlecode.common.TerrainTile;
 
 public class Nav {
 	private static MapLocation dest;
@@ -12,13 +19,11 @@ public class Nav {
 	private static boolean fightIsWinningDecision;
 
 	private enum BugState {
-		DIRECT,
-		BUG
+		DIRECT, BUG
 	}
 
 	private enum WallSide {
-		LEFT,
-		RIGHT
+		LEFT, RIGHT
 	}
 
 	private static BugState bugState;
@@ -37,7 +42,8 @@ public class Nav {
 		dirs[0] = toDest;
 		Direction dirLeft = toDest.rotateLeft();
 		Direction dirRight = toDest.rotateRight();
-		if (here.add(dirLeft).distanceSquaredTo(dest) < here.add(dirRight).distanceSquaredTo(dest)) {
+		if (here.add(dirLeft).distanceSquaredTo(dest) < here.add(dirRight)
+				.distanceSquaredTo(dest)) {
 			dirs[1] = dirLeft;
 			dirs[2] = dirRight;
 		} else {
@@ -46,11 +52,20 @@ public class Nav {
 		}
 		for (Direction dir : dirs) {
 			if (bestDir != null) {
-				if (rc.senseTerrainTile(here.add(dir)) != TerrainTile.ROAD) continue; // only bother with suboptimal directions if they have roads
+				if (rc.senseTerrainTile(here.add(dir)) != TerrainTile.ROAD)
+					continue; // only bother with suboptimal directions if they
+								// have roads
 			}
 			if (canMoveSafely(dir)) {
 				if (moveIsAllowedByEngagementRules(dir)) {
-					if (rc.senseTerrainTile(here.add(dir)) == TerrainTile.ROAD) { // if we found a road, go there immediately
+					if (rc.senseTerrainTile(here.add(dir)) == TerrainTile.ROAD) { // if
+																					// we
+																					// found
+																					// a
+																					// road,
+																					// go
+																					// there
+																					// immediately
 						move(dir);
 						return true;
 					}
@@ -75,15 +90,22 @@ public class Nav {
 		// try to intelligently choose on which side we will keep the wall
 		Direction leftTryDir = bugLastMoveDir.rotateLeft();
 		for (int i = 0; i < 3; i++) {
-			if (!canMoveSafely(leftTryDir) || !moveIsAllowedByEngagementRules(leftTryDir)) leftTryDir = leftTryDir.rotateLeft();
-			else break;
+			if (!canMoveSafely(leftTryDir)
+					|| !moveIsAllowedByEngagementRules(leftTryDir))
+				leftTryDir = leftTryDir.rotateLeft();
+			else
+				break;
 		}
 		Direction rightTryDir = bugLastMoveDir.rotateRight();
 		for (int i = 0; i < 3; i++) {
-			if (!canMoveSafely(rightTryDir) || !moveIsAllowedByEngagementRules(rightTryDir)) rightTryDir = rightTryDir.rotateRight();
-			else break;
+			if (!canMoveSafely(rightTryDir)
+					|| !moveIsAllowedByEngagementRules(rightTryDir))
+				rightTryDir = rightTryDir.rotateRight();
+			else
+				break;
 		}
-		if (dest.distanceSquaredTo(rc.getLocation().add(leftTryDir)) < dest.distanceSquaredTo(rc.getLocation().add(rightTryDir))) {
+		if (dest.distanceSquaredTo(rc.getLocation().add(leftTryDir)) < dest
+				.distanceSquaredTo(rc.getLocation().add(rightTryDir))) {
 			bugWallSide = WallSide.RIGHT;
 		} else {
 			bugWallSide = WallSide.LEFT;
@@ -94,8 +116,10 @@ public class Nav {
 		bugMovesSinceSeenObstacle++;
 		Direction dir = bugLookStartDir;
 		for (int i = 8; i-- > 0;) {
-			if (canMoveSafely(dir) && moveIsAllowedByEngagementRules(dir)) return dir;
-			dir = (bugWallSide == WallSide.LEFT ? dir.rotateRight() : dir.rotateLeft());
+			if (canMoveSafely(dir) && moveIsAllowedByEngagementRules(dir))
+				return dir;
+			dir = (bugWallSide == WallSide.LEFT ? dir.rotateRight() : dir
+					.rotateLeft());
 			bugMovesSinceSeenObstacle = 0;
 		}
 		return null;
@@ -111,9 +135,11 @@ public class Nav {
 
 	private static int calculateBugRotation(Direction moveDir) {
 		if (bugWallSide == WallSide.LEFT) {
-			return numRightRotations(bugLookStartDir, moveDir) - numRightRotations(bugLookStartDir, bugLastMoveDir);
+			return numRightRotations(bugLookStartDir, moveDir)
+					- numRightRotations(bugLookStartDir, bugLastMoveDir);
 		} else {
-			return numLeftRotations(bugLookStartDir, moveDir) - numLeftRotations(bugLookStartDir, bugLastMoveDir);
+			return numLeftRotations(bugLookStartDir, moveDir)
+					- numLeftRotations(bugLookStartDir, bugLastMoveDir);
 		}
 	}
 
@@ -121,14 +147,19 @@ public class Nav {
 		move(dir);
 		bugRotationCount += calculateBugRotation(dir);
 		bugLastMoveDir = dir;
-		// if (bugWallSide == WallSide.LEFT) bugLookStartDir = dir.isDiagonal() ? dir.rotateLeft().rotateLeft() : dir.rotateLeft();
-		// else bugLookStartDir = dir.isDiagonal() ? dir.rotateRight().rotateRight() : dir.rotateRight();
-		if (bugWallSide == WallSide.LEFT) bugLookStartDir = dir.rotateLeft().rotateLeft();
-		else bugLookStartDir = dir.rotateRight().rotateRight();
+		// if (bugWallSide == WallSide.LEFT) bugLookStartDir = dir.isDiagonal()
+		// ? dir.rotateLeft().rotateLeft() : dir.rotateLeft();
+		// else bugLookStartDir = dir.isDiagonal() ?
+		// dir.rotateRight().rotateRight() : dir.rotateRight();
+		if (bugWallSide == WallSide.LEFT)
+			bugLookStartDir = dir.rotateLeft().rotateLeft();
+		else
+			bugLookStartDir = dir.rotateRight().rotateRight();
 	}
 
 	private static boolean detectBugIntoEdge() {
-		if (rc.senseTerrainTile(rc.getLocation().add(bugLastMoveDir)) != TerrainTile.OFF_MAP) return false;
+		if (rc.senseTerrainTile(rc.getLocation().add(bugLastMoveDir)) != TerrainTile.OFF_MAP)
+			return false;
 
 		if (bugLastMoveDir.isDiagonal()) {
 			if (bugWallSide == WallSide.LEFT) {
@@ -142,7 +173,8 @@ public class Nav {
 	}
 
 	private static void reverseBugWallFollowDir() throws GameActionException {
-		bugWallSide = (bugWallSide == WallSide.LEFT ? WallSide.RIGHT : WallSide.LEFT);
+		bugWallSide = (bugWallSide == WallSide.LEFT ? WallSide.RIGHT
+				: WallSide.LEFT);
 		startBug();
 	}
 
@@ -157,8 +189,10 @@ public class Nav {
 	}
 
 	private static boolean canEndBug() {
-		if (bugMovesSinceSeenObstacle >= 4) return true;
-		return (bugRotationCount <= 0 || bugRotationCount >= 8) && rc.getLocation().distanceSquaredTo(dest) <= bugStartDistSq;
+		if (bugMovesSinceSeenObstacle >= 4)
+			return true;
+		return (bugRotationCount <= 0 || bugRotationCount >= 8)
+				&& rc.getLocation().distanceSquaredTo(dest) <= bugStartDistSq;
 	}
 
 	private static void bugTo(MapLocation theDest) throws GameActionException {
@@ -188,22 +222,34 @@ public class Nav {
 		}
 	}
 
-	private static boolean tryMoveBfs(MapLocation here) throws GameActionException {
+	private static boolean tryMoveBfs(MapLocation here)
+			throws GameActionException {
 		Direction bfsDir = Bfs.readResult(here, dest);
 
-		if (bfsDir == null) return false;
+		if (bfsDir == null)
+			return false;
 
-		Direction[] dirs = new Direction[] { bfsDir, bfsDir.rotateLeft(), bfsDir.rotateRight() };
+		Direction[] dirs = new Direction[] { bfsDir, bfsDir.rotateLeft(),
+				bfsDir.rotateRight() };
 		Direction bestDir = null;
 		for (int i = 0; i < dirs.length; i++) {
 			if (bestDir != null) {
 				// Only consider suboptimal directions if they have roads
-				if (rc.senseTerrainTile(here.add(dirs[i])) != TerrainTile.ROAD) continue;
+				if (rc.senseTerrainTile(here.add(dirs[i])) != TerrainTile.ROAD)
+					continue;
 			}
 			Direction dir = dirs[i];
 			if (canMoveSafely(dir)) {
 				if (moveIsAllowedByEngagementRules(dir)) {
-					if (rc.senseTerrainTile(here.add(dir)) == TerrainTile.ROAD) { // then this direction has a road; go this way
+					if (rc.senseTerrainTile(here.add(dir)) == TerrainTile.ROAD) { // then
+																					// this
+																					// direction
+																					// has
+																					// a
+																					// road;
+																					// go
+																					// this
+																					// way
 						move(dir);
 						return true;
 					}
@@ -225,16 +271,16 @@ public class Nav {
 	}
 
 	public enum Sneak {
-		YES,
-		NO
+		YES, NO
 	}
 
 	public enum Engage {
-		YES,
-		NO
+		YES, NO
 	}
 
-	public static void goTo(MapLocation theDest, Sneak theSneak, Engage theEngage, int[] theNumEnemiesAttackingMoveDirs) throws GameActionException {
+	public static void goTo(MapLocation theDest, Sneak theSneak,
+			Engage theEngage, int[] theNumEnemiesAttackingMoveDirs)
+			throws GameActionException {
 		// Debug.indicate("nav", 2, "goTo " + theDest.toString());
 
 		sneak = (theSneak == Sneak.YES);
@@ -247,53 +293,68 @@ public class Nav {
 		if (!theDest.equals(dest)) {
 			dest = theDest;
 			bugState = BugState.DIRECT;
-			// Debug.indicateAppend("nav", 1, "new dest: resetting bug to direct; ");
+			// Debug.indicateAppend("nav", 1,
+			// "new dest: resetting bug to direct; ");
 		}
 
 		MapLocation here = rc.getLocation();
 
-		if (here.equals(theDest)) return;
+		if (here.equals(theDest))
+			return;
 
-		if (!rc.isActive()) return;
+		if (!rc.isActive())
+			return;
 
 		if (tryMoveBfs(here)) {
 			bugState = BugState.DIRECT; // reset bug
-//			Debug.indicate("nav", 0, "using bfs");
+			// Debug.indicate("nav", 0, "using bfs");
 			return;
 		}
 
-//		Debug.indicate("nav", 0, "using bug");
+		// Debug.indicate("nav", 0, "using bug");
 		bugTo(dest);
 	}
 
 	private static void move(Direction dir) throws GameActionException {
 		if (sneak) {
-//			Debug.indicate("sneak", 1, "Nav.move sneaking");
+			// Debug.indicate("sneak", 1, "Nav.move sneaking");
 			rc.sneak(dir);
 		} else {
-//			Debug.indicate("sneak", 1, "Nav.move moving regularly");
+			// Debug.indicate("sneak", 1, "Nav.move moving regularly");
 			rc.move(dir);
 		}
 	}
 
 	private static boolean canMoveSafely(Direction dir) {
-		return rc.canMove(dir) && !Bot.isInTheirHQAttackRange(rc.getLocation().add(dir));
+		return rc.canMove(dir)
+				&& !Bot.isInTheirHQAttackRange(rc.getLocation().add(dir));
 	}
 
-	private static boolean moveIsAllowedByEngagementRules(Direction dir) throws GameActionException {
-		if (numEnemiesAttackingMoveDirs[dir.ordinal()] == 0) return true;
-		if (!engage) return false;
+	private static boolean moveIsAllowedByEngagementRules(Direction dir)
+			throws GameActionException {
+		if (numEnemiesAttackingMoveDirs[dir.ordinal()] == 0)
+			return true;
+		if (!engage)
+			return false;
 
-		if (fightDecisionIsCached) return fightIsWinningDecision;
+		if (fightDecisionIsCached)
+			return fightIsWinningDecision;
 
-		Robot[] allEngagedEnemies = rc.senseNearbyGameObjects(Robot.class, rc.getLocation().add(dir), RobotType.SOLDIER.attackRadiusMaxSquared, rc.getTeam()
-				.opponent());
-		RobotInfo anEngagedEnemy = Util.findANonConstructingSoldier(allEngagedEnemies, rc);
-		if (anEngagedEnemy == null) return true;
+		Robot[] allEngagedEnemies = rc.senseNearbyGameObjects(Robot.class, rc
+				.getLocation().add(dir),
+				RobotType.SOLDIER.attackRadiusMaxSquared, rc.getTeam()
+						.opponent());
+		RobotInfo anEngagedEnemy = Util.findANonConstructingSoldier(
+				allEngagedEnemies, rc);
+		if (anEngagedEnemy == null)
+			return true;
 
-		int numNearbyAllies = 1 + Util.countNonConstructingSoldiers(rc.senseNearbyGameObjects(Robot.class, anEngagedEnemy.location, 29, rc.getTeam()), rc);
-		int numNearbyEnemies = Util.countNonConstructingSoldiers(rc.senseNearbyGameObjects(Robot.class, anEngagedEnemy.location, 49, rc.getTeam().opponent()),
-				rc);
+		int numNearbyAllies = 1 + Util.countNonConstructingSoldiers(rc
+				.senseNearbyGameObjects(Robot.class, anEngagedEnemy.location,
+						29, rc.getTeam()), rc);
+		int numNearbyEnemies = Util.countNonConstructingSoldiers(rc
+				.senseNearbyGameObjects(Robot.class, anEngagedEnemy.location,
+						49, rc.getTeam().opponent()), rc);
 		boolean ret = numNearbyAllies > numNearbyEnemies;
 		fightIsWinningDecision = ret;
 		fightDecisionIsCached = true;

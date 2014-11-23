@@ -1,26 +1,29 @@
-package zephyr;
+package ext_zephyr;
 
-import battlecode.common.*;
+import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
 
 public enum MessageBoard {
-	RALLY_LOC(GameConstants.BROADCAST_MAX_CHANNELS - 1),
-	RALLY_GOAL(GameConstants.BROADCAST_MAX_CHANNELS - 2),
-//	ROUND_KILL_COUNT(GameConstants.BROADCAST_MAX_CHANNELS - 3),
-	SPAWN_COUNT(GameConstants.BROADCAST_MAX_CHANNELS - 4),
-	STRATEGY(GameConstants.BROADCAST_MAX_CHANNELS - 5),
-	PASTR_DISTRESS_SIGNAL(GameConstants.BROADCAST_MAX_CHANNELS - 6),
-	SELF_DESTRUCT_LOCKOUT_ID(GameConstants.BROADCAST_MAX_CHANNELS - 7),
-	SELF_DESTRUCT_LOCKOUT_ROUND(GameConstants.BROADCAST_MAX_CHANNELS - 8),
-	NUM_PASTR_LOCATIONS(GameConstants.BROADCAST_MAX_CHANNELS - 9),
-	NUM_SUPPRESSORS(GameConstants.BROADCAST_MAX_CHANNELS - 10),
-	BUILD_PASTRS_FAST(GameConstants.BROADCAST_MAX_CHANNELS - 11),
-	COLLAPSE_TO_PASTR_SIGNAL(GameConstants.BROADCAST_MAX_CHANNELS - 12),
-	BEST_PASTR_LOCATIONS(GameConstants.BROADCAST_MAX_CHANNELS - 30),
-	TOWER_BUILDER_ROBOT_IDS(GameConstants.BROADCAST_MAX_CHANNELS - 40),
-	PASTR_BUILDER_ROBOT_IDS(GameConstants.BROADCAST_MAX_CHANNELS - 50),
-	SUPPRESSOR_TARGET_LOCATIONS(GameConstants.BROADCAST_MAX_CHANNELS - 60),
-	SUPPRESSOR_BUILDER_ROBOT_IDS(GameConstants.BROADCAST_MAX_CHANNELS - 70),
-	SUPPRESSOR_JOBS_FINISHED(GameConstants.BROADCAST_MAX_CHANNELS - 80);
+	RALLY_LOC(GameConstants.BROADCAST_MAX_CHANNELS - 1), RALLY_GOAL(
+			GameConstants.BROADCAST_MAX_CHANNELS - 2),
+	// ROUND_KILL_COUNT(GameConstants.BROADCAST_MAX_CHANNELS - 3),
+	SPAWN_COUNT(GameConstants.BROADCAST_MAX_CHANNELS - 4), STRATEGY(
+			GameConstants.BROADCAST_MAX_CHANNELS - 5), PASTR_DISTRESS_SIGNAL(
+			GameConstants.BROADCAST_MAX_CHANNELS - 6), SELF_DESTRUCT_LOCKOUT_ID(
+			GameConstants.BROADCAST_MAX_CHANNELS - 7), SELF_DESTRUCT_LOCKOUT_ROUND(
+			GameConstants.BROADCAST_MAX_CHANNELS - 8), NUM_PASTR_LOCATIONS(
+			GameConstants.BROADCAST_MAX_CHANNELS - 9), NUM_SUPPRESSORS(
+			GameConstants.BROADCAST_MAX_CHANNELS - 10), BUILD_PASTRS_FAST(
+			GameConstants.BROADCAST_MAX_CHANNELS - 11), COLLAPSE_TO_PASTR_SIGNAL(
+			GameConstants.BROADCAST_MAX_CHANNELS - 12), BEST_PASTR_LOCATIONS(
+			GameConstants.BROADCAST_MAX_CHANNELS - 30), TOWER_BUILDER_ROBOT_IDS(
+			GameConstants.BROADCAST_MAX_CHANNELS - 40), PASTR_BUILDER_ROBOT_IDS(
+			GameConstants.BROADCAST_MAX_CHANNELS - 50), SUPPRESSOR_TARGET_LOCATIONS(
+			GameConstants.BROADCAST_MAX_CHANNELS - 60), SUPPRESSOR_BUILDER_ROBOT_IDS(
+			GameConstants.BROADCAST_MAX_CHANNELS - 70), SUPPRESSOR_JOBS_FINISHED(
+			GameConstants.BROADCAST_MAX_CHANNELS - 80);
 
 	public static void setDefaultChannelValues() throws GameActionException {
 		RALLY_LOC.writeMapLocation(null);
@@ -80,14 +83,18 @@ public enum MessageBoard {
 	}
 
 	public void writeMapLocation(MapLocation loc) throws GameActionException {
-		int data = (loc == null ? -999 : loc.x * GameConstants.MAP_MAX_HEIGHT + loc.y);
+		int data = (loc == null ? -999 : loc.x * GameConstants.MAP_MAX_HEIGHT
+				+ loc.y);
 		writeInt(data);
 	}
 
 	public MapLocation readMapLocation() throws GameActionException {
 		int data = readInt();
-		if (data == -999) return null;
-		else return new MapLocation(data / GameConstants.MAP_MAX_HEIGHT, data % GameConstants.MAP_MAX_HEIGHT);
+		if (data == -999)
+			return null;
+		else
+			return new MapLocation(data / GameConstants.MAP_MAX_HEIGHT, data
+					% GameConstants.MAP_MAX_HEIGHT);
 	}
 
 	public void writeStrategy(Strategy s) throws GameActionException {
@@ -106,18 +113,25 @@ public enum MessageBoard {
 		return BotHQ.RallyGoal.values()[readInt()];
 	}
 
-	public void writeToMapLocationList(int index, MapLocation loc) throws GameActionException {
-		int data = (loc == null ? -999 : loc.x * GameConstants.MAP_MAX_HEIGHT + loc.y);
+	public void writeToMapLocationList(int index, MapLocation loc)
+			throws GameActionException {
+		int data = (loc == null ? -999 : loc.x * GameConstants.MAP_MAX_HEIGHT
+				+ loc.y);
 		rc.broadcast(channel + index, data);
 	}
 
-	public MapLocation readFromMapLocationList(int index) throws GameActionException {
+	public MapLocation readFromMapLocationList(int index)
+			throws GameActionException {
 		int data = rc.readBroadcast(channel + index);
-		if (data == -999) return null;
-		else return new MapLocation(data / GameConstants.MAP_MAX_HEIGHT, data % GameConstants.MAP_MAX_HEIGHT);
+		if (data == -999)
+			return null;
+		else
+			return new MapLocation(data / GameConstants.MAP_MAX_HEIGHT, data
+					% GameConstants.MAP_MAX_HEIGHT);
 	}
 
-	public void writeToBooleanList(int index, boolean b) throws GameActionException {
+	public void writeToBooleanList(int index, boolean b)
+			throws GameActionException {
 		rc.broadcast(channel + index, b ? 1 : 0);
 	}
 
@@ -137,7 +151,8 @@ public enum MessageBoard {
 		return rc.readBroadcast(channel + index) == rc.getRobot().getID();
 	}
 
-	public boolean checkIfAssignmentUnowned(int index) throws GameActionException {
+	public boolean checkIfAssignmentUnowned(int index)
+			throws GameActionException {
 		return rc.readBroadcast(channel + index) == -1;
 	}
 

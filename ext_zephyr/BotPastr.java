@@ -1,6 +1,10 @@
-package zephyr;
+package ext_zephyr;
 
-import battlecode.common.*;
+import battlecode.common.Clock;
+import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
+import battlecode.common.RobotType;
 
 public class BotPastr extends Bot {
 	public static void loop(RobotController theRC) throws Exception {
@@ -15,14 +19,17 @@ public class BotPastr extends Bot {
 		}
 	}
 
-	protected static void init(RobotController theRC) throws GameActionException {
+	protected static void init(RobotController theRC)
+			throws GameActionException {
 		Bot.init(theRC);
 		// Debug.init(theRC, "pages");
 
-		// claim the assignment to build this pastr so others know not to build it
+		// claim the assignment to build this pastr so others know not to build
+		// it
 		int numPastrLocations = MessageBoard.NUM_PASTR_LOCATIONS.readInt();
 		for (int i = 0; i < numPastrLocations; i++) {
-			MapLocation pastrLoc = MessageBoard.BEST_PASTR_LOCATIONS.readFromMapLocationList(i);
+			MapLocation pastrLoc = MessageBoard.BEST_PASTR_LOCATIONS
+					.readFromMapLocationList(i);
 			if (rc.getLocation().equals(pastrLoc)) {
 				MessageBoard.PASTR_BUILDER_ROBOT_IDS.claimAssignment(i);
 				break;
@@ -34,7 +41,8 @@ public class BotPastr extends Bot {
 
 	private static void turn() throws GameActionException {
 		if (rc.getHealth() < lastHealth) {
-			MessageBoard.COLLAPSE_TO_PASTR_SIGNAL.writeInt(Clock.getRoundNum() + 30);
+			MessageBoard.COLLAPSE_TO_PASTR_SIGNAL
+					.writeInt(Clock.getRoundNum() + 30);
 		}
 		lastHealth = rc.getHealth();
 
@@ -46,7 +54,8 @@ public class BotPastr extends Bot {
 		int bytecodeLimit = 9000;
 		MapLocation[] enemyPastrs = rc.sensePastrLocations(them);
 		for (int i = 0; i < enemyPastrs.length; i++) {
-			if (Clock.getBytecodeNum() > bytecodeLimit) break;
+			if (Clock.getBytecodeNum() > bytecodeLimit)
+				break;
 			Bfs.work(enemyPastrs[i], Bfs.PRIORITY_LOW, bytecodeLimit);
 		}
 	}

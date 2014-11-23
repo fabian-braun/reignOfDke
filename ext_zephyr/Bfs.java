@@ -1,6 +1,12 @@
-package zephyr;
+package ext_zephyr;
 
-import battlecode.common.*;
+import battlecode.common.Clock;
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
+import battlecode.common.TerrainTile;
 
 public class Bfs {
 
@@ -24,17 +30,25 @@ public class Bfs {
 	public static final int PRIORITY_LOW = 1;
 
 	// Page allocation:
-	// From time to time various different robots will want to use the Bfs class to
-	// calculate pathing information for various different destinations. In each case, we need
+	// From time to time various different robots will want to use the Bfs class
+	// to
+	// calculate pathing information for various different destinations. In each
+	// case, we need
 	// to be able to answer the following questions:
-	// - Does a complete, undamaged pathfinding map already exist in some page for the specified destination?
+	// - Does a complete, undamaged pathfinding map already exist in some page
+	// for the specified destination?
 	// If so, no point doing any more work on that destination.
-	// - Is there another robot that is at this very moment computing pathing information for the specified destination?
+	// - Is there another robot that is at this very moment computing pathing
+	// information for the specified destination?
 	// If so, no point duplicating their work
-	// - If no complete undamaged map exists and no other robot is working on the specified destination, is
-	// there a free page that can be used to build a map for the specified destination? By "free" we mean a
-	// page that (a) is not at this very moment being added to by another robot and (b) does not contain
-	// pathing information for a destination more important than the specified one.
+	// - If no complete undamaged map exists and no other robot is working on
+	// the specified destination, is
+	// there a free page that can be used to build a map for the specified
+	// destination? By "free" we mean a
+	// page that (a) is not at this very moment being added to by another robot
+	// and (b) does not contain
+	// pathing information for a destination more important than the specified
+	// one.
 	// If such a free page exists, we can work on it.
 
 	// metadata format:
@@ -44,9 +58,12 @@ public class Bfs {
 	// rrrr = round last updated
 	// xx = dest x coordinate
 	// yy = dest y coordinate
-	private static void writePageMetadata(int page, int roundLastUpdated, MapLocation dest, int priority, boolean finished) throws GameActionException {
+	private static void writePageMetadata(int page, int roundLastUpdated,
+			MapLocation dest, int priority, boolean finished)
+			throws GameActionException {
 		int channel = pageMetadataBaseChannel + page;
-		int data = (finished ? 1000000000 : 0) + 100000000 * priority + 10000 * roundLastUpdated + MAP_HEIGHT * dest.x + dest.y;
+		int data = (finished ? 1000000000 : 0) + 100000000 * priority + 10000
+				* roundLastUpdated + MAP_HEIGHT * dest.x + dest.y;
 		rc.broadcast(channel, data);
 	}
 
@@ -73,11 +90,14 @@ public class Bfs {
 		return data;
 	}
 
-	private static int findFreePage(MapLocation dest, int priority) throws GameActionException {
+	private static int findFreePage(MapLocation dest, int priority)
+			throws GameActionException {
 		// see if we can reuse a page we used before
 		if (dest.equals(previousDest) && previousPage != -1) {
 			int previousPageMetadata = readPageMetadata(previousPage);
-			if (getMetadataRoundLastUpdated(previousPageMetadata) == previousRoundWorked && getMetadataDestination(previousPageMetadata).equals(dest)) {
+			if (getMetadataRoundLastUpdated(previousPageMetadata) == previousRoundWorked
+					&& getMetadataDestination(previousPageMetadata)
+							.equals(dest)) {
 				if (getMetadataIsFinished(previousPageMetadata)) {
 					return -1; // we're done! don't do any work!
 				} else {
@@ -86,8 +106,10 @@ public class Bfs {
 			}
 		}
 
-		// Check to see if anyone else is working on this destination. If so, don't bother doing anything.
-		// But as we loop over pages, look for the page that hasn't been touched in the longest time
+		// Check to see if anyone else is working on this destination. If so,
+		// don't bother doing anything.
+		// But as we loop over pages, look for the page that hasn't been touched
+		// in the longest time
 		int lastRound = Clock.getRoundNum() - 1;
 		int oldestPage = -1;
 		int oldestPageRoundUpdated = 999999;
@@ -113,23 +135,29 @@ public class Bfs {
 			}
 		}
 
-		// No one else is working on our dest. If we found an inactive page, use that one.
-		if (oldestPage != -1 && oldestPageRoundUpdated < lastRound) return oldestPage;
+		// No one else is working on our dest. If we found an inactive page, use
+		// that one.
+		if (oldestPage != -1 && oldestPageRoundUpdated < lastRound)
+			return oldestPage;
 
-		// If there aren't any inactive pages, and we have high priority, just trash page 0:
-		if (priority == PRIORITY_HIGH) return 0;
+		// If there aren't any inactive pages, and we have high priority, just
+		// trash page 0:
+		if (priority == PRIORITY_HIGH)
+			return 0;
 
 		// otherwise, give up:
 		return -1;
 	}
 
 	// Set up the queue
-	private static MapLocation[] locQueue = new MapLocation[GameConstants.MAP_MAX_WIDTH * GameConstants.MAP_MAX_HEIGHT];
+	private static MapLocation[] locQueue = new MapLocation[GameConstants.MAP_MAX_WIDTH
+			* GameConstants.MAP_MAX_HEIGHT];
 	private static int locQueueHead = 0;
 	private static int locQueueTail = 0;
 	private static boolean[][] wasQueued = new boolean[GameConstants.MAP_MAX_WIDTH][GameConstants.MAP_MAX_HEIGHT];
 
-	private static Direction[] dirs = new Direction[] { Direction.NORTH_WEST, Direction.SOUTH_WEST, Direction.SOUTH_EAST, Direction.NORTH_EAST,
+	private static Direction[] dirs = new Direction[] { Direction.NORTH_WEST,
+			Direction.SOUTH_WEST, Direction.SOUTH_EAST, Direction.NORTH_EAST,
 			Direction.NORTH, Direction.WEST, Direction.SOUTH, Direction.EAST };
 	private static int[] dirsX = new int[] { 1, 1, -1, -1, 0, 1, 0, -1 };
 	private static int[] dirsY = new int[] { 1, -1, -1, 1, 1, 0, -1, 0 };
@@ -151,17 +179,21 @@ public class Bfs {
 		wasQueued[dest.x][dest.y] = true;
 	}
 
-	// HQ or pastr calls this function to spend spare bytecodes computing paths for soldiers
-	public static void work(MapLocation dest, int priority, int bytecodeLimit) throws GameActionException {
+	// HQ or pastr calls this function to spend spare bytecodes computing paths
+	// for soldiers
+	public static void work(MapLocation dest, int priority, int bytecodeLimit)
+			throws GameActionException {
 		int page = findFreePage(dest, priority);
-//		Debug.indicate("path", 1, "BFS Pathing to " + dest.toString() + "; using page " + page);
-		if (page == -1) return; // We can't do any work, or don't have to
+		// Debug.indicate("path", 1, "BFS Pathing to " + dest.toString() +
+		// "; using page " + page);
+		if (page == -1)
+			return; // We can't do any work, or don't have to
 
 		if (!dest.equals(previousDest)) {
-//			Debug.indicate("path", 0, "BFS initingQueue");
+			// Debug.indicate("path", 0, "BFS initingQueue");
 			initQueue(dest);
 		} else {
-//			Debug.indicate("path", 0, "BFS queue already inited");
+			// Debug.indicate("path", 0, "BFS queue already inited");
 		}
 
 		previousDest = dest;
@@ -174,28 +206,37 @@ public class Bfs {
 		int destDistSqToEnemyHQ = dest.distanceSquaredTo(enemyHQ);
 		boolean destInSpawn = destDistSqToEnemyHQ <= 25;
 
-		while (locQueueHead != locQueueTail && Clock.getBytecodeNum() < bytecodeLimit) {
+		while (locQueueHead != locQueueTail
+				&& Clock.getBytecodeNum() < bytecodeLimit) {
 			// pop a location from the queue
 			MapLocation loc = locQueue[locQueueHead];
 			locQueueHead++;
-			if (loc.equals(Bot.ourHQ) && !loc.equals(dest)) continue; // can't path through our HQ unless HQ is the destination
+			if (loc.equals(Bot.ourHQ) && !loc.equals(dest))
+				continue; // can't path through our HQ unless HQ is the
+							// destination
 
 			int locX = loc.x;
 			int locY = loc.y;
 			for (int i = 8; i-- > 0;) {
 				int x = locX + dirsX[i];
 				int y = locY + dirsY[i];
-				if (x >= 0 && y >= 0 && x < mapWidth && y < mapHeight && !wasQueued[x][y]) {
+				if (x >= 0 && y >= 0 && x < mapWidth && y < mapHeight
+						&& !wasQueued[x][y]) {
 					MapLocation newLoc = new MapLocation(x, y);
 					if (rc.senseTerrainTile(newLoc) != TerrainTile.VOID) {
 						if (destInSpawn) {
-							// if loc is in their HQ's attack range, we must move outward from the HQ
+							// if loc is in their HQ's attack range, we must
+							// move outward from the HQ
 							if (Bot.isInTheirHQAttackRange(loc)) {
-								if (Bot.theirHQ.distanceSquaredTo(newLoc) < Bot.theirHQ.distanceSquaredTo(loc)) continue;
+								if (Bot.theirHQ.distanceSquaredTo(newLoc) < Bot.theirHQ
+										.distanceSquaredTo(loc))
+									continue;
 							}
 						} else {
-							// if loc is not in their HQ's attack range, avoid their HQ completely
-							if (Bot.isInTheirHQAttackRange(newLoc)) continue;
+							// if loc is not in their HQ's attack range, avoid
+							// their HQ completely
+							if (Bot.isInTheirHQAttackRange(newLoc))
+								continue;
 						}
 						publishResult(page, newLoc, dest, dirs[i]);
 
@@ -209,7 +250,8 @@ public class Bfs {
 		}
 
 		boolean finished = locQueueHead == locQueueTail;
-//		Debug.indicate("path", 2, "BFS finished = " + finished + "; locQueueHead = " + locQueueHead);
+		// Debug.indicate("path", 2, "BFS finished = " + finished +
+		// "; locQueueHead = " + locQueueHead);
 		writePageMetadata(page, Clock.getRoundNum(), dest, priority, finished);
 	}
 
@@ -219,18 +261,22 @@ public class Bfs {
 
 	// We store the data in this format:
 	// 10d0xxyy
-	// 1 = validation to prevent mistaking the initial 0 value for a valid pathing instruction
+	// 1 = validation to prevent mistaking the initial 0 value for a valid
+	// pathing instruction
 	// d = direction to move
 	// xx = x coordinate of destination
 	// yy = y coordinate of destination
-	private static void publishResult(int page, MapLocation here, MapLocation dest, Direction dir) throws GameActionException {
-		int data = 10000000 + (dir.ordinal() * 100000) + (dest.x * MAP_HEIGHT) + (dest.y);
+	private static void publishResult(int page, MapLocation here,
+			MapLocation dest, Direction dir) throws GameActionException {
+		int data = 10000000 + (dir.ordinal() * 100000) + (dest.x * MAP_HEIGHT)
+				+ (dest.y);
 		int channel = locChannel(page, here);
 		rc.broadcast(channel, data);
 	}
 
 	// Soldiers call this to get pathing directions
-	public static Direction readResult(MapLocation here, MapLocation dest) throws GameActionException {
+	public static Direction readResult(MapLocation here, MapLocation dest)
+			throws GameActionException {
 		for (int page = 0; page < NUM_PAGES; page++) {
 			int data = rc.readBroadcast(locChannel(page, here));
 			if (data != 0) { // all valid published results are != 0
