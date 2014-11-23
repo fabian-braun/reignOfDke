@@ -199,4 +199,27 @@ public class Channel {
 		}
 	}
 
+	public static void selfDestruction(RobotController rc, RobotType type) {
+		int chCurrent;
+		switch (type) {
+		case SOLDIER:
+			chCurrent = chCurrentSoldierCount;
+			break;
+		case NOISETOWER:
+			chCurrent = chCurrentNoiseTowerCount;
+			break;
+		case PASTR:
+			chCurrent = chCurrentPastrCount;
+			break;
+		default: // case HQ
+			// should never happen... otherwise misc channel
+			chCurrent = chMisc - 1;
+		}
+		try {
+			rc.broadcast(chCurrent, rc.readBroadcast(chCurrent) - 1);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
 }
