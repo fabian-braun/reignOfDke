@@ -1,6 +1,8 @@
 package dualcore;
 
+import battlecode.common.Clock;
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
@@ -9,46 +11,84 @@ public class Channel {
 
 	/* CHANNEL DEFINITIONS: [0..65535] */
 	public static final int chBestPastrLocation = 65535;
-	// count of soldier roles
-	public static final int chCurrentPastrBuilderCount = 65534;
-	public static final int chCurrentNoiseTowerBuilderCount = 65533;
-	public static final int chCurrentProtectorCount = 65532;
-	public static final int chCurrentAttackerCount = 65531;
 	// count of soldier types
-	public static final int chCurrentPastrCount = 65530;
-	public static final int chCurrentNoiseTowerCount = 65529;
-	public static final int chCurrentSoldierCount = 65528;
-	// next role that a robot should incorporate
-	public static final int chNextTeamId = 65500;
+	public static final int chCurrentPastrCount = 65534;
+	public static final int chCurrentNoiseTowerCount = 65533;
+	public static final int chCurrentSoldierCount = 65532;
+	public static final int chNextTeamId = 65531;
+	public static final int chNextSoldierId = 65530;
 
-	// team channels reserved from 1001 to 1100
-	// channels contain: count of soldiers corresponding to this team; task of
-	// the team; target of the team;
+	/**
+	 * team channels reserved from 1001 to 1100. channels contain:<br\>
+	 * (+0) id of this team;<br\>
+	 * (+1) count of soldiers corresponding to this team;<br\>
+	 * (+2) task of the team;<br\>
+	 * (+3) target of the team;<br\>
+	 */
 	public static final int chTeam = 1001;
+	private static final int teamChannelCount = 4;
 
-	// individual soldier channels reserved from 1 to 500
+	//
 	// channels contain: alive indicator; team id
-	public static final int chSoldierAliveIndicator = 1001;
-	public static final int chSoldierTeamId = 1002;
+
+	/**
+	 * individual soldier channels reserved from 1 to 1000. channels contain:<br\>
+	 * (+0) id of this soldier;<br\>
+	 * (+1) alive indicator;<br\>
+	 * (+2) team id of this soldier;<br\>
+	 */
+	public static final int chSoldier = 1;
+	private static final int soldierChannelCount = 3;
 
 	// channel is used for any nonsense info
 	public static final int chMisc = 0;
 
+	// ########### methods ########################################
+
+	/**
+	 * returns the corresponding channel for the given team without offset.<br\>
+	 * Offsets are:<br\>
+	 * (+0) id of this team;<br\>
+	 * (+1) count of soldiers corresponding to this team;<br\>
+	 * (+2) task of the team;<br\>
+	 * (+3) target of the team;<br\>
+	 * 
+	 * @param teamId
+	 * @return
+	 */
+	private static int getTeamChannel(int teamId) {
+		return chTeam + teamId * teamChannelCount;
+	}
+
+	/**
+	 * returns the corresponding channel for the given soldier without offset.<br\>
+	 * Offsets are:<br\>
+	 * (+0) id of this soldier;<br\>
+	 * (+1) alive indicator;<br\>
+	 * (+2) team id of this soldier;<br\>
+	 * 
+	 * @param soldierId
+	 * @return
+	 */
+	private static int getSoldierChannel(int soldierId) {
+		return chSoldier + soldierId * soldierChannelCount;
+	}
+
 	public static void broadcastTask(RobotController rc, Task task,
 			MapLocation target, int teamId) {
-		int c = chTeam + teamId * 3;
+		int c = getTeamChannel(teamId);
 		try {
-			rc.broadcast(c + 1, task.ordinal());
-			rc.broadcast(c + 2, toInt(target));
+			rc.broadcast(c + 2, task.ordinal());
+			rc.broadcast(c + 3, toInt(target));
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}
 	}
 
 	public static Task getTask(RobotController rc, int teamId) {
-		int c = chTeam + teamId * 3;
+		int c = getTeamChannel(teamId);
 		try {
-			int ordinal = rc.readBroadcast(c + 1);
+			int ordinal = rc.readBroadcast(c + 2);
 			return Task.values()[ordinal];
 		} catch (GameActionException e) {
 			e.printStackTrace();
@@ -57,7 +97,7 @@ public class Channel {
 	}
 
 	public static MapLocation getTarget(RobotController rc, int teamId) {
-		int c = chTeam + teamId * 3;
+		int c = getTeamChannel(teamId);
 		try {
 			int encoded = rc.readBroadcast(c + 2);
 			return toMapLocation(encoded);
@@ -67,6 +107,12 @@ public class Channel {
 		return new MapLocation(0, 0);
 	}
 
+	/**
+	 * for HQ: set the id which should be incorporated by the next soldier
+	 * 
+	 * @param rc
+	 * @param id
+	 */
 	public static void assignTeamId(RobotController rc, int id) {
 		try {
 			rc.broadcast(chNextTeamId, id);
@@ -76,8 +122,8 @@ public class Channel {
 	}
 
 	/**
-	 * this method should be used by soldiers. It returns the team id which
-	 * should be incorporated by the requesting soldier.
+	 * for SOLDIER. It returns the team id which should be incorporated by the
+	 * requesting soldier.
 	 * 
 	 * @param rc
 	 * @return
@@ -92,33 +138,62 @@ public class Channel {
 	}
 
 	/**
-	 * this method should be used by soldiers. They have to announce the
-	 * {@link SoldierRole} that they incorporate.
+	 * for SOLDIER. They have to announce the teamId that they incorporate.
 	 * 
 	 * @param rc
 	 * @param role
 	 */
 	public static void announceTeamId(RobotController rc, int soldierId,
 			int teamId) {
-		int chCurrent;
-		switch (role) {
-		case ATTACKER:
-			chCurrent = chCurrentAttackerCount;
-			break;
-		case NOISE_TOWER_BUILDER:
-			chCurrent = chCurrentNoiseTowerBuilderCount;
-			break;
-		case PASTR_BUILDER:
-			chCurrent = chCurrentPastrBuilderCount;
-			break;
-		default: // case PROTECTOR
-			chCurrent = chCurrentProtectorCount;
-		}
+		int c = getSoldierChannel(soldierId);
 		try {
-			rc.broadcast(chCurrent, rc.readBroadcast(chCurrent) + 1);
+			rc.broadcast(c + 2, teamId);
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static int requestSoldierId(RobotController rc) {
+		try {
+			int myId = rc.readBroadcast(chNextSoldierId);
+			if (!isAlive(rc, myId + 1)) {
+				rc.broadcast(chNextSoldierId, myId + 1);
+			} else {
+				int i = 2;
+				while (i < GameConstants.MAX_ROBOTS) {
+					int id = myId + i % GameConstants.MAX_ROBOTS;
+					if (!isAlive(rc, id)) {
+						rc.broadcast(chNextSoldierId, id);
+						break;
+					}
+					i++;
+				}
+			}
+			return myId;
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	public static void signalAlive(RobotController rc, int soldierId) {
+		int c = getSoldierChannel(soldierId);
+		try {
+			rc.broadcast(c + 1, Clock.getRoundNum());
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static boolean isAlive(RobotController rc, int soldierId) {
+		int c = getSoldierChannel(soldierId);
+		try {
+			int round = rc.readBroadcast(c + 1);
+			return round > Clock.getRoundNum() - 8 && round > 0;
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	/**

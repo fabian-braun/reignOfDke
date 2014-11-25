@@ -10,18 +10,18 @@ import battlecode.common.Team;
 public class Soldier extends AbstractRobotType {
 
 	private boolean inactive = false;
-	private SoldierRole role;
+	private int teamId;
+	private int id;
 	private PathFinderSnailTrail pathFinderSnailTrail;
 	private PathFinderMLineBug pathFinderMLineBug;
 	private PathFinderGreedy pathFinderGreedy;
-	MapLocation bestPastrLocation = new MapLocation(0, 0);
 	private Team us;
 	private Team opponent;
-	private boolean fleeMode = false;
-	private static final double HEALTH_ABOUT_TO_DIE = 40;
-	private static final double HEALTH_REGENERATED = 50;
 	private int ySize = 0;
 	private int xSize = 0;
+
+	Task task = Task.GOTO;
+	MapLocation target = new MapLocation(0, 0);
 
 	public Soldier(RobotController rc) {
 		super(rc);
@@ -34,28 +34,15 @@ public class Soldier extends AbstractRobotType {
 	 */
 	@Override
 	protected void act() throws GameActionException {
+		updateTask();
 		if (inactive || !rc.isActive()) {
 			return;
 		}
 		if (rc.isConstructing()) {
 			inactive = true;
+			return;
 		}
-		switch (role) {
-		case ATTACKER:
-			actMicro();
-			break;
-		case NOISE_TOWER_BUILDER:
-			actMicro();
-			break;
-		case PASTR_BUILDER:
-			actMicro();
-			break;
-		case PROTECTOR:
-			actMicro();
-			break;
-		default:
-			break;
-		}
+		actMicro(target, task);
 	}
 
 	/*
@@ -66,18 +53,23 @@ public class Soldier extends AbstractRobotType {
 	@Override
 	protected void init() throws GameActionException {
 		Channel.announceSoldierType(rc, RobotType.SOLDIER);
-		role = Channel.requestSoldierRole(rc);
-		rc.setIndicatorString(0, role.toString());
-		Channel.announceSoldierRole(rc, role);
+		id = Channel.requestSoldierId(rc);
+		Channel.signalAlive(rc, id);
+
+		teamId = Channel.requestTeamId(rc);
+		Channel.announceTeamId(rc, id, teamId);
+		rc.setIndicatorString(0, "SOLDIER [" + id + "] TEAM [" + teamId + "]");
+		target = Channel.getTarget(rc, teamId);
+		task = Channel.getTask(rc, teamId);
+
 		us = rc.getTeam();
 		opponent = us.opponent();
 		ySize = rc.getMapHeight();
 		xSize = rc.getMapWidth();
-		bestPastrLocation = Channel.getBestPastrLocation(rc);
 		pathFinderSnailTrail = new PathFinderSnailTrail(rc);
 		pathFinderMLineBug = new PathFinderMLineBug(rc);
-		pathFinderSnailTrail.setTarget(bestPastrLocation);
-		pathFinderMLineBug.setTarget(bestPastrLocation);
+		pathFinderSnailTrail.setTarget(target);
+		pathFinderMLineBug.setTarget(target);
 		pathFinderGreedy = new PathFinderGreedy(rc, randall);
 	}
 
@@ -114,7 +106,9 @@ public class Soldier extends AbstractRobotType {
 				if (!pathFinderMLineBug.getTarget().equals(target)) {
 					pathFinderMLineBug.setTarget(target);
 				}
-				pathFinderMLineBug.move();
+				if (PathFinder.distance(rc.getLocation(), target) > 3) {
+					pathFinderMLineBug.move();
+				}
 				break;
 			}
 		} else if (size(closeOpponents) > size(closeFriends)) {
@@ -157,6 +151,18 @@ public class Soldier extends AbstractRobotType {
 		totalX = totalX / count;
 		totalY = totalY / count;
 		return new MapLocation(xSize - totalX, ySize - totalY);
+	}
+
+	private void updateTask() {
+		Task newTask = Channel.getTask(rc, teamId);
+		MapLocation newTarget = Channel.getTarget(rc, teamId);
+		if (!newTarget.equals(target) || !newTask.equals(task)) {
+			task = newTask;
+			target = newTarget;
+			// the task has changed
+			pathFinderMLineBug.setTarget(target);
+		}
+		rc.setIndicatorString(1, "DOING TASK " + task + " ON TARGET " + target);
 	}
 
 	/**
