@@ -15,6 +15,7 @@ public class HQ extends AbstractRobotType {
 	private MapAnalyzer mapAnalyzer;
 	private Team[] teams;
 	private Direction spawningDefault;
+	private int teamId = 0;
 
 	public HQ(RobotController rc) {
 		super(rc);
@@ -23,6 +24,12 @@ public class HQ extends AbstractRobotType {
 	@Override
 	protected void act() throws GameActionException {
 		// Check if a robot is spawnable and spawn one if it is
+		if (rc.isActive() && rc.canMove(spawningDefault)
+				&& rc.senseRobotCount() < GameConstants.MAX_ROBOTS) {
+			rc.spawn(spawningDefault);
+			Channel.assignTeamId(rc, teamId);
+			teamId = (teamId + 1) % teams.length;
+		}
 		if (rc.senseRobotCount() < 1) {
 			// location between our HQ and opponent's HQ:
 			MapLocation target = new MapLocation(
@@ -31,10 +38,21 @@ public class HQ extends AbstractRobotType {
 			for (Team team : teams) {
 				team.setTask(Task.GOTO, target);
 			}
-		}
-		if (rc.isActive() && rc.canMove(spawningDefault)
-				&& rc.senseRobotCount() < GameConstants.MAX_ROBOTS) {
-			rc.spawn(spawningDefault);
+		} else {
+			MapLocation[] pastrLocations = rc.sensePastrLocations(rc.getTeam()
+					.opponent());
+			if (Soldier.size(pastrLocations) > 0) {
+				for (Team team : teams) {
+					team.setTask(Task.GOTO, pastrLocations[0]);
+				}
+			} else {
+				if (rc.senseRobotCount() > 5) {
+					mapAnalyzer = new MapAnalyzer(rc, myHq, otherHq, ySize,
+							xSize);
+					teams[0].setTask(Task.BUILD_PASTR,
+							mapAnalyzer.evaluateBestPastrLoc());
+				}
+			}
 		}
 	}
 

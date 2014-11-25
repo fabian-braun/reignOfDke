@@ -28,9 +28,6 @@ public class Channel {
 	public static final int chTeam = 1001;
 	private static final int teamChannelCount = 4;
 
-	//
-	// channels contain: alive indicator; team id
-
 	/**
 	 * individual soldier channels reserved from 1 to 1000. channels contain:<br\>
 	 * (+0) id of this soldier;<br\>
@@ -99,7 +96,7 @@ public class Channel {
 	public static MapLocation getTarget(RobotController rc, int teamId) {
 		int c = getTeamChannel(teamId);
 		try {
-			int encoded = rc.readBroadcast(c + 2);
+			int encoded = rc.readBroadcast(c + 3);
 			return toMapLocation(encoded);
 		} catch (GameActionException e) {
 			e.printStackTrace();

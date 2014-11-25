@@ -9,6 +9,7 @@ import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.TerrainTile;
 
 public class PathFinderMLineBug extends PathFinder {
 
@@ -37,6 +38,9 @@ public class PathFinderMLineBug extends PathFinder {
 
 	@Override
 	public void setTarget(MapLocation target) {
+		if (target.equals(this.target)) {
+			return;
+		}
 		obstacleMode = false;
 		this.target = target;
 		minDistance = Integer.MAX_VALUE;
@@ -58,7 +62,8 @@ public class PathFinderMLineBug extends PathFinder {
 
 	private Direction getNextAroundObstacle() {
 		int nextDirToTry = (currentTurnDirection.indexOf(lastDir) + 8 - 2) % 8;
-		while (!rc.canMove(currentTurnDirection.get(nextDirToTry))) {
+		while (!isWalkable(rc.getLocation(),
+				currentTurnDirection.get(nextDirToTry))) {
 			nextDirToTry++;
 			nextDirToTry %= 8;
 		}
@@ -93,7 +98,8 @@ public class PathFinderMLineBug extends PathFinder {
 			}
 		} else { // move on mLine
 			moveTo = getNextOnMLine();
-			if (!rc.canMove(moveTo)) {
+			rc.senseTerrainTile(current.add(moveTo));
+			if (!isWalkable(current, moveTo)) {
 				// System.out.println("mLine left at " + rc.getLocation());
 				obstacleMode = true;
 				decideTurnDirection();
@@ -103,7 +109,12 @@ public class PathFinderMLineBug extends PathFinder {
 			}
 		}
 		return moveTo;
+	}
 
+	private boolean isWalkable(MapLocation current, Direction into) {
+		TerrainTile target = rc.senseTerrainTile(current.add(into));
+		return TerrainTile.NORMAL.equals(target)
+				|| TerrainTile.ROAD.equals(target);
 	}
 
 	@Override

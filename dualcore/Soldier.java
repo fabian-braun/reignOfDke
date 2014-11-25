@@ -1,5 +1,6 @@
 package dualcore;
 
+import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
@@ -17,8 +18,6 @@ public class Soldier extends AbstractRobotType {
 	private PathFinderGreedy pathFinderGreedy;
 	private Team us;
 	private Team opponent;
-	private int ySize = 0;
-	private int xSize = 0;
 
 	Task task = Task.GOTO;
 	MapLocation target = new MapLocation(0, 0);
@@ -64,8 +63,6 @@ public class Soldier extends AbstractRobotType {
 
 		us = rc.getTeam();
 		opponent = us.opponent();
-		ySize = rc.getMapHeight();
-		xSize = rc.getMapWidth();
 		pathFinderSnailTrail = new PathFinderSnailTrail(rc);
 		pathFinderMLineBug = new PathFinderMLineBug(rc);
 		pathFinderSnailTrail.setTarget(target);
@@ -83,38 +80,42 @@ public class Soldier extends AbstractRobotType {
 			// no opponents in sight - go for your task
 			switch (task) {
 			case BUILD_NOISETOWER:
-				if (!pathFinderMLineBug.getTarget().equals(target)) {
-					pathFinderMLineBug.setTarget(target);
-				}
+				pathFinderMLineBug.setTarget(target);
 				if (rc.getLocation().isAdjacentTo(target)) {
 					rc.construct(RobotType.NOISETOWER);
 				} else {
-					pathFinderMLineBug.move();
+					if (!pathFinderMLineBug.move()) {
+						doRandomMove();
+						pathFinderMLineBug.setTarget(target);
+					}
 				}
 				break;
 			case BUILD_PASTR:
-				if (!pathFinderMLineBug.getTarget().equals(target)) {
-					pathFinderMLineBug.setTarget(target);
-				}
+				pathFinderMLineBug.setTarget(target);
 				if (rc.getLocation().equals(target)) {
 					rc.construct(RobotType.PASTR);
 				} else {
-					pathFinderMLineBug.move();
+					if (!pathFinderMLineBug.move()) {
+						doRandomMove();
+						pathFinderMLineBug.setTarget(target);
+					}
 				}
 				break;
 			case GOTO:
-				if (!pathFinderMLineBug.getTarget().equals(target)) {
+				pathFinderMLineBug.setTarget(target);
+				if (!pathFinderMLineBug.move()) {
+					doRandomMove();
 					pathFinderMLineBug.setTarget(target);
-				}
-				if (PathFinder.distance(rc.getLocation(), target) > 3) {
-					pathFinderMLineBug.move();
 				}
 				break;
 			}
-		} else if (size(closeOpponents) > size(closeFriends)) {
+		} else if (size(closeOpponents) >= size(closeFriends)) {
 			// there are more opponents. Better get away.
-			MapLocation away = getFleeTarget(closeOpponents);
+			MapLocation oppAt = rc.senseLocationOf(closeOpponents[0]);
+			MapLocation away = rc.getLocation().add(
+					oppAt.directionTo(rc.getLocation()), 3);
 			pathFinderGreedy.setTarget(away);
+			pathFinderGreedy.move();
 		} else if (size(closeOpponents) < size(closeFriends)) {
 			// we are dominating!
 			Robot[] attackableOpponents = rc.senseNearbyGameObjects(
@@ -126,31 +127,10 @@ public class Soldier extends AbstractRobotType {
 				rc.attackSquare(toAttack);
 			} else {
 				MapLocation toAttack = rc.senseLocationOf(closeOpponents[0]);
-				pathFinderGreedy.setTarget(toAttack);
-				pathFinderGreedy.move();
+				pathFinderMLineBug.setTarget(toAttack);
+				pathFinderMLineBug.move();
 			}
 		}
-	}
-
-	public MapLocation getFleeTarget(Robot[] fleeFrom) {
-		int totalX = 0;
-		int totalY = 0;
-		int count = 0;
-		for (Robot robot : fleeFrom) {
-			MapLocation loc;
-			try {
-				loc = rc.senseLocationOf(robot);
-				totalX += loc.x;
-				totalY += loc.y;
-				count++;
-			} catch (GameActionException e) {
-				// ignore that soldier
-				e.printStackTrace();
-			}
-		}
-		totalX = totalX / count;
-		totalY = totalY / count;
-		return new MapLocation(xSize - totalX, ySize - totalY);
 	}
 
 	private void updateTask() {
@@ -163,6 +143,17 @@ public class Soldier extends AbstractRobotType {
 			pathFinderMLineBug.setTarget(target);
 		}
 		rc.setIndicatorString(1, "DOING TASK " + task + " ON TARGET " + target);
+	}
+
+	private void doRandomMove() {
+		Direction random = C.DIRECTIONS[randall.nextInt(C.DIRECTIONS.length)];
+		if (rc.canMove(random)) {
+			try {
+				rc.move(random);
+			} catch (GameActionException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	/**
