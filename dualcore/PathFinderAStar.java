@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.Stack;
 
 import battlecode.common.Clock;
 import battlecode.common.Direction;
@@ -16,9 +17,9 @@ import battlecode.common.TerrainTile;
 
 public class PathFinderAStar extends PathFinder {
 
-	private Map<MapLocation, MapLocation> fromTo = new HashMap<MapLocation, MapLocation>();
 	private MapLocation target = new MapLocation(0, 0);
 	protected final TerrainTile[][] map;
+	private Stack<MapLocation> fromTo;
 
 	public PathFinderAStar(RobotController rc) {
 		super(rc);
@@ -38,16 +39,17 @@ public class PathFinderAStar extends PathFinder {
 
 	@Override
 	public boolean move() throws GameActionException {
-		MapLocation next = fromTo.get(rc.getLocation());
-		if (null == next) {
+		if (fromTo.isEmpty()) {
 			System.out.println("A-Start does not know the way");
 			return false;
 		} else {
+			MapLocation next = fromTo.pop();
 			Direction dir = rc.getLocation().directionTo(next);
 			if (rc.canMove(dir)) {
 				rc.move(dir);
 				return true;
 			} else {
+				fromTo.push(next);
 				return false;
 			}
 		}
@@ -72,10 +74,6 @@ public class PathFinderAStar extends PathFinder {
 				+ " with bytecode left " + byteCodeLeftStart
 				+ ". Ended in round " + roundsEnd + " with bytecode left "
 				+ byteCodeLeftEnd);
-		while (!target.equals(current) && current != null) {
-			current = fromTo.get(current);
-			System.out.println("--> " + current);
-		}
 	}
 
 	@Override
@@ -83,9 +81,8 @@ public class PathFinderAStar extends PathFinder {
 		return target;
 	}
 
-	private Map<MapLocation, MapLocation> aStar(MapLocation start,
-			final MapLocation target) {
-		Map<MapLocation, MapLocation> fromTo = new HashMap<MapLocation, MapLocation>();
+	public Stack<MapLocation> aStar(MapLocation start, final MapLocation target) {
+		Map<MapLocation, MapLocation> ancestors = new HashMap<MapLocation, MapLocation>();
 		Map<MapLocation, Integer> gScore = new HashMap<MapLocation, Integer>();
 		final Map<MapLocation, Integer> fScore = new HashMap<MapLocation, Integer>();
 		Comparator<MapLocation> comparator = new Comparator<MapLocation>() {
@@ -94,8 +91,8 @@ public class PathFinderAStar extends PathFinder {
 				return Integer.compare(fScore.get(o1), fScore.get(o2));
 			}
 		};
-		PriorityQueue<MapLocation> open = new PrioQueueNoDuplicates<MapLocation>(
-				20, comparator);
+		PriorityQueue<MapLocation> open = new PriorityQueue<MapLocation>(20,
+				comparator);
 		Set<MapLocation> closed = new HashSet<MapLocation>();
 
 		open.add(start);
@@ -106,7 +103,7 @@ public class PathFinderAStar extends PathFinder {
 		while (!open.isEmpty()) {
 			MapLocation current = open.poll();
 			if (current.equals(target))
-				return fromTo;
+				return getPath(ancestors, target);
 			closed.add(current);
 			Set<MapLocation> neighbours = getNeighbours(current);
 			for (MapLocation neighbour : neighbours) {
@@ -116,26 +113,37 @@ public class PathFinderAStar extends PathFinder {
 				if (open.contains(neighbour)
 						&& tentative >= gScore.get(neighbour))
 					continue;
-				fromTo.put(current, neighbour);
+				ancestors.put(neighbour, current);
 				gScore.put(neighbour, tentative);
 				fScore.put(neighbour, tentative + calcFScore(neighbour, target));
-				// if (!open.contains(neighbour))
-				open.add(neighbour);
+				if (!open.contains(neighbour))
+					open.add(neighbour);
 			}
 		}
 		// no path exists
-		return new HashMap<MapLocation, MapLocation>();
+		return new Stack<MapLocation>();
+	}
+
+	public static Stack<MapLocation> getPath(
+			Map<MapLocation, MapLocation> ancestors, MapLocation target) {
+		Stack<MapLocation> path = new Stack<MapLocation>();
+		MapLocation current = target;
+		while (current != null) {
+			path.push(current);
+			current = ancestors.get(current);
+		}
+		return path;
 	}
 
 	private int calcFScore(MapLocation from, MapLocation to) {
 		int distance = distance(from, to);
-		// if (map[from.y][from.x].equals(TerrainTile.ROAD)) {
-		// distance = (distance * 3) / 4;
-		// }
-		return distance;
+		if (map[from.y][from.x].equals(TerrainTile.ROAD)) {
+			distance = distance / 2;
+		}
+		return distance * 2;
 	}
 
-	private Set<MapLocation> getNeighbours(MapLocation loc) {
+	public Set<MapLocation> getNeighbours(MapLocation loc) {
 		Set<MapLocation> neighbours = new HashSet<MapLocation>();
 		for (int i = 0; i < C.DIRECTIONS.length; i++) {
 			MapLocation n = loc.add(C.DIRECTIONS[i]);
@@ -144,7 +152,8 @@ public class PathFinderAStar extends PathFinder {
 					&& n.x >= 0
 					&& n.y >= 0
 					&& (map[n.y][n.x].equals(TerrainTile.NORMAL) || map[n.y][n.x]
-							.equals(TerrainTile.ROAD))) {
+							.equals(TerrainTile.ROAD)) && !n.equals(hqEnemLoc)
+					&& !n.equals(hqSelfLoc)) {
 				neighbours.add(n);
 			}
 		}
