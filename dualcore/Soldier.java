@@ -1,10 +1,14 @@
 package dualcore;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
 import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 import battlecode.common.Team;
 
@@ -15,12 +19,15 @@ public class Soldier extends AbstractRobotType {
 	private int id;
 	private PathFinderSnailTrail pathFinderSnailTrail;
 	private PathFinderMLineBug pathFinderMLineBug;
-	private PathFinderGreedy pathFinderGreedy;
+	private PathFinderAStar pathFinderAStar;
+	protected PathFinderGreedy pathFinderGreedy;
 	private Team us;
 	private Team opponent;
+	private MapLocation enemyHq;
 
 	Task task = Task.GOTO;
 	MapLocation target = new MapLocation(0, 0);
+	MapLocation myLoc;
 
 	public Soldier(RobotController rc) {
 		super(rc);
@@ -33,6 +40,8 @@ public class Soldier extends AbstractRobotType {
 	 */
 	@Override
 	protected void act() throws GameActionException {
+		Channel.signalAlive(rc, id);
+		myLoc = rc.getLocation();
 		updateTask();
 		if (inactive || !rc.isActive()) {
 			return;
@@ -64,24 +73,28 @@ public class Soldier extends AbstractRobotType {
 		us = rc.getTeam();
 		opponent = us.opponent();
 		pathFinderSnailTrail = new PathFinderSnailTrail(rc);
+		pathFinderAStar = new PathFinderAStar(rc, pathFinderSnailTrail.map,
+				pathFinderSnailTrail.hqSelfLoc, pathFinderSnailTrail.hqEnemLoc,
+				pathFinderSnailTrail.height, pathFinderSnailTrail.width);
 		pathFinderMLineBug = new PathFinderMLineBug(rc);
 		pathFinderSnailTrail.setTarget(target);
 		pathFinderMLineBug.setTarget(target);
 		pathFinderGreedy = new PathFinderGreedy(rc, randall);
+		enemyHq = rc.senseEnemyHQLocation();
 	}
 
 	private void actMicro(MapLocation target, Task task)
 			throws GameActionException {
 		Robot[] closeOpponents = rc.senseNearbyGameObjects(Robot.class,
 				RobotType.SOLDIER.sensorRadiusSquared, opponent);
-		Robot[] closeFriends = rc.senseNearbyGameObjects(Robot.class,
-				RobotType.SOLDIER.sensorRadiusSquared, us);
-		if (size(closeOpponents) < 1) {
+		boolean oppHqInRange = myLoc.distanceSquaredTo(enemyHq) <= RobotType.SOLDIER.sensorRadiusSquared;
+		if (size(closeOpponents) < 1
+				|| (size(closeOpponents) == 1 && oppHqInRange)) {
 			// no opponents in sight - go for your task
 			switch (task) {
 			case BUILD_NOISETOWER:
 				pathFinderMLineBug.setTarget(target);
-				if (rc.getLocation().isAdjacentTo(target)) {
+				if (myLoc.isAdjacentTo(target)) {
 					rc.construct(RobotType.NOISETOWER);
 				} else {
 					if (!pathFinderMLineBug.move()) {
@@ -92,7 +105,7 @@ public class Soldier extends AbstractRobotType {
 				break;
 			case BUILD_PASTR:
 				pathFinderMLineBug.setTarget(target);
-				if (rc.getLocation().equals(target)) {
+				if (myLoc.equals(target)) {
 					rc.construct(RobotType.PASTR);
 				} else {
 					if (!pathFinderMLineBug.move()) {
@@ -102,33 +115,62 @@ public class Soldier extends AbstractRobotType {
 				}
 				break;
 			case GOTO:
-				pathFinderMLineBug.setTarget(target);
-				if (!pathFinderMLineBug.move()) {
-					doRandomMove();
-					pathFinderMLineBug.setTarget(target);
+				if (!target.equals(pathFinderAStar.getTarget())) {
+					pathFinderAStar.setTarget(target);
 				}
+				if (!pathFinderAStar.move()) {
+					doRandomMove();
+					pathFinderAStar.setTarget(target);
+				}
+				// pathFinderMLineBug.setTarget(target);
+				// if (!pathFinderMLineBug.move()) {
+				// doRandomMove();
+				// pathFinderMLineBug.setTarget(target);
+				// }
+				break;
+			case ACCUMULATE:
+				pathFinderGreedy.setTarget(target);
+				pathFinderGreedy.move();
+				break;
+			default:
 				break;
 			}
-		} else if (size(closeOpponents) >= size(closeFriends)) {
-			// there are more opponents. Better get away.
+		} else {
+			List<Robot> closeSoldiers = new ArrayList<Robot>();
+			for (Robot robot : closeOpponents) {
+				RobotInfo ri = rc.senseRobotInfo(robot);
+				if (ri.type.equals(RobotType.SOLDIER)) {
+					closeSoldiers.add(robot);
+				}
+			}
 			MapLocation oppAt = rc.senseLocationOf(closeOpponents[0]);
-			MapLocation away = rc.getLocation().add(
-					oppAt.directionTo(rc.getLocation()), 3);
-			pathFinderGreedy.setTarget(away);
-			pathFinderGreedy.move();
-		} else if (size(closeOpponents) < size(closeFriends)) {
-			// we are dominating!
-			Robot[] attackableOpponents = rc.senseNearbyGameObjects(
-					Robot.class, RobotType.SOLDIER.attackRadiusMaxSquared,
-					opponent);
-			if (size(attackableOpponents) > 0) {
-				MapLocation toAttack = rc
-						.senseLocationOf(attackableOpponents[0]);
-				rc.attackSquare(toAttack);
+			if (oppAt.equals(enemyHq)) {
+				oppAt = rc.senseLocationOf(closeOpponents[1]);
+			}
+			Robot[] closeFriends = rc.senseNearbyGameObjects(Robot.class,
+					oppAt, RobotType.SOLDIER.sensorRadiusSquared, us);
+			if (closeSoldiers.size() >= size(closeFriends)) {
+				// there are more opponents. Better get away.
+				MapLocation away = null;
+				MapLocation myFriendsLoc = Channel.getPositionalCenterOfTeam(
+						rc, teamId);
+				if (myFriendsLoc.equals(myLoc)) {
+					away = myLoc.add(oppAt.directionTo(myLoc), 3);
+				} else {
+					// away = myLoc.add(oppAt.directionTo(myLoc), 3);
+					away = myLoc.add(myLoc.directionTo(myFriendsLoc), 3);
+				}
+				pathFinderGreedy.setTarget(away);
+				pathFinderGreedy.move();
 			} else {
-				MapLocation toAttack = rc.senseLocationOf(closeOpponents[0]);
-				pathFinderMLineBug.setTarget(toAttack);
-				pathFinderMLineBug.move();
+				// we are dominating!
+				int distance = myLoc.distanceSquaredTo(oppAt);
+				if (distance <= RobotType.SOLDIER.attackRadiusMaxSquared) {
+					rc.attackSquare(oppAt);
+				} else {
+					pathFinderMLineBug.setTarget(oppAt);
+					pathFinderMLineBug.move();
+				}
 			}
 		}
 	}

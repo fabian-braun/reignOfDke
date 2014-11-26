@@ -23,33 +23,37 @@ public class HQ extends AbstractRobotType {
 
 	@Override
 	protected void act() throws GameActionException {
+		Team.updateSoldierCount(rc, teams);
 		// Check if a robot is spawnable and spawn one if it is
 		if (rc.isActive() && rc.canMove(spawningDefault)
 				&& rc.senseRobotCount() < GameConstants.MAX_ROBOTS) {
-			rc.spawn(spawningDefault);
 			Channel.assignTeamId(rc, teamId);
 			teamId = (teamId + 1) % teams.length;
+			rc.spawn(spawningDefault);
 		}
 		if (rc.senseRobotCount() < 1) {
 			// location between our HQ and opponent's HQ:
 			MapLocation target = new MapLocation(
 					(myHq.x * 3 / 4 + otherHq.x / 4),
 					(myHq.y * 3 / 4 + otherHq.y / 4));
-			for (Team team : teams) {
-				team.setTask(Task.GOTO, target);
-			}
+
+			teams[0].setTask(Task.GOTO, target);
+			teams[1].setTask(Task.GOTO, target);
+			teams[2].setTask(Task.GOTO, target);
+
 		} else {
 			MapLocation[] pastrLocations = rc.sensePastrLocations(rc.getTeam()
 					.opponent());
 			if (Soldier.size(pastrLocations) > 0) {
-				for (Team team : teams) {
-					team.setTask(Task.GOTO, pastrLocations[0]);
-				}
+				teams[0].setTask(Task.GOTO, pastrLocations[0]);
+				teams[1].setTask(Task.GOTO, pastrLocations[0]);
 			} else {
 				if (rc.senseRobotCount() > 5) {
 					mapAnalyzer = new MapAnalyzer(rc, myHq, otherHq, ySize,
 							xSize);
-					teams[0].setTask(Task.BUILD_PASTR,
+					teams[2].setTask(Task.BUILD_PASTR,
+							mapAnalyzer.evaluateBestPastrLoc());
+					teams[1].setTask(Task.BUILD_NOISETOWER,
 							mapAnalyzer.evaluateBestPastrLoc());
 				}
 			}
@@ -62,10 +66,7 @@ public class HQ extends AbstractRobotType {
 		xSize = rc.getMapWidth();
 		myHq = rc.senseHQLocation();
 		otherHq = rc.senseEnemyHQLocation();
-		teams = new Team[3];
-		teams[0] = new Team(0, rc);
-		teams[1] = new Team(1, rc);
-		teams[2] = new Team(2, rc);
+		teams = Team.getTeams(rc);
 
 		mapAnalyzer = new MapAnalyzer(rc, myHq, otherHq, ySize, xSize);
 		// mapAnalyzer.generateRealDistanceMap(); // TODO: too expensive

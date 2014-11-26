@@ -19,7 +19,7 @@ public class PathFinderSnailTrail extends PathFinder {
 
 	public PathFinderSnailTrail(RobotController rc, TerrainTile[][] map,
 			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int height, int width) {
-		super(rc, map, hqEnemLoc, hqEnemLoc, height, width);
+		super(rc, hqEnemLoc, hqEnemLoc, height, width);
 		this.map = map;
 	}
 

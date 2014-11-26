@@ -15,6 +15,7 @@ public class Channel {
 	public static final int chCurrentPastrCount = 65534;
 	public static final int chCurrentNoiseTowerCount = 65533;
 	public static final int chCurrentSoldierCount = 65532;
+
 	public static final int chNextTeamId = 65531;
 	public static final int chNextSoldierId = 65530;
 
@@ -24,18 +25,21 @@ public class Channel {
 	 * (+1) count of soldiers corresponding to this team;<br\>
 	 * (+2) task of the team;<br\>
 	 * (+3) target of the team;<br\>
+	 * (+4) positional center of the team;<br\>
 	 */
 	public static final int chTeam = 1001;
-	private static final int teamChannelCount = 4;
+	private static final int teamChannelCount = 5;
 
 	/**
-	 * individual soldier channels reserved from 1 to 1000. channels contain:<br\>
+	 * individual soldier channels reserved from 1 to 600. channels contain:<br\>
 	 * (+0) id of this soldier;<br\>
 	 * (+1) alive indicator;<br\>
 	 * (+2) team id of this soldier;<br\>
+	 * (+3) current position of this soldier<br\>
+	 * channel 500 corresponds to second core
 	 */
 	public static final int chSoldier = 1;
-	private static final int soldierChannelCount = 3;
+	private static final int soldierChannelCount = 4;
 
 	// channel is used for any nonsense info
 	public static final int chMisc = 0;
@@ -49,6 +53,7 @@ public class Channel {
 	 * (+1) count of soldiers corresponding to this team;<br\>
 	 * (+2) task of the team;<br\>
 	 * (+3) target of the team;<br\>
+	 * (+4) positional center of the team;<br\>
 	 * 
 	 * @param teamId
 	 * @return
@@ -63,6 +68,7 @@ public class Channel {
 	 * (+0) id of this soldier;<br\>
 	 * (+1) alive indicator;<br\>
 	 * (+2) team id of this soldier;<br\>
+	 * (+3) current position of this soldier<br\>
 	 * 
 	 * @param soldierId
 	 * @return
@@ -150,6 +156,48 @@ public class Channel {
 		}
 	}
 
+	public static int getTeamIdOfSoldier(RobotController rc, int soldierId) {
+		int c = getSoldierChannel(soldierId);
+		try {
+			return rc.readBroadcast(c + 2);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	public static MapLocation getLocationOfSoldier(RobotController rc,
+			int soldierId) {
+		int c = getSoldierChannel(soldierId);
+		try {
+			return toMapLocation(rc.readBroadcast(c + 3));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return new MapLocation(0, 0);
+	}
+
+	public static MapLocation getPositionalCenterOfTeam(RobotController rc,
+			int teamId) {
+		int c = getTeamChannel(teamId);
+		try {
+			return toMapLocation(rc.readBroadcast(c + 4));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return new MapLocation(0, 0);
+	}
+
+	public static void broadcastPositionalCenterOfTeam(RobotController rc,
+			int teamId, MapLocation center) {
+		int c = getTeamChannel(teamId);
+		try {
+			rc.broadcast(c + 4, toInt(center));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static int requestSoldierId(RobotController rc) {
 		try {
 			int myId = rc.readBroadcast(chNextSoldierId);
@@ -173,15 +221,31 @@ public class Channel {
 		return 0;
 	}
 
+	/**
+	 * for SOLDIER. should be called at the beginning of each round. Soldier
+	 * broadcasts that he is still alive and his current {@link MapLocation}
+	 * 
+	 * @param rc
+	 * @param soldierId
+	 */
 	public static void signalAlive(RobotController rc, int soldierId) {
 		int c = getSoldierChannel(soldierId);
 		try {
 			rc.broadcast(c + 1, Clock.getRoundNum());
+			rc.broadcast(c + 3, toInt(rc.getLocation()));
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}
 	}
 
+	/**
+	 * returns whether the soldier is still alive. Not 100% accurate. Death will
+	 * only be noticed after 8 rounds.
+	 * 
+	 * @param rc
+	 * @param soldierId
+	 * @return
+	 */
 	public static boolean isAlive(RobotController rc, int soldierId) {
 		int c = getSoldierChannel(soldierId);
 		try {

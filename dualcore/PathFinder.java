@@ -3,7 +3,6 @@ package dualcore;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
-import battlecode.common.TerrainTile;
 
 public abstract class PathFinder {
 
@@ -13,8 +12,8 @@ public abstract class PathFinder {
 	protected final int width;
 	protected final RobotController rc;
 
-	public PathFinder(RobotController rc, TerrainTile[][] map,
-			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int height, int width) {
+	public PathFinder(RobotController rc, MapLocation hqSelfLoc,
+			MapLocation hqEnemLoc, int height, int width) {
 		this.rc = rc;
 		this.hqSelfLoc = hqSelfLoc;
 		this.hqEnemLoc = hqEnemLoc;
@@ -31,7 +30,13 @@ public abstract class PathFinder {
 	}
 
 	public static final int distance(int y1, int x1, int y2, int x2) {
-		return Math.abs(y2 - y1) + Math.abs(x2 - x1);
+		int dx = x1 - x2;
+		int dy = y1 - y2;
+		if (dx < 0)
+			dx *= -1;
+		if (dy < 0)
+			dy *= -1;
+		return dx + dy;
 	}
 
 	public static final int distance(MapLocation loc1, MapLocation loc2) {

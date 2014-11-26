@@ -15,7 +15,11 @@ public class RobotPlayer {
 			robot = new Pastr(rc);
 			break;
 		case SOLDIER:
-			robot = new Soldier(rc);
+			if (!Channel.isAlive(rc, Core.id)) {
+				robot = new Core(rc);
+			} else {
+				robot = new Soldier(rc);
+			}
 			break;
 		// case HQ:
 		default:

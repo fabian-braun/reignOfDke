@@ -35,10 +35,10 @@ public class PathFinderGreedy extends PathFinder {
 			Direction dir = rc.getLocation().directionTo(target);
 			if (rc.canMove(dir)) {
 				rc.move(dir);
-				return false;
+				return true;
 			} else {
 				moveRandom = 3;
-				return true;
+				return false;
 			}
 		}
 	}

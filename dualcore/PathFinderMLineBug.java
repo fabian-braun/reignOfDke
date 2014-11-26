@@ -19,6 +19,7 @@ public class PathFinderMLineBug extends PathFinder {
 	private MapLocation target;
 	private boolean obstacleMode = false;
 	private Set<MapLocation> mTiles = new HashSet<MapLocation>();
+	private Set<MapLocation> visited = new HashSet<MapLocation>();
 	private static final List<Direction> prioDirClockwise = Arrays
 			.asList(new Direction[] { Direction.NORTH, Direction.NORTH_EAST,
 					Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
@@ -41,14 +42,15 @@ public class PathFinderMLineBug extends PathFinder {
 		if (target.equals(this.target)) {
 			return;
 		}
-		obstacleMode = false;
 		this.target = target;
-		minDistance = Integer.MAX_VALUE;
 		updateMLine();
 	}
 
 	private void updateMLine() {
+		obstacleMode = false;
+		minDistance = PathFinder.distance(rc.getLocation(), target);
 		mTiles.clear();
+		visited.clear();
 		MapLocation current = rc.getLocation();
 		MapLocation temp = new MapLocation(current.x, current.y);
 		while (!temp.equals(target)) {
@@ -119,8 +121,12 @@ public class PathFinderMLineBug extends PathFinder {
 
 	@Override
 	public boolean move() throws GameActionException {
+		MapLocation current = rc.getLocation();
+		if (visited.contains(current)) {
+			updateMLine();
+		}
+		visited.add(current);
 		Direction moveTo = getNextDirection();
-		// TODO: bytecode check and maybe yield
 		if (rc.canMove(moveTo)) {
 			lastDir = moveTo;
 			rc.move(moveTo);
@@ -133,7 +139,6 @@ public class PathFinderMLineBug extends PathFinder {
 	@Override
 	public boolean sneak() throws GameActionException {
 		Direction moveTo = getNextDirection();
-		// TODO: bytecode check and maybe yield
 		if (rc.canMove(moveTo)) {
 			lastDir = moveTo;
 			rc.sneak(moveTo);
