@@ -8,7 +8,6 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.Stack;
 
-import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -19,7 +18,7 @@ public class PathFinderAStar extends PathFinder {
 
 	private MapLocation target = new MapLocation(0, 0);
 	protected final TerrainTile[][] map;
-	private Stack<MapLocation> fromTo;
+	private Stack<MapLocation> path;
 
 	public PathFinderAStar(RobotController rc) {
 		super(rc);
@@ -33,23 +32,27 @@ public class PathFinderAStar extends PathFinder {
 
 	public PathFinderAStar(RobotController rc, TerrainTile[][] map,
 			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int height, int width) {
-		super(rc, hqEnemLoc, hqEnemLoc, height, width);
+		super(rc, hqSelfLoc, hqEnemLoc, height, width);
 		this.map = map;
 	}
 
 	@Override
 	public boolean move() throws GameActionException {
-		if (fromTo.isEmpty()) {
-			System.out.println("A-Start does not know the way");
+		if (path.isEmpty()) {
+			System.out.println("A-Star does not know the way");
 			return false;
 		} else {
-			MapLocation next = fromTo.pop();
+			MapLocation myLoc = rc.getLocation();
+			if (!myLoc.isAdjacentTo(path.peek())) {
+				path = aStar(myLoc, target);
+			}
+			MapLocation next = path.peek();
 			Direction dir = rc.getLocation().directionTo(next);
 			if (rc.canMove(dir)) {
 				rc.move(dir);
+				path.pop();
 				return true;
 			} else {
-				fromTo.push(next);
 				return false;
 			}
 		}
@@ -57,23 +60,15 @@ public class PathFinderAStar extends PathFinder {
 
 	@Override
 	public boolean sneak() throws GameActionException {
-		// TODO Auto-generated method stub
+		// TODO: implement
 		return false;
 	}
 
 	@Override
 	public void setTarget(MapLocation target) {
-		int byteCodeLeftStart = Clock.getBytecodesLeft();
-		int roundsStart = Clock.getRoundNum();
 		this.target = target;
 		MapLocation current = rc.getLocation();
-		fromTo = aStar(current, target);
-		int roundsEnd = Clock.getRoundNum();
-		int byteCodeLeftEnd = Clock.getBytecodesLeft();
-		System.out.println("Started in round " + roundsStart
-				+ " with bytecode left " + byteCodeLeftStart
-				+ ". Ended in round " + roundsEnd + " with bytecode left "
-				+ byteCodeLeftEnd);
+		path = aStar(current, target);
 	}
 
 	@Override
@@ -136,27 +131,28 @@ public class PathFinderAStar extends PathFinder {
 	}
 
 	private int calcFScore(MapLocation from, MapLocation to) {
-		int distance = distance(from, to);
+		int distance = 4 * distance(from, to);
 		if (map[from.y][from.x].equals(TerrainTile.ROAD)) {
-			distance = distance / 2;
+			if (distance > 2)
+				distance = distance - 2;
 		}
-		return distance * 2;
+		return distance;
 	}
 
 	public Set<MapLocation> getNeighbours(MapLocation loc) {
 		Set<MapLocation> neighbours = new HashSet<MapLocation>();
 		for (int i = 0; i < C.DIRECTIONS.length; i++) {
 			MapLocation n = loc.add(C.DIRECTIONS[i]);
-			if (n.x < width
-					&& n.y < height
-					&& n.x >= 0
-					&& n.y >= 0
-					&& (map[n.y][n.x].equals(TerrainTile.NORMAL) || map[n.y][n.x]
-							.equals(TerrainTile.ROAD)) && !n.equals(hqEnemLoc)
-					&& !n.equals(hqSelfLoc)) {
+			if (isTraversable(n)) {
 				neighbours.add(n);
 			}
 		}
 		return neighbours;
+	}
+
+	public boolean isTraversable(MapLocation location) {
+		return isXonMap(location.x) && isYonMap(location.y)
+				&& !map[location.y][location.x].equals(TerrainTile.VOID)
+				&& !isHqLocation(location);
 	}
 }
