@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import battlecode.common.GameActionException;
+import battlecode.common.GameObject;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
@@ -25,6 +26,9 @@ public class Channel {
 	public static final int chNextSoldierRole = 65500;
 	// channel is used for any nonsense info
 	public static final int chMisc = 0;
+
+	// Pastr with this Location wants to be destroyed
+	public static final int chSelfDestruction = 50000;
 
 	/**
 	 * broadcast the location which is optimal for herding cows
@@ -199,4 +203,61 @@ public class Channel {
 		}
 	}
 
+	/**
+	 * executed by a pastr that wants to be destroyed
+	 * 
+	 * @param rc
+	 * @param loc
+	 */
+	public static void broadcastSelfDestruction(RobotController rc,
+			MapLocation loc) {
+		int data = loc.x * 1000 + loc.y;
+		try {
+			rc.broadcast(chSelfDestruction, data);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * executed by the HQ to find pastr who wants to be destroyed
+	 * 
+	 * @param rc
+	 * @return
+	 */
+	public static MapLocation getSelfDestructionLocation(RobotController rc) {
+		int data = 0;
+		try {
+			data = rc.readBroadcast(chSelfDestruction);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		MapLocation selfDestruction = new MapLocation(data / 1000, data % 1000);
+		return selfDestruction;
+	}
+
+	public static boolean needSelfDestruction(RobotController rc) {
+		int data = 0;
+		try {
+			data = rc.readBroadcast(chSelfDestruction);
+			MapLocation selfDestruction = new MapLocation(data / 1000,
+					data % 1000);
+			if (rc.canSenseSquare(selfDestruction)) {
+				GameObject stillAlive = rc
+						.senseObjectAtLocation(selfDestruction);
+				if (stillAlive == null) {
+					rc.broadcast(chSelfDestruction, 0);
+					data = 0;
+				}
+			}
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+
+		if (data == 0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 }

@@ -1,10 +1,11 @@
 package teamKingOfTasks;
 
-import java.util.Comparator;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+import battlecode.common.Direction;
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
@@ -31,22 +32,31 @@ public class HQ extends AbstractRobotType {
 		Map<SoldierRole, Integer> roleCount = Channel.getSoldierRoleCount(rc);
 		Map<RobotType, Integer> typeCount = Channel.getRobotTypeCount(rc);
 
-		Comparator<Task> comp = new TaskComparator();
-		taskmanager = new PriorityQueue<Task>(4, comp);
+		// Comparator<Task> comp = new TaskComparator();
+		// taskmanager = new PriorityQueue<Task>(4, comp);
 
-		/**
-		 * // Check if a robot is spawnable and spawn one if it is // if
-		 * (rc.senseRobotCount() < GameConstants.MAX_ROBOTS) { TODO: //
-		 * uncomment if (rc.senseRobotCount() < GameConstants.MAX_ROBOTS) { if
-		 * (roleCount.get(SoldierRole.PASTR_BUILDER) < 1 &&
-		 * typeCount.get(RobotType.PASTR) < 1) { Channel.demandSoldierRole(rc,
-		 * SoldierRole.PASTR_BUILDER); } else if (randall.nextBoolean()) {
-		 * Channel.demandSoldierRole(rc, SoldierRole.ATTACKER); } else {
-		 * Channel.demandSoldierRole(rc, SoldierRole.PROTECTOR); } Direction
-		 * spawnAt = myHq.directionTo(otherHq); if (rc.isActive()) { int i = 0;
-		 * while (!rc.canMove(spawnAt)) { spawnAt = C.DIRECTIONS[i %
-		 * C.DIRECTIONS.length]; i++; } rc.spawn(spawnAt); } }
-		 **/
+		// Check if a robot is spawnable and spawn one if it is //
+		if (rc.senseRobotCount() < GameConstants.MAX_ROBOTS) {
+			if (roleCount.get(SoldierRole.PASTR_BUILDER) < 1
+					&& typeCount.get(RobotType.PASTR) < 1) {
+				Channel.demandSoldierRole(rc, SoldierRole.PASTR_BUILDER);
+			} else if (randall.nextBoolean()) {
+				Channel.demandSoldierRole(rc, SoldierRole.ATTACKER);
+			} else {
+				Channel.demandSoldierRole(rc, SoldierRole.PROTECTOR);
+			}
+
+			Direction spawnAt = myHq.directionTo(otherHq);
+			if (rc.isActive()) {
+				int i = 0;
+				while (!rc.canMove(spawnAt)) {
+					spawnAt = C.DIRECTIONS[i % C.DIRECTIONS.length];
+					i++;
+				}
+				rc.spawn(spawnAt);
+			}
+		}
+
 	}
 
 	private void generatePastrRating() {

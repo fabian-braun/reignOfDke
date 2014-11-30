@@ -25,6 +25,8 @@ public class Channel {
 	public static final int chNextSoldierRole = 65500;
 	// channel is used for any nonsense info
 	public static final int chMisc = 0;
+	// strategy
+	public static final int chStrategy = 1;
 
 	public static void broadcastBestPastrLocation(RobotController rc,
 			MapLocation bestLocation) {
@@ -34,6 +36,26 @@ public class Channel {
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static void broadcastStrategy(RobotController rc, Strategy s) {
+		int data = s.ordinal();
+		try {
+			rc.broadcast(chStrategy, data);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static Strategy getStrategy(RobotController rc) {
+		int data = 0;
+		try {
+			data = rc.readBroadcast(chStrategy);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		Strategy[] s = Strategy.values();
+		return s[data];
 	}
 
 	public static MapLocation getBestPastrLocation(RobotController rc) {

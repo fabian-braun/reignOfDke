@@ -11,7 +11,9 @@ public class Pastr extends AbstractRobotType {
 
 	@Override
 	protected void act() throws GameActionException {
-
+		if (rc.getHealth() < 10) {
+			rc.selfDestruct();
+		}
 	}
 
 	@Override

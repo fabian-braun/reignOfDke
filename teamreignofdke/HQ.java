@@ -15,7 +15,7 @@ public class HQ extends AbstractRobotType {
 	private int width;
 	private MapLocation myHq;
 	private MapLocation otherHq;
-	private int boundaryBeforePastr = 10;
+	private int boundaryBeforePastr = 2;
 	private MapAnalyzer mapAnalyzer;
 
 	public HQ(RobotController rc) {
