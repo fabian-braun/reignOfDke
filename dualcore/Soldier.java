@@ -80,7 +80,9 @@ public class Soldier extends AbstractRobotType {
 		us = rc.getTeam();
 		opponent = us.opponent();
 		pathFinderAStar = new PathFinderAStar(rc);
-		pathFinderMLineBug = new PathFinderMLineBug(rc);
+		pathFinderMLineBug = new PathFinderMLineBug(rc, pathFinderAStar.map,
+				pathFinderAStar.hqSelfLoc, pathFinderAStar.hqEnemLoc,
+				pathFinderAStar.ySize, pathFinderAStar.xSize);
 		pathFinderMLineBug.setTarget(target);
 		pathFinderGreedy = new PathFinderGreedy(rc, randall);
 		enemyHq = rc.senseEnemyHQLocation();
@@ -92,7 +94,9 @@ public class Soldier extends AbstractRobotType {
 				RobotType.SOLDIER.sensorRadiusSquared, opponent);
 		boolean oppHqInRange = myLoc.distanceSquaredTo(enemyHq) <= RobotType.SOLDIER.sensorRadiusSquared;
 		if (fleeCounter > 0) {
-			if (fleeCounter == 2) {
+			if (fleeCounter == 1) {
+				// this adds a "random" factor, such that the robots not always
+				// go backwards and forward on the same line
 				pathFinderGreedy.setTarget(target);
 			}
 			pathFinderGreedy.move();
