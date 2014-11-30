@@ -195,8 +195,16 @@ public class Soldier extends AbstractRobotType {
 		if (flee()) {
 			return;
 		}
+
 		MapLocation currentLoc = rc.getLocation();
-		if (PathFinder.distance(currentLoc, bestPastrLocation) > 4) {
+		if (Channel.needSelfDestruction(rc)) {
+			MapLocation destroy = Channel.getSelfDestructionLocation(rc);
+			if (PathFinder.distance(currentLoc, destroy) > 4) {
+				pathFinderMLineBug.move();
+			} else {
+				rc.attackSquare(destroy);
+			}
+		} else if (PathFinder.distance(currentLoc, bestPastrLocation) > 4) {
 			pathFinderMLineBug.move();
 		} else {
 			Robot[] nearbyEnemies = rc.senseNearbyGameObjects(Robot.class, 10,

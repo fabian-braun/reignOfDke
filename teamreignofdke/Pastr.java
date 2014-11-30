@@ -11,11 +11,11 @@ public class Pastr extends AbstractRobotType {
 
 	@Override
 	protected void act() throws GameActionException {
-		if (rc.getHealth() < 5) {
-			Channel.selfDestruction(rc, rc.getType());
-			rc.selfDestruct();
+		// The direct self-destruction of a pastr gives the opponent 2 million
+		// gallons of milk. So this is nothing we should try.
+		if (rc.getHealth() < 70) {
+			Channel.broadcastSelfDestruction(rc, rc.getLocation());
 		}
-
 	}
 
 	@Override
