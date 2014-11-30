@@ -1,32 +1,44 @@
 package dualcore;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.TerrainTile;
 
 public abstract class PathFinder {
 
 	protected final MapLocation hqSelfLoc;
 	protected final MapLocation hqEnemLoc;
-	protected final int height;
-	protected final int width;
+	protected final int ySize;
+	protected final int xSize;
 	protected final RobotController rc;
+	protected final TerrainTile[][] map;
 
-	public PathFinder(RobotController rc, MapLocation hqSelfLoc,
-			MapLocation hqEnemLoc, int height, int width) {
+	public PathFinder(RobotController rc, TerrainTile[][] map,
+			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
 		this.rc = rc;
 		this.hqSelfLoc = hqSelfLoc;
 		this.hqEnemLoc = hqEnemLoc;
-		this.height = height;
-		this.width = width;
+		this.ySize = ySize;
+		this.xSize = xSize;
+		this.map = map;
 	}
 
 	public PathFinder(RobotController rc) {
 		this.rc = rc;
-		height = rc.getMapHeight();
-		width = rc.getMapWidth();
+		ySize = rc.getMapHeight();
+		xSize = rc.getMapWidth();
 		hqSelfLoc = rc.senseHQLocation();
 		hqEnemLoc = rc.senseEnemyHQLocation();
+		map = new TerrainTile[ySize][xSize];
+		for (int y = 0; y < ySize; y++) {
+			for (int x = 0; x < xSize; x++) {
+				map[y][x] = rc.senseTerrainTile(new MapLocation(x, y));
+			}
+		}
 	}
 
 	public static final int distance(int y1, int x1, int y2, int x2) {
@@ -48,11 +60,28 @@ public abstract class PathFinder {
 	}
 
 	public boolean isXonMap(int x) {
-		return x >= 0 && x < width;
+		return x >= 0 && x < xSize;
 	}
 
 	public boolean isYonMap(int y) {
-		return y >= 0 && y < height;
+		return y >= 0 && y < ySize;
+	}
+
+	public Set<MapLocation> getNeighbours(MapLocation loc) {
+		Set<MapLocation> neighbours = new HashSet<MapLocation>();
+		for (int i = 0; i < C.DIRECTIONS.length; i++) {
+			MapLocation n = loc.add(C.DIRECTIONS[i]);
+			if (isTraversable(n)) {
+				neighbours.add(n);
+			}
+		}
+		return neighbours;
+	}
+
+	public boolean isTraversable(MapLocation location) {
+		return isXonMap(location.x) && isYonMap(location.y)
+				&& !map[location.y][location.x].equals(TerrainTile.VOID)
+				&& !isHqLocation(location);
 	}
 
 	public abstract boolean move() throws GameActionException;

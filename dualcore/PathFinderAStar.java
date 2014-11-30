@@ -17,23 +17,15 @@ import battlecode.common.TerrainTile;
 public class PathFinderAStar extends PathFinder {
 
 	private MapLocation target = new MapLocation(0, 0);
-	protected final TerrainTile[][] map;
 	private Stack<MapLocation> path;
 
 	public PathFinderAStar(RobotController rc) {
 		super(rc);
-		map = new TerrainTile[height][width];
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				map[y][x] = rc.senseTerrainTile(new MapLocation(x, y));
-			}
-		}
 	}
 
 	public PathFinderAStar(RobotController rc, TerrainTile[][] map,
-			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int height, int width) {
-		super(rc, hqSelfLoc, hqEnemLoc, height, width);
-		this.map = map;
+			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
+		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize);
 	}
 
 	@Override
@@ -139,20 +131,4 @@ public class PathFinderAStar extends PathFinder {
 		return distance;
 	}
 
-	public Set<MapLocation> getNeighbours(MapLocation loc) {
-		Set<MapLocation> neighbours = new HashSet<MapLocation>();
-		for (int i = 0; i < C.DIRECTIONS.length; i++) {
-			MapLocation n = loc.add(C.DIRECTIONS[i]);
-			if (isTraversable(n)) {
-				neighbours.add(n);
-			}
-		}
-		return neighbours;
-	}
-
-	public boolean isTraversable(MapLocation location) {
-		return isXonMap(location.x) && isYonMap(location.y)
-				&& !map[location.y][location.x].equals(TerrainTile.VOID)
-				&& !isHqLocation(location);
-	}
 }

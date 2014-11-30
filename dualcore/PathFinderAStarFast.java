@@ -18,22 +18,17 @@ public class PathFinderAStarFast extends PathFinder {
 
 	private MapLocation target = new MapLocation(0, 0);
 	private PathFinderMLineBug bug;
-	protected final TerrainTile[][] map;
+	private TerrainTile[][] mapRed; // small unconcise map
 	private Stack<MapLocation> path;
 	int yCount;
 	int xCount;
 
 	public PathFinderAStarFast(RobotController rc) {
 		super(rc);
-		bug = new PathFinderMLineBug(rc);
-		yCount = height / 2 + height % 2;
-		xCount = width / 2 + width % 2;
-		map = new TerrainTile[yCount][xCount];
-		for (int y = 0; y < yCount; y++) {
-			for (int x = 0; x < xCount; x++) {
-				map[y][x] = rc.senseTerrainTile(new MapLocation(x, y));
-			}
-		}
+		bug = new PathFinderMLineBug(rc, map, hqSelfLoc, hqEnemLoc, ySize,
+				xSize);
+		yCount = ySize / 2 + ySize % 2;
+		xCount = xSize / 2 + xSize % 2;
 	}
 
 	@Override
@@ -139,6 +134,7 @@ public class PathFinderAStarFast extends PathFinder {
 		return distance * 4;
 	}
 
+	@Override
 	public Set<MapLocation> getNeighbours(MapLocation loc) {
 		Set<MapLocation> neighbours = new HashSet<MapLocation>();
 		for (int i = 0; i < C.DIRECTIONS.length; i++) {
@@ -150,6 +146,7 @@ public class PathFinderAStarFast extends PathFinder {
 		return neighbours;
 	}
 
+	@Override
 	public boolean isTraversable(MapLocation location) {
 		return isXonMap(location.x) && isYonMap(location.y)
 				&& !map[location.y][location.x].equals(TerrainTile.VOID)

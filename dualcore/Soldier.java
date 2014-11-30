@@ -119,9 +119,9 @@ public class Soldier extends AbstractRobotType {
 					pathFinderAStar.setTarget(target);
 				}
 				if (!pathFinderAStar.move()) {
-					if (PathFinder.distance(myLoc, target) > 4) {
-						doRandomMove();
-					}
+					// if (PathFinder.distance(myLoc, target) > 4) {
+					doRandomMove();
+					// }
 				}
 				break;
 			case ACCUMULATE:

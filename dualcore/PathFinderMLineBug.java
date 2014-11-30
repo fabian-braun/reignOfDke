@@ -15,8 +15,7 @@ public class PathFinderMLineBug extends PathFinder {
 
 	private Direction lastDir = Direction.NONE;
 	private int minDistance = Integer.MAX_VALUE;
-	private RobotController rc;
-	private MapLocation target;
+	private MapLocation target = new MapLocation(-1, -1);
 	private boolean obstacleMode = false;
 	private Set<MapLocation> mTiles = new HashSet<MapLocation>();
 	private Set<MapLocation> visited = new HashSet<MapLocation>();
@@ -32,9 +31,11 @@ public class PathFinderMLineBug extends PathFinder {
 
 	public PathFinderMLineBug(RobotController rc) {
 		super(rc);
-		this.rc = rc;
-		// init target to middle of map
-		setTarget(new MapLocation(width / 2, height / 2));
+	}
+
+	public PathFinderMLineBug(RobotController rc, TerrainTile[][] map,
+			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
+		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize);
 	}
 
 	@Override
@@ -64,8 +65,8 @@ public class PathFinderMLineBug extends PathFinder {
 
 	private Direction getNextAroundObstacle() {
 		int nextDirToTry = (currentTurnDirection.indexOf(lastDir) + 8 - 2) % 8;
-		while (!isWalkable(rc.getLocation(),
-				currentTurnDirection.get(nextDirToTry))) {
+		while (!isTraversable(rc.getLocation().add(
+				currentTurnDirection.get(nextDirToTry)))) {
 			nextDirToTry++;
 			nextDirToTry %= 8;
 		}
@@ -100,8 +101,7 @@ public class PathFinderMLineBug extends PathFinder {
 			}
 		} else { // move on mLine
 			moveTo = getNextOnMLine();
-			rc.senseTerrainTile(current.add(moveTo));
-			if (!isWalkable(current, moveTo)) {
+			if (!isTraversable(current.add(moveTo))) {
 				// System.out.println("mLine left at " + rc.getLocation());
 				obstacleMode = true;
 				decideTurnDirection();
@@ -111,12 +111,6 @@ public class PathFinderMLineBug extends PathFinder {
 			}
 		}
 		return moveTo;
-	}
-
-	private boolean isWalkable(MapLocation current, Direction into) {
-		TerrainTile target = rc.senseTerrainTile(current.add(into));
-		return TerrainTile.NORMAL.equals(target)
-				|| TerrainTile.ROAD.equals(target);
 	}
 
 	@Override

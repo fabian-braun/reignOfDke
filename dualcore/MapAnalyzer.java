@@ -15,8 +15,8 @@ public class MapAnalyzer {
 
 	private MapLocation myHq;
 	private MapLocation otherHq;
-	private int height;
-	private int width;
+	private int ySize;
+	private int xSize;
 
 	private MapLocation bestForPastr;
 	private char[][] mapRepresentation;
@@ -28,12 +28,12 @@ public class MapAnalyzer {
 	private boolean realDistanceReady = false;
 
 	public MapAnalyzer(RobotController rc, MapLocation myHQ,
-			MapLocation otherHq, int height, int width) {
+			MapLocation otherHq, int ySize, int xSize) {
 		this.rc = rc;
 		this.myHq = myHQ;
 		this.otherHq = otherHq;
-		this.height = height;
-		this.width = width;
+		this.ySize = ySize;
+		this.xSize = xSize;
 	}
 
 	/**
@@ -43,7 +43,7 @@ public class MapAnalyzer {
 	 * algorithm is Dijkstra.
 	 */
 	public void generateRealDistanceMap() {
-		realDistanceFromOpponentHQ = new int[height][width];
+		realDistanceFromOpponentHQ = new int[ySize][xSize];
 		for (int[] row : realDistanceFromOpponentHQ) {
 			Arrays.fill(row, Integer.MAX_VALUE - 1);
 		}
@@ -71,11 +71,11 @@ public class MapAnalyzer {
 	}
 
 	private boolean isXonMap(int x) {
-		return x >= 0 && x < width;
+		return x >= 0 && x < xSize;
 	}
 
 	private boolean isYonMap(int y) {
-		return y >= 0 && y < height;
+		return y >= 0 && y < ySize;
 	}
 
 	/**
@@ -142,13 +142,13 @@ public class MapAnalyzer {
 			return bestForPastr;
 		}
 		mapCowGrowth = rc.senseCowGrowth();
-		mapPastrRating = new double[height][width];
+		mapPastrRating = new double[ySize][xSize];
 		double currentBestRating = 0;
 		bestForPastr = new MapLocation(0, 0);
-		int xStep = width / 25 + 1;
-		int yStep = height / 25 + 1;
-		for (int y = 2; y < height; y += yStep) {
-			for (int x = 2; x < width; x += xStep) {
+		int xStep = xSize / 25 + 1;
+		int yStep = ySize / 25 + 1;
+		for (int y = 2; y < ySize; y += yStep) {
+			for (int x = 2; x < xSize; x += xStep) {
 				TerrainTile tile = rc.senseTerrainTile(new MapLocation(x, y));
 				if (tile != TerrainTile.NORMAL && tile != TerrainTile.ROAD) {
 					continue;
@@ -156,8 +156,8 @@ public class MapAnalyzer {
 				double sumCowGrowth = 0;
 				for (int ylocal = y - 1; ylocal <= y + 1; ylocal++) {
 					for (int xlocal = x - 1; xlocal <= x + 1; xlocal++) {
-						if (ylocal >= 0 && xlocal >= 0 && ylocal < height
-								&& xlocal < width) {
+						if (ylocal >= 0 && xlocal >= 0 && ylocal < ySize
+								&& xlocal < xSize) {
 							// mapCowGrowth has x before y.. this is no bug
 							sumCowGrowth += mapCowGrowth[x][y];
 						}
@@ -182,9 +182,9 @@ public class MapAnalyzer {
 	 * should not be used in competition. Prints out the map terrain
 	 */
 	public void printMap() {
-		mapRepresentation = new char[height][width];
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
+		mapRepresentation = new char[ySize][xSize];
+		for (int y = 0; y < ySize; y++) {
+			for (int x = 0; x < xSize; x++) {
 				TerrainTile tile = rc.senseTerrainTile(new MapLocation(x, y));
 				switch (tile) {
 				case OFF_MAP:
@@ -222,8 +222,8 @@ public class MapAnalyzer {
 	 */
 	public void printMapAnalysis() {
 		System.out.println("map:");
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
+		for (int y = 0; y < ySize; y++) {
+			for (int x = 0; x < xSize; x++) {
 				System.out.print(String.format("%5.0f", mapPastrRating[y][x]));
 			}
 			System.out.println();
@@ -238,8 +238,8 @@ public class MapAnalyzer {
 	 */
 	public void printMapAnalysisDistance() {
 		System.out.println("distance to opponent map:");
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
+		for (int y = 0; y < ySize; y++) {
+			for (int x = 0; x < xSize; x++) {
 				if (realDistanceFromOpponentHQ[y][x] > 1000) {
 					System.out.print("XX ");
 				} else {
