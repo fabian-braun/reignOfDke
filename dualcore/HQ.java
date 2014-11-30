@@ -44,11 +44,13 @@ public class HQ extends AbstractRobotType {
 			if (rc.canMove(spawningDefault))
 				rc.spawn(spawningDefault);
 			else {
-				// TODO: this is a dirty workaround! randall should not be
-				// misused here
-				int r = randall.nextInt(C.DIRECTIONS.length);
-				if (rc.canMove(C.DIRECTIONS[r])) {
-					rc.spawn(C.DIRECTIONS[r]);
+				int i = 0;
+				Direction dir = spawningDefault;
+				while (!rc.canMove(dir) && i < C.DIRECTIONS.length) {
+					dir = dir.rotateLeft();
+				}
+				if (rc.canMove(dir)) {
+					rc.spawn(dir);
 				}
 			}
 		}
