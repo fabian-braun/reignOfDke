@@ -377,6 +377,7 @@ public class RobotPlayer {
 		return true;
 	}
 
+	@SuppressWarnings("unused")
 	public static void findGoodLocations() throws GameActionException {
 		double highestCows = 1;
 		int bestx = 0;

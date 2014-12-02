@@ -832,6 +832,7 @@ public class Assaulter {
 	 * @throws GameActionException
 	 */
 
+	@SuppressWarnings("unused")
 	public Direction getSuicideDir(Robot[] enemies) throws GameActionException {
 		MapLocation cur = rc.getLocation();
 		double myHealth = rc.getHealth();

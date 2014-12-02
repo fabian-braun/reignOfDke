@@ -42,6 +42,7 @@ public class RobotSoldier {
 	private static boolean onPathTrack;
 	private static MapLocation lastNetworkPoint;
 	private static MapLocation previousGoal;
+	@SuppressWarnings("unused")
 	private static int lonelyTurns;
 	private static boolean sneaking;
 	private static AlertLevel alertLevel;
@@ -59,6 +60,7 @@ public class RobotSoldier {
 		alertLevel = AlertLevel.GREEN;
 	}
 
+	@SuppressWarnings("unused")
 	public static void run(RobotController rc) throws GameActionException {
 		sneaking = false;
 		myLoc = rc.getLocation();
@@ -461,6 +463,7 @@ public class RobotSoldier {
 		return !rc.isActive();
 	}
 
+	@SuppressWarnings("unused")
 	private static boolean canAvoid(MapLocation goal, MapLocation avoid) {
 		Direction toAvoid = myLoc.directionTo(avoid);
 		Direction toGoal = myLoc.directionTo(goal);

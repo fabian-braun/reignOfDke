@@ -65,6 +65,7 @@ public class AStar {
 	 * return null; }
 	 */
 
+	@SuppressWarnings("unused")
 	private static int moveSpeed(MapLocation l, Direction d) {
 		switch (d) {
 		case EAST:
@@ -91,12 +92,14 @@ public class AStar {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private static int heuristic(int ax, int ay, int bx, int by) {
 		int dx = Math.abs(ax - bx);
 		int dy = Math.abs(ay - by);
 		return (dx + dy) * 10;
 	}
 
+	@SuppressWarnings("unused")
 	private static ArrayList<MapLocation> buildPath() {
 		ArrayList<MapLocation> path = new ArrayList<MapLocation>();
 		MapLocation current = end;

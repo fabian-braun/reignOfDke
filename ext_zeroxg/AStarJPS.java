@@ -259,6 +259,7 @@ public class AStarJPS {
 		return (dx + dy) * 10 - Math.min(dx, dy) * 6;
 	}
 
+	@SuppressWarnings("unused")
 	private static Path buildPath() {
 		ArrayList<MapLocation> path = new ArrayList<MapLocation>();
 		MapLocation current = end;

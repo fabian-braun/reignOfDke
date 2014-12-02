@@ -7,6 +7,7 @@ import battlecode.common.RobotType;
 import battlecode.common.TerrainTile;
 
 public class SunrayHerder {
+	@SuppressWarnings("unused")
 	private Controller c;
 	private RobotController rc;
 

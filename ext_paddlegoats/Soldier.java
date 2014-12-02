@@ -199,6 +199,7 @@ public class Soldier extends Bot {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	static void newmicro() throws GameActionException {
 
 		// getting shot threat
