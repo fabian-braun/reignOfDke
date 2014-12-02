@@ -85,7 +85,7 @@ public class Soldier extends AbstractRobotType {
 				pathFinderAStar.ySize, pathFinderAStar.xSize);
 		pathFinderMLineBug.setTarget(target);
 		pathFinderGreedy = new PathFinderGreedy(rc, randall);
-		enemyHq = rc.senseEnemyHQLocation();
+		enemyHq = pathFinderAStar.hqEnemLoc;
 	}
 
 	private void actMicro(MapLocation target, Task task)

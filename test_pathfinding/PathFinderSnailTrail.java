@@ -1,9 +1,9 @@
-package teamKingOfTasks;
+package test_pathfinding;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Set;
 
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -16,8 +16,8 @@ public class PathFinderSnailTrail extends PathFinder {
 	private MapLocation target;
 
 	public PathFinderSnailTrail(RobotController rc, TerrainTile[][] map,
-			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int height, int width) {
-		super(rc, map, hqEnemLoc, hqEnemLoc, height, width);
+			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
+		super(rc, map, hqEnemLoc, hqEnemLoc, ySize, xSize);
 	}
 
 	public PathFinderSnailTrail(RobotController rc) {
@@ -26,31 +26,16 @@ public class PathFinderSnailTrail extends PathFinder {
 
 	private Direction getNextDirection() {
 		MapLocation current = rc.getLocation();
-		List<MapLocation> possibleLocs = new ArrayList<MapLocation>();
-		possibleLocs.add(new MapLocation(current.x - 1, current.y - 1));
-		possibleLocs.add(new MapLocation(current.x - 1, current.y));
-		possibleLocs.add(new MapLocation(current.x - 1, current.y + 1));
-		possibleLocs.add(new MapLocation(current.x, current.y - 1));
-		possibleLocs.add(new MapLocation(current.x, current.y + 1));
-		possibleLocs.add(new MapLocation(current.x + 1, current.y - 1));
-		possibleLocs.add(new MapLocation(current.x + 1, current.y));
-		possibleLocs.add(new MapLocation(current.x + 1, current.y + 1));
+		lastVisited.put(current, Clock.getRoundNum());
+		Set<MapLocation> neighbours = getNeighbours(current);
 		Direction dir = Direction.NONE;
 		int bestRating = Integer.MAX_VALUE;
-		for (MapLocation next : possibleLocs) {
-			if (next.y < 0 || next.x < 0 || next.y >= map.length
-					|| next.x >= map[0].length) {
-				// out of range
-				continue;
-			}
-			if (map[next.y][next.x] == TerrainTile.OFF_MAP
-					|| map[next.y][next.x] == TerrainTile.VOID
-					|| isHqLocation(new MapLocation(next.x, next.y))) {
-				continue;
-			}
+		for (MapLocation next : neighbours) {
 			int dist = distance(next, target);
 			if (lastVisited.containsKey(next)) {
-				dist += map.length + map[0].length - lastVisited.get(next);
+				// this tile has been visited. Make the rating worse: increase
+				// it by roundnumber of last visit + max distance on this map
+				dist += lastVisited.get(next) + ySize + xSize;
 			}
 			if (dist < bestRating) {
 				bestRating = dist;
@@ -86,4 +71,8 @@ public class PathFinderSnailTrail extends PathFinder {
 		this.target = target;
 	}
 
+	@Override
+	public MapLocation getTarget() {
+		return target;
+	}
 }
