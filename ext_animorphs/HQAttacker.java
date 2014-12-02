@@ -24,6 +24,7 @@ public class HQAttacker {
 		damageValues = new double[2 * RADIUS_CHECK + 1][2 * RADIUS_CHECK + 1];
 	}
 
+	@SuppressWarnings("unused")
 	public MapLocation quickDamage() throws GameActionException {
 		int splashAttackRadius = (int) (hc.attackRadiusSquared + RADIUS_MAX_SQUARED_ADDER);
 		Robot[] enemyRobots = hc.rc.senseNearbyGameObjects(Robot.class,

@@ -134,6 +134,7 @@ public class RobotHQ {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private static void strategy() throws GameActionException {
 		MapLocation[] myPASTR = rc.sensePastrLocations(rc.getTeam());
 		MapLocation[] enemyPASTRs = rc.sensePastrLocations(rc.getTeam()
@@ -281,6 +282,7 @@ public class RobotHQ {
 		return (int) (pastrTurnFactor * mDist + pastrTurnBase);
 	}
 
+	@SuppressWarnings("unused")
 	private static MapLocation bestRallyPoint() {
 		int dx = enemyHQ.x - myHQ.x;
 		int dy = enemyHQ.y - myHQ.y;
@@ -515,6 +517,7 @@ public class RobotHQ {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private static int mapInitCost() {
 		return 5 * rc.getMapHeight() * rc.getMapWidth() * 10
 				/ GameConstants.BYTECODE_LIMIT;

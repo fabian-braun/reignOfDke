@@ -71,6 +71,7 @@ public class Bfs {
 		return metadata >= 1000000000;
 	}
 
+	@SuppressWarnings("unused")
 	private static int getMetadataPriority(int metadata) {
 		return (metadata % 1000000000) / 100000000;
 	}

@@ -10,6 +10,7 @@ import battlecode.common.RobotType;
 import battlecode.common.Team;
 
 public class SoldierAttacker {
+	@SuppressWarnings("unused")
 	private SoldierController sc;
 	private Robot[] enemyRobotsInAttackRange;
 	private RobotController rc;

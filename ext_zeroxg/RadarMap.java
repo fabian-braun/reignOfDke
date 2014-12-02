@@ -5,6 +5,7 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
 public class RadarMap {
+	@SuppressWarnings("unused")
 	private static final int validTurnCount = 2;
 	private int band;
 

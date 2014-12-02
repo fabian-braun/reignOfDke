@@ -403,6 +403,7 @@ public class SpiralHerder {
 	 * 
 	 * @param pastrLoc
 	 */
+	@SuppressWarnings("unused")
 	private void initMaxDistanceAndCurrentTargets(MapLocation pastrLoc) {
 		int radius = (int) Math.sqrt(c.attackRadiusSquared);
 		int diag = radius * 100 / 141;

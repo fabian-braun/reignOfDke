@@ -47,6 +47,7 @@ public class BFS {
 		queueEnd++;
 	}
 
+	@SuppressWarnings("unused")
 	public boolean calc(int byteLimit) throws GameActionException {
 		int start = Clock.getBytecodeNum();
 		int num = 0;

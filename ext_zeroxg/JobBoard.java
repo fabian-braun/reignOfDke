@@ -81,6 +81,7 @@ public class JobBoard {
 		return null;
 	}
 
+	@SuppressWarnings("unused")
 	private void printBand(RobotController rc, int x)
 			throws GameActionException {
 		System.out.println();

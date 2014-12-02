@@ -24,8 +24,11 @@ public class RobotNT {
 	private static Direction[][] from;
 	private static MapLocation[] senseLocs;
 	private static final int maxRange = 150;
+	@SuppressWarnings("unused")
 	private static List<MapLocation> outerPath;
+	@SuppressWarnings("unused")
 	private static final int innerTurns = 10;
+	@SuppressWarnings("unused")
 	private static int currentInnerTurn = 0;
 	private static final int diagonalMinDist = 1;
 	private static final int minDist = 1;
@@ -102,6 +105,7 @@ public class RobotNT {
 		return new MapLocation(loc.x + times * dir.dx, loc.y + times * dir.dy);
 	}
 
+	@SuppressWarnings("unused")
 	private static void attackBestInSensorRange(RobotController rc)
 			throws GameActionException {
 		double bestPop = -1;
@@ -131,6 +135,7 @@ public class RobotNT {
 		return false;
 	}
 
+	@SuppressWarnings("unused")
 	private static boolean pastrExists(RobotController rc, MapLocation loc) {
 		try {
 			Robot r = (Robot) rc.senseObjectAtLocation(loc);
@@ -158,6 +163,7 @@ public class RobotNT {
 		return nearest;
 	}
 
+	@SuppressWarnings("unused")
 	private static void initPaths(RobotController rc) {
 		PerfCounter.start();
 
