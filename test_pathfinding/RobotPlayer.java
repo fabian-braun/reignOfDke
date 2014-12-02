@@ -13,22 +13,29 @@ public class RobotPlayer {
 
 	private static MapLocation myHq;
 	private static MapLocation otherHq;
+	private static MapLocation start;
 	private static PathFinder pathFinder;
 	private static boolean initComplete = false;
 	private static String pfType = "";
 	private static MapLocation target;
 	private static int spawnNextInRound = 0;
 	private static int robotCount = 0;
+	private static int moveCount = 0;
 
 	public static void run(RobotController rc) throws GameActionException {
 		Random randall = new Random();
 		myHq = rc.senseHQLocation();
 		otherHq = rc.senseEnemyHQLocation();
+		start = rc.getLocation();
+		target = otherHq.add(start.directionTo(myHq));
 		loop: while (true) {
 			if (rc.getType().equals(RobotType.HQ)
 					&& Clock.getRoundNum() > spawnNextInRound) {
 				Direction spawnAt = myHq.directionTo(otherHq);
 				if (rc.isActive() && robotCount < 4) {
+					while (!rc.canMove(spawnAt)) {
+						spawnAt = spawnAt.rotateLeft();
+					}
 					if (rc.canMove(spawnAt)) {
 						rc.spawn(spawnAt);
 						spawnNextInRound += 200;
@@ -60,7 +67,6 @@ public class RobotPlayer {
 						break;
 					}
 					rc.setIndicatorString(0, pfType);
-					target = otherHq.add(otherHq.directionTo(myHq));
 					System.out.println("start " + pfType + " in round "
 							+ Clock.getRoundNum() + "; used bytecode "
 							+ Clock.getBytecodeNum() + "; left bytecode "
@@ -75,11 +81,14 @@ public class RobotPlayer {
 						System.out.println("finish " + pfType + " in round "
 								+ Clock.getRoundNum() + "; used bytecode "
 								+ Clock.getBytecodeNum() + "; left bytecode "
-								+ Clock.getBytecodesLeft());
+								+ Clock.getBytecodesLeft() + "; moves: "
+								+ moveCount);
 						break loop;
 					}
-					if (rc.isActive())
+					if (rc.isActive()) {
 						pathFinder.move();
+						moveCount++;
+					}
 				}
 			}
 			rc.yield();
