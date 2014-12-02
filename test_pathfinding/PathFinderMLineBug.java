@@ -16,7 +16,6 @@ public class PathFinderMLineBug extends PathFinder {
 	private MapLocation target = new MapLocation(-1, -1);
 	private boolean obstacleMode = false;
 	private Set<MapLocation> mTiles = new HashSet<MapLocation>();
-	private Set<MapLocation> visited = new HashSet<MapLocation>();
 	private boolean turnClockWise = true;
 
 	public PathFinderMLineBug(RobotController rc) {
@@ -40,7 +39,6 @@ public class PathFinderMLineBug extends PathFinder {
 	private void updateMLine() {
 		obstacleMode = false;
 		mTiles.clear();
-		visited.clear();
 		MapLocation current = rc.getLocation();
 		minDistance = PathFinder.distance(current, target);
 		MapLocation temp = new MapLocation(current.x, current.y);
@@ -54,15 +52,28 @@ public class PathFinderMLineBug extends PathFinder {
 	}
 
 	private Direction getNextAroundObstacle() {
-		System.out.println(">>>>>>>>>>>>>");
-		System.out.println("last: " + lastDir);
-		Direction nextDirToTry = lastDir.rotateRight().rotateRight();
-		while (!isTraversable(rc.getLocation().add(nextDirToTry))) {
-			System.out.print(nextDirToTry + " -> ");
-			nextDirToTry = nextDirToTry.rotateLeft();
-			System.out.println(nextDirToTry);
+		// System.out.println(">>>>>>>>>>>>>");
+		// System.out.println("last: " + lastDir);
+		Direction nextDirToTry;
+		if (turnClockWise) {
+			nextDirToTry = lastDir.rotateRight().rotateRight();
+			while (!isTraversable(rc.getLocation().add(nextDirToTry))) {
+				// System.out.print(nextDirToTry + " -> ");
+				nextDirToTry = nextDirToTry.rotateLeft();
+				// System.out.println(nextDirToTry);
+			}
+			// System.out.println("<<<<<<<<<<<<<");
+
+		} else {
+			nextDirToTry = lastDir.rotateLeft().rotateLeft();
+			while (!isTraversable(rc.getLocation().add(nextDirToTry))) {
+				// System.out.print(nextDirToTry + " -> ");
+				nextDirToTry = nextDirToTry.rotateRight();
+				// System.out.println(nextDirToTry);
+			}
+			// System.out.println("<<<<<<<<<<<<<");
+
 		}
-		System.out.println("<<<<<<<<<<<<<");
 		return nextDirToTry;
 	}
 
@@ -92,7 +103,10 @@ public class PathFinderMLineBug extends PathFinder {
 			if (!isTraversable(current.add(moveTo))) {
 				obstacleMode = true;
 				decideTurnDirection();
-				lastDir = moveTo.rotateLeft().rotateLeft();
+				if (turnClockWise)
+					lastDir = moveTo.rotateLeft().rotateLeft();
+				else
+					lastDir = moveTo.rotateRight().rotateRight();
 				moveTo = getNextAroundObstacle();
 				lastDir = moveTo;
 			} else {
@@ -105,10 +119,6 @@ public class PathFinderMLineBug extends PathFinder {
 	@Override
 	public boolean move() throws GameActionException {
 		MapLocation current = rc.getLocation();
-		if (!visited.contains(current)) {
-			updateMLine();
-		}
-		visited.add(current);
 		Direction moveTo = getNextDirection();
 		if (rc.canMove(moveTo)) {
 			rc.move(moveTo);
