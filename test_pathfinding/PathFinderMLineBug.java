@@ -100,8 +100,6 @@ public class PathFinderMLineBug extends PathFinder {
 		Direction moveTo = getNextDirection();
 		if (rc.canMove(moveTo)) {
 			rc.move(moveTo);
-			rc.setIndicatorString(1,
-					"is on mline:" + mTiles.contains(current.add(moveTo)));
 			return true;
 		} else {
 			return false;
