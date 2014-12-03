@@ -32,7 +32,7 @@ public class RobotPlayer {
 			if (rc.getType().equals(RobotType.HQ)
 					&& Clock.getRoundNum() > spawnNextInRound) {
 				Direction spawnAt = myHq.directionTo(otherHq);
-				if (rc.isActive() && robotCount < 4) {
+				if (rc.isActive() && robotCount < 1) {
 					while (!rc.canMove(spawnAt)) {
 						spawnAt = spawnAt.rotateLeft();
 					}
@@ -50,9 +50,9 @@ public class RobotPlayer {
 					int robotCount = rc.readBroadcast(0);
 					switch (robotCount) {
 					case 1:
-						pfType = "PathFinderGreedy";
-						pathFinder = new PathFinderGreedy(rc, randall);
-						break;
+						// pfType = "PathFinderGreedy";
+						// pathFinder = new PathFinderGreedy(rc, randall);
+						// break;
 					case 2:
 						pfType = "PathFinderMLineBug";
 						pathFinder = new PathFinderMLineBug(rc);
