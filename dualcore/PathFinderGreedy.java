@@ -15,7 +15,6 @@ public class PathFinderGreedy extends PathFinder {
 
 	public PathFinderGreedy(RobotController rc, Random randall) {
 		super(rc);
-		target = hqSelfLoc;
 		this.randall = randall;
 	}
 

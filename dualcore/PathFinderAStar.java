@@ -31,10 +31,14 @@ public class PathFinderAStar extends PathFinder {
 	@Override
 	public boolean move() throws GameActionException {
 		if (path.isEmpty()) {
-			System.out.println("A-Star does not know the way");
 			return false;
 		} else {
 			MapLocation myLoc = rc.getLocation();
+			while (myLoc.equals(path.peek())) {
+				// we are already here due to some movement performed outside of
+				// this class
+				path.pop();
+			}
 			if (!myLoc.isAdjacentTo(path.peek())) {
 				path = aStar(myLoc, target);
 			}
