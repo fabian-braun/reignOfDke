@@ -53,22 +53,13 @@ public class PathFinderMLineBug extends PathFinder {
 	}
 
 	private Direction getNextAroundObstacle() {
-		// System.out.println(">>>>>>>>>>>>>");
-		// System.out.println("last: " + lastDir);
 		Direction nextDirToTry;
 		nextDirToTry = lastDir.rotateRight().rotateRight();
 		while (!isTraversable(rc.getLocation().add(nextDirToTry))) {
-			System.out.print(nextDirToTry + " -> ");
 			nextDirToTry = nextDirToTry.rotateLeft();
-			System.out.println(nextDirToTry);
 		}
-		System.out.println("<<<<<<<<<<<<<");
 		return nextDirToTry;
 	}
-
-	// private void decideTurnDirection() {
-	// turnClockWise = rc.getRobot().getID() % 2 < 1;
-	// }
 
 	private Direction getNextOnMLine() {
 		return rc.getLocation().directionTo(target);

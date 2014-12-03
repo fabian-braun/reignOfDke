@@ -31,7 +31,6 @@ public class PathFinderAStar extends PathFinder {
 	@Override
 	public boolean move() throws GameActionException {
 		if (path.isEmpty()) {
-			System.out.println("A-Star does not know the way");
 			return false;
 		} else {
 			MapLocation myLoc = rc.getLocation();
