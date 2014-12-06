@@ -16,7 +16,6 @@ public class PathFinderMLineBug extends PathFinder {
 	private MapLocation target = new MapLocation(-1, -1);
 	private boolean obstacleMode = false;
 	private Set<MapLocation> mTiles = new HashSet<MapLocation>();
-	private Set<MapLocation> visited = new HashSet<MapLocation>();
 
 	public PathFinderMLineBug(RobotController rc) {
 		super(rc);
@@ -39,7 +38,6 @@ public class PathFinderMLineBug extends PathFinder {
 	private void updateMLine() {
 		obstacleMode = false;
 		mTiles.clear();
-		visited.clear();
 		MapLocation current = rc.getLocation();
 		minDistance = PathFinder.distance(current, target);
 		MapLocation temp = new MapLocation(current.x, current.y);
@@ -67,15 +65,14 @@ public class PathFinderMLineBug extends PathFinder {
 
 	public Direction getNextDirection() {
 		MapLocation current = rc.getLocation();
-		visited.add(current);
 		Direction moveTo;
 		if (obstacleMode) { // move around obstacle
 			// check if mLine reached again
 			if (mTiles.contains(current)
-					&& PathFinder.distance(current, target) < minDistance
-					&& !visited.contains(current)) {
+					&& PathFinder.distance(current, target) < minDistance) {
 				obstacleMode = false;
 				moveTo = getNextOnMLine();
+				minDistance = PathFinder.distance(current, target);
 			} else {
 				moveTo = getNextAroundObstacle();
 				lastDir = moveTo;
@@ -84,7 +81,7 @@ public class PathFinderMLineBug extends PathFinder {
 			moveTo = getNextOnMLine();
 			if (!isTraversable(current.add(moveTo))) {
 				obstacleMode = true;
-				lastDir = moveTo.rotateLeft();
+				lastDir = moveTo.rotateLeft().rotateLeft();
 				moveTo = getNextAroundObstacle();
 				lastDir = moveTo;
 			} else {
@@ -96,7 +93,6 @@ public class PathFinderMLineBug extends PathFinder {
 
 	@Override
 	public boolean move() throws GameActionException {
-		MapLocation current = rc.getLocation();
 		Direction moveTo = getNextDirection();
 		if (rc.canMove(moveTo)) {
 			rc.move(moveTo);

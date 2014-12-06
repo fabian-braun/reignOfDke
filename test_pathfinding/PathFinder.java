@@ -48,7 +48,7 @@ public abstract class PathFinder {
 			dx *= -1;
 		if (dy < 0)
 			dy *= -1;
-		return dx + dy;
+		return dx > dy ? dx : dy;
 	}
 
 	public static final int distance(MapLocation loc1, MapLocation loc2) {
