@@ -3,6 +3,7 @@ package reignierOfDKE;
 import java.util.ArrayList;
 import java.util.List;
 
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -17,9 +18,10 @@ public class Soldier extends AbstractRobotType {
 	private boolean inactive = false;
 	private int teamId;
 	private int id;
-	private PathFinderMLineBug pathFinderMLineBug;
+	private PathFinderSnailTrail pathFinderSnailTrail;
 	private PathFinderAStar pathFinderAStar;
 	protected PathFinderGreedy pathFinderGreedy;
+	private MapLocation myPreviousLocation;
 	private Team us;
 	private Team opponent;
 	private MapLocation enemyHq;
@@ -79,13 +81,16 @@ public class Soldier extends AbstractRobotType {
 
 		us = rc.getTeam();
 		opponent = us.opponent();
-		pathFinderAStar = new PathFinderAStar(rc);
-		pathFinderMLineBug = new PathFinderMLineBug(rc, pathFinderAStar.map,
-				pathFinderAStar.hqSelfLoc, pathFinderAStar.hqEnemLoc,
-				pathFinderAStar.ySize, pathFinderAStar.xSize);
-		pathFinderMLineBug.setTarget(target);
+		pathFinderAStar = new PathFinderAStar(rc, id);
+		pathFinderSnailTrail = new PathFinderSnailTrail(rc,
+				pathFinderAStar.map, pathFinderAStar.hqSelfLoc,
+				pathFinderAStar.hqEnemLoc, pathFinderAStar.ySize,
+				pathFinderAStar.xSize);
+		pathFinderSnailTrail.setTarget(target);
 		pathFinderGreedy = new PathFinderGreedy(rc, randall);
 		enemyHq = pathFinderAStar.hqEnemLoc;
+
+		myPreviousLocation = rc.getLocation();
 	}
 
 	private void actMicro(MapLocation target, Task task)
@@ -119,13 +124,51 @@ public class Soldier extends AbstractRobotType {
 					break;
 				}
 			case GOTO:
-				if (!target.equals(pathFinderAStar.getTarget())) {
-					pathFinderAStar.setTarget(target);
-				}
-				if (!pathFinderAStar.move()) {
-					// if (PathFinder.distance(myLoc, target) > 4) {
-					doRandomMove();
-					// }
+				// Check if I am the leader of my team
+				if (amILeader()) {
+					rc.setIndicatorString(2, "Leading");
+					// Check if we need to wait for our team members
+					if (Clock.getRoundNum() % 5 == 0) {
+						// Calculate the route to the target
+						if (!target.equals(pathFinderAStar.getTarget())) {
+							pathFinderAStar.setTarget(target);
+						}
+						// If we have reached the target, set temporary target
+						// to
+						// target
+						if (myLoc.equals(target)) {
+							Channel.broadcastTemporaryTarget(rc, teamId, target);
+						} else if (!pathFinderAStar.move()) {
+							// Something went wrong
+							doRandomMove();
+						} else {
+							// Means the leader moved
+							// Broadcast temporary target (current + direction)
+							MapLocation tempTarget = myLoc
+									.add(myPreviousLocation.directionTo(myLoc));
+							Channel.broadcastTemporaryTarget(rc, teamId,
+									tempTarget);
+							// Save my previous location
+							myPreviousLocation = myLoc;
+						}
+					}
+				} else {
+					rc.setIndicatorString(2, "Following");
+					// If I am not the leader, check if my leader has set a
+					// temporary target
+					MapLocation tempTarget = Channel.getTemporaryTarget(rc,
+							teamId);
+					if (tempTarget.x > 0 || tempTarget.y > 0) {
+						rc.setIndicatorString(2, "Following to " + tempTarget);
+						// Move to temporary target
+						if (!tempTarget
+								.equals(pathFinderSnailTrail.getTarget())) {
+							pathFinderSnailTrail.setTarget(tempTarget);
+						}
+						pathFinderSnailTrail.move();
+					} else {
+						doRandomMove();
+					}
 				}
 				break;
 			case CIRCULATE:
@@ -188,6 +231,11 @@ public class Soldier extends AbstractRobotType {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private boolean amILeader() {
+		// Return whether or not my ID is the ID of the leader of my team
+		return id == Channel.getLeaderIdOfTeam(rc, teamId);
 	}
 
 	/**
