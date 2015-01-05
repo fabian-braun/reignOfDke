@@ -173,8 +173,6 @@ public class Soldier extends AbstractRobotType {
 		if (!newTarget.equals(target) || !newTask.equals(task)) {
 			task = newTask;
 			target = newTarget;
-			// the task has changed
-			pathFinderMLineBug.setTarget(target);
 		}
 		rc.setIndicatorString(1, "DOING TASK " + task + " ON TARGET " + target);
 	}
