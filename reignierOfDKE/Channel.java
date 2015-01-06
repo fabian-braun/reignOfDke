@@ -55,6 +55,7 @@ public class Channel {
 	 * (+2) task of the team;<br\>
 	 * (+3) target of the team;<br\>
 	 * (+4) positional center of the team;<br\>
+	 * (+5) temporary target of the team, set by leader;<br\>
 	 * 
 	 * @param teamId
 	 * @return
@@ -171,9 +172,9 @@ public class Channel {
 		// Loop through all robots
 		for (int id = 0; id < GameConstants.MAX_ROBOTS; id++) {
 			// Check if the robot is alive
-			if (Channel.isAlive(rc, id)) {
+			if (isAlive(rc, id)) {
 				// Check the alive robot is on the same team
-				if (teamId == Channel.getTeamIdOfSoldier(rc, id)) {
+				if (teamId == getTeamIdOfSoldier(rc, id)) {
 					// The robot with the lowest ID is the leader
 					return id;
 				}
