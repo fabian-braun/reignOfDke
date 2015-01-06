@@ -31,7 +31,7 @@ public class PathFinderSnailTrail extends PathFinder {
 		Direction dir = Direction.NONE;
 		int bestRating = Integer.MAX_VALUE;
 		for (MapLocation next : neighbours) {
-			int dist = distance(next, target);
+			int dist = getRequiredMoves(next, target);
 			if (lastVisited.containsKey(next)) {
 				// this tile has been visited. Make the rating worse: increase
 				// it by roundnumber of last visit + max distance on this map
@@ -74,5 +74,10 @@ public class PathFinderSnailTrail extends PathFinder {
 	@Override
 	public MapLocation getTarget() {
 		return target;
+	}
+
+	@Override
+	public boolean isTargetReached() {
+		return rc.getLocation().equals(target);
 	}
 }

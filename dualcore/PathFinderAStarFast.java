@@ -3,12 +3,12 @@ package dualcore;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.Stack;
 
-import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
@@ -17,40 +17,194 @@ import battlecode.common.TerrainTile;
 public class PathFinderAStarFast extends PathFinder {
 
 	private MapLocation target = new MapLocation(0, 0);
-	private PathFinderMLineBug bug;
-	private TerrainTile[][] mapRed; // small unconcise map
-	private Stack<MapLocation> path;
-	int yCount;
-	int xCount;
+	private MapLocation tempTarget = new MapLocation(-10, -10);
+
+	private PathFinderAStar internalPF;
+
+	// variables for reduced map
+	private MapLocation targetR = new MapLocation(0, 0);
+	private MapLocation tempTargetR = new MapLocation(-10, -10);
+	private Stack<MapLocation> pathR;
+	private TerrainTile[][] mapR;
+	private int ySizeR;
+	private int xSizeR;
+	private int yDivisor = 1;
+	private int xDivisor = 1;
+	public static final int reducedDim = 20;
 
 	public PathFinderAStarFast(RobotController rc) {
 		super(rc);
-		bug = new PathFinderMLineBug(rc, map, hqSelfLoc, hqEnemLoc, ySize,
+		// init internal pathfinder for small distances
+		internalPF = new PathFinderAStar(rc, map, hqSelfLoc, hqEnemLoc, ySize,
 				xSize);
-		yCount = ySize / 2 + ySize % 2;
-		xCount = xSize / 2 + xSize % 2;
+
+		// create reduced map
+		ySizeR = convertNyRy(ySize);
+		while (ySizeR > reducedDim) {
+			yDivisor++;
+			ySizeR = convertNyRy(ySize);
+		}
+		xSizeR = convertNxRx(xSize);
+		while (xSizeR > reducedDim) {
+			xDivisor++;
+			xSizeR = convertNxRx(xSize);
+		}
+		ySizeR += ((ySize % yDivisor) > 0 ? 1 : 0);
+		xSizeR += ((xSize % xDivisor) > 0 ? 1 : 0);
+		mapR = new TerrainTile[ySizeR][xSizeR];
+		for (int y = 0; y < ySizeR; y++) {
+			for (int x = 0; x < xSizeR; x++) {
+				Set<MapLocation> corresp = getCorresponding(y, x);
+				int norm = 0; // traversable tiles
+				int road = 0; // road tiles
+				int bloc = 0; // blocked tiles
+				for (MapLocation loc : corresp) {
+					if (map[loc.y][loc.x].equals(TerrainTile.NORMAL)) {
+						norm++;
+					} else if (map[loc.y][loc.x].equals(TerrainTile.ROAD)) {
+						road++;
+					} else {
+						bloc++;
+					}
+				}
+				// if there are two times more traversable tiles than void, the
+				// square is treated as traversable. This is pessimistic.
+				if (norm + road >= bloc * 2) {
+					if (road * 2 > norm) {
+						mapR[y][x] = TerrainTile.ROAD;
+					} else {
+						mapR[y][x] = TerrainTile.NORMAL;
+					}
+				} else {
+					mapR[y][x] = TerrainTile.VOID;
+				}
+			}
+		}
+		// System.out.println(mapToString(map));
+		// System.out.println(mapToString(mapR));
+
 	}
+
+	// convert normal y-value to corresponding y-value on reduced map
+	private int convertNyRy(int y) {
+		return (y / yDivisor);
+	}
+
+	// convert normal x-value to corresponding x-value on reduced map
+	private int convertNxRx(int x) {
+		return (x / xDivisor);
+	}
+
+	private Set<MapLocation> getCorresponding(int yR, int xR) {
+		Set<MapLocation> corresp = new HashSet<MapLocation>();
+		for (int y = yR * yDivisor; y < yR * yDivisor + yDivisor; y++) {
+			for (int x = xR * xDivisor; x < xR * xDivisor + xDivisor; x++) {
+				if (isXonMap(x) && isYonMap(y)) {
+					corresp.add(new MapLocation(x, y));
+				}
+			}
+		}
+		return corresp;
+	}
+
+	private MapLocation getCorrespondingTempTarget(int yR, int xR) {
+		if (isCorresponding(target, yR, xR)) {
+			return target;
+		}
+		MapLocation current = rc.getLocation();
+		MapLocation currentR = new MapLocation(convertNxRx(current.x),
+				convertNyRy(current.y));
+		MapLocation tempTarget;
+
+		if (currentR.x < xR && currentR.y < yR) { // top left
+			tempTarget = new MapLocation((xR + 1) * xDivisor, (yR + 1)
+					* yDivisor);
+		} else if (currentR.x == xR && currentR.y < yR) { // top
+			tempTarget = new MapLocation(current.x, (yR + 1) * yDivisor);
+		} else if (currentR.x < xR && currentR.y < yR) { // top right
+			tempTarget = new MapLocation((xR * xDivisor) - 1, (yR + 1)
+					* yDivisor);
+		} else if (currentR.x < xR && currentR.y < yR) { // left
+			tempTarget = new MapLocation((xR + 1) * xDivisor, current.y);
+		} else if (currentR.x < xR && currentR.y < yR) { // right
+			tempTarget = new MapLocation((xR * xDivisor) - 1, current.y);
+		} else if (currentR.x < xR && currentR.y < yR) { // bottom left
+			tempTarget = new MapLocation((xR + 1) * xDivisor,
+					(yR * yDivisor) - 1);
+		} else if (currentR.x < xR && currentR.y < yR) { // bottom
+			tempTarget = new MapLocation(current.x, (yR * yDivisor) - 1);
+		} else { // bottom right
+			tempTarget = new MapLocation((xR * xDivisor) - 1,
+					(yR * yDivisor) - 1);
+		}
+		if (!isTraversableAndNotHq(tempTarget)) {
+			tempTarget = getCorrespondingTempTargetSimple(yR, xR);
+		}
+		return tempTarget;
+	}
+
+	private MapLocation getCorrespondingTempTargetSimple(int yR, int xR) {
+		if (isCorresponding(target, yR, xR)) {
+			return target;
+		}
+		MapLocation tempTarget = new MapLocation(xR * xDivisor, yR * yDivisor);
+		for (int y = yR * yDivisor; y < yR * yDivisor + yDivisor; y++) {
+			for (int x = xR * xDivisor + 1; x < xR * xDivisor + xDivisor; x++) {
+				tempTarget = new MapLocation(x, y);
+				if (isTraversableAndNotHq(tempTarget)) {
+					return tempTarget;
+				}
+			}
+		}
+		return tempTarget;
+	}
+
+	private boolean isCorresponding(MapLocation loc, int yR, int xR) {
+		int yMin = yR * yDivisor;
+		int yMax = yR * yDivisor + yDivisor;
+		int xMin = xR * xDivisor;
+		int xMax = xR * xDivisor + xDivisor;
+		return loc.y >= yMin && loc.y < yMax && loc.x >= xMin && loc.x < xMax;
+	}
+
+	// @Override
+	// public boolean move() throws GameActionException {
+	// if (pathR.isEmpty() && path != null && path.isEmpty()) {
+	// System.out.println("A-Star does not know the way");
+	// return false;
+	// } else {
+	// MapLocation myLoc = rc.getLocation();
+	// if (path == null || myLoc.equals(tempTarget)) {
+	// MapLocation tempTargetR = pathR.pop();
+	// tempTarget = getCorrespondingTempTarget(tempTargetR.y,
+	// tempTargetR.x);
+	// path = aStar(myLoc, tempTarget, map, false);
+	// }
+	// MapLocation next = path.peek();
+	// Direction dir = rc.getLocation().directionTo(next);
+	// if (rc.canMove(dir)) {
+	// rc.move(dir);
+	// path.pop();
+	// return true;
+	// } else {
+	// return false;
+	// }
+	// }
+	// }
 
 	@Override
 	public boolean move() throws GameActionException {
-		if (path.isEmpty()) {
-			System.out.println("A-Star does not know the way");
-			return false;
-		} else {
-			MapLocation myLoc = rc.getLocation();
-			if (!myLoc.isAdjacentTo(path.peek())) {
-				path = aStar(myLoc, target);
-			}
-			MapLocation next = path.peek();
-			Direction dir = rc.getLocation().directionTo(next);
-			if (rc.canMove(dir)) {
-				rc.move(dir);
-				path.pop();
-				return true;
+		if (internalPF.isTargetReached()) {
+			if (!pathR.isEmpty()) {
+				tempTargetR = pathR.pop();
+				tempTarget = getCorrespondingTempTarget(tempTargetR.y,
+						tempTargetR.x);
 			} else {
-				return false;
+				tempTarget = target;
 			}
+			internalPF.setTarget(tempTarget);
 		}
+		return internalPF.move();
 	}
 
 	@Override
@@ -62,8 +216,25 @@ public class PathFinderAStarFast extends PathFinder {
 	@Override
 	public void setTarget(MapLocation target) {
 		this.target = target;
+		this.targetR = new MapLocation(convertNxRx(target.x),
+				convertNyRy(target.y));
 		MapLocation current = rc.getLocation();
-		path = aStar(current, target);
+		MapLocation currentR = new MapLocation(convertNxRx(current.x),
+				convertNyRy(current.y));
+		pathR = aStar(currentR, targetR, mapR);
+		printPath(pathR);
+		tempTargetR = pathR.pop();
+		tempTarget = getCorrespondingTempTarget(tempTargetR.y, tempTargetR.x);
+		internalPF.setTarget(tempTarget);
+	}
+
+	private void printPath(Stack<MapLocation> path) {
+		Iterator<MapLocation> iterator = path.iterator();
+		String s = "";
+		while (iterator.hasNext()) {
+			s += "->" + iterator.next();
+		}
+		System.out.println("reduced:" + s);
 	}
 
 	@Override
@@ -71,7 +242,8 @@ public class PathFinderAStarFast extends PathFinder {
 		return target;
 	}
 
-	public Stack<MapLocation> aStar(MapLocation start, final MapLocation target) {
+	public Stack<MapLocation> aStar(MapLocation start,
+			final MapLocation target, TerrainTile[][] map) {
 		Map<MapLocation, MapLocation> ancestors = new HashMap<MapLocation, MapLocation>();
 		Map<MapLocation, Integer> gScore = new HashMap<MapLocation, Integer>();
 		final Map<MapLocation, Integer> fScore = new HashMap<MapLocation, Integer>();
@@ -87,7 +259,7 @@ public class PathFinderAStarFast extends PathFinder {
 
 		open.add(start);
 		gScore.put(start, 0);
-		fScore.put(start, calcFScore(start, target));
+		fScore.put(start, calcFScore(start, target, map));
 
 		// start algorithm
 		while (!open.isEmpty()) {
@@ -95,7 +267,7 @@ public class PathFinderAStarFast extends PathFinder {
 			if (current.equals(target))
 				return getPath(ancestors, target);
 			closed.add(current);
-			Set<MapLocation> neighbours = getNeighbours(current);
+			Set<MapLocation> neighbours = getNeighboursR(current);
 			for (MapLocation neighbour : neighbours) {
 				if (closed.contains(neighbour))
 					continue;
@@ -105,7 +277,8 @@ public class PathFinderAStarFast extends PathFinder {
 					continue;
 				ancestors.put(neighbour, current);
 				gScore.put(neighbour, tentative);
-				fScore.put(neighbour, tentative + calcFScore(neighbour, target));
+				fScore.put(neighbour,
+						tentative + calcFScore(neighbour, target, map));
 				if (!open.contains(neighbour))
 					open.add(neighbour);
 			}
@@ -125,31 +298,35 @@ public class PathFinderAStarFast extends PathFinder {
 		return path;
 	}
 
-	private int calcFScore(MapLocation from, MapLocation to) {
-		int distance = distance(from, to);
+	private int calcFScore(MapLocation from, MapLocation to, TerrainTile[][] map) {
+		int distance = getEuclidianDist(from.y, from.x, to.y, to.x);
 		if (map[from.y][from.x].equals(TerrainTile.ROAD)) {
 			if (distance > 3)
 				distance = distance - 3;
 		}
-		return distance * 4;
+		return distance;
 	}
 
-	@Override
-	public Set<MapLocation> getNeighbours(MapLocation loc) {
+	// for reduced map
+	protected Set<MapLocation> getNeighboursR(MapLocation loc) {
 		Set<MapLocation> neighbours = new HashSet<MapLocation>();
 		for (int i = 0; i < C.DIRECTIONS.length; i++) {
 			MapLocation n = loc.add(C.DIRECTIONS[i]);
-			if (isTraversable(n)) {
+			if (isTraversableR(n)) {
 				neighbours.add(n);
 			}
 		}
 		return neighbours;
 	}
 
+	// for reduced map
+	protected boolean isTraversableR(MapLocation location) {
+		return isXonMap(location.x, mapR) && isYonMap(location.y, mapR)
+				&& !mapR[location.y][location.x].equals(TerrainTile.VOID);
+	}
+
 	@Override
-	public boolean isTraversable(MapLocation location) {
-		return isXonMap(location.x) && isYonMap(location.y)
-				&& !map[location.y][location.x].equals(TerrainTile.VOID)
-				&& !isHqLocation(location);
+	public boolean isTargetReached() {
+		return rc.getLocation().equals(target);
 	}
 }

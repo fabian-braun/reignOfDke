@@ -39,7 +39,7 @@ public class PathFinderMLineBug extends PathFinder {
 		obstacleMode = false;
 		mTiles.clear();
 		MapLocation current = rc.getLocation();
-		minDistance = PathFinder.distance(current, target);
+		minDistance = PathFinder.getRequiredMoves(current, target);
 		MapLocation temp = new MapLocation(current.x, current.y);
 		while (!temp.equals(target)) {
 			mTiles.add(temp);
@@ -53,7 +53,7 @@ public class PathFinderMLineBug extends PathFinder {
 	private Direction getNextAroundObstacle() {
 		Direction nextDirToTry;
 		nextDirToTry = lastDir.rotateRight().rotateRight();
-		while (!isTraversable(rc.getLocation().add(nextDirToTry))) {
+		while (!isTraversableAndNotHq(rc.getLocation().add(nextDirToTry))) {
 			nextDirToTry = nextDirToTry.rotateLeft();
 		}
 		return nextDirToTry;
@@ -69,23 +69,23 @@ public class PathFinderMLineBug extends PathFinder {
 		if (obstacleMode) { // move around obstacle
 			// check if mLine reached again
 			if (mTiles.contains(current)
-					&& PathFinder.distance(current, target) < minDistance) {
+					&& PathFinder.getRequiredMoves(current, target) < minDistance) {
 				obstacleMode = false;
 				moveTo = getNextOnMLine();
-				minDistance = PathFinder.distance(current, target);
+				minDistance = PathFinder.getRequiredMoves(current, target);
 			} else {
 				moveTo = getNextAroundObstacle();
 				lastDir = moveTo;
 			}
 		} else { // move on mLine
 			moveTo = getNextOnMLine();
-			if (!isTraversable(current.add(moveTo))) {
+			if (!isTraversableAndNotHq(current.add(moveTo))) {
 				obstacleMode = true;
 				lastDir = moveTo.rotateLeft().rotateLeft();
 				moveTo = getNextAroundObstacle();
 				lastDir = moveTo;
 			} else {
-				minDistance = PathFinder.distance(current.add(moveTo), target);
+				minDistance = PathFinder.getRequiredMoves(current.add(moveTo), target);
 			}
 		}
 		return moveTo;
@@ -116,5 +116,10 @@ public class PathFinderMLineBug extends PathFinder {
 	@Override
 	public MapLocation getTarget() {
 		return target;
+	}
+
+	@Override
+	public boolean isTargetReached() {
+		return rc.getLocation().equals(target);
 	}
 }

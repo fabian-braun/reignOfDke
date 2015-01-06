@@ -3,6 +3,7 @@ package dualcore;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -65,6 +66,7 @@ public class PathFinderAStar extends PathFinder {
 		this.target = target;
 		MapLocation current = rc.getLocation();
 		path = aStar(current, target);
+		printPath(path);
 	}
 
 	@Override
@@ -127,12 +129,26 @@ public class PathFinderAStar extends PathFinder {
 	}
 
 	private int calcFScore(MapLocation from, MapLocation to) {
-		int distance = 4 * distance(from, to);
+		int distance = getEuclidianDist(from, to);
 		if (map[from.y][from.x].equals(TerrainTile.ROAD)) {
 			if (distance > 2)
 				distance = distance - 2;
 		}
 		return distance;
+	}
+
+	@Override
+	public boolean isTargetReached() {
+		return rc.getLocation().equals(target);
+	}
+
+	private void printPath(Stack<MapLocation> path) {
+		Iterator<MapLocation> iterator = path.iterator();
+		String s = "";
+		while (iterator.hasNext()) {
+			s += "->" + iterator.next();
+		}
+		System.out.println("original: " + s);
 	}
 
 }
