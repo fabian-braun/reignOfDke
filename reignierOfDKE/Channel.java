@@ -195,6 +195,26 @@ public class Channel {
 		return new MapLocation(0, 0);
 	}
 
+	public static int getSoldierCountOfTeam(RobotController rc, int teamId) {
+		int c = getTeamChannel(teamId);
+		try {
+			return rc.readBroadcast(c + 1);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	public static void broadcastSoldierCountOfTeam(RobotController rc,
+			int teamId, int members) {
+		int c = getTeamChannel(teamId);
+		try {
+			rc.broadcast(c + 1, members);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static MapLocation getPositionalCenterOfTeam(RobotController rc,
 			int teamId) {
 		int c = getTeamChannel(teamId);

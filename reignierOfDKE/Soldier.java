@@ -3,9 +3,9 @@ package reignierOfDKE;
 import java.util.ArrayList;
 import java.util.List;
 
-import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
 import battlecode.common.RobotController;
@@ -30,6 +30,9 @@ public class Soldier extends AbstractRobotType {
 	Task task = Task.GOTO;
 	MapLocation target = new MapLocation(0, 0);
 	MapLocation myLoc;
+
+	private static final int CLOSE_TEAM_MEMBER_DISTANCE_THRESHOLD = 5;
+	private static final double WAIT_FOR_TEAM_FRACTION_THRESHOLD = 0.5;
 
 	public Soldier(RobotController rc) {
 		super(rc);
@@ -126,9 +129,16 @@ public class Soldier extends AbstractRobotType {
 			case GOTO:
 				// Check if I am the leader of my team
 				if (amILeader()) {
-					rc.setIndicatorString(2, "Leading");
+					// Sense how many of my team members are close
+					int closeTeamMembers = getNumberOfCloseTeamMembers();
+					int totalTeamMembers = Channel.getSoldierCountOfTeam(rc,
+							teamId) - 1; // -1 cause we ourselves are 1
+					rc.setIndicatorString(2, "Leading " + closeTeamMembers
+							+ "/" + totalTeamMembers + " team members");
+					double closeTeamFraction = closeTeamMembers
+							/ (totalTeamMembers * 1.0);
 					// Check if we need to wait for our team members
-					if (Clock.getRoundNum() % 5 == 0) {
+					if (closeTeamFraction > WAIT_FOR_TEAM_FRACTION_THRESHOLD) {
 						// Calculate the route to the target
 						if (!target.equals(pathFinderAStar.getTarget())) {
 							pathFinderAStar.setTarget(target);
@@ -165,7 +175,11 @@ public class Soldier extends AbstractRobotType {
 								.equals(pathFinderSnailTrail.getTarget())) {
 							pathFinderSnailTrail.setTarget(tempTarget);
 						}
-						pathFinderSnailTrail.move();
+						// If we fail to move where we want to go
+						if (!pathFinderSnailTrail.move()) {
+							// Move random
+							doRandomMove();
+						}
 					} else {
 						doRandomMove();
 					}
@@ -236,6 +250,30 @@ public class Soldier extends AbstractRobotType {
 	private boolean amILeader() {
 		// Return whether or not my ID is the ID of the leader of my team
 		return id == Channel.getLeaderIdOfTeam(rc, teamId);
+	}
+
+	private int getNumberOfCloseTeamMembers() {
+		int closeTeamMembers = 0;
+		// Loop through all robots
+		for (int id = 0; id < GameConstants.MAX_ROBOTS; id++) {
+			if (id != this.id) {
+				// Check if the robot is alive
+				if (Channel.isAlive(rc, id)) {
+					// Check the alive robot is on the same team
+					if (teamId == Channel.getTeamIdOfSoldier(rc, id)) {
+						// Get the position of this robot
+						MapLocation teamMemberLocation = Channel
+								.getLocationOfSoldier(rc, id);
+						int distance = PathFinder.distance(myLoc,
+								teamMemberLocation);
+						if (distance <= CLOSE_TEAM_MEMBER_DISTANCE_THRESHOLD) {
+							closeTeamMembers++;
+						}
+					}
+				}
+			}
+		}
+		return closeTeamMembers;
 	}
 
 	/**
