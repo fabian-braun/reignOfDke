@@ -80,8 +80,8 @@ public class PathFinderAStarFast extends PathFinder {
 				}
 			}
 		}
-		// System.out.println(mapToString(map));
-		// System.out.println(mapToString(mapR));
+		System.out.println(mapToString(map));
+		System.out.println(mapToString(mapR));
 
 	}
 
@@ -230,11 +230,16 @@ public class PathFinderAStarFast extends PathFinder {
 
 	private void printPath(Stack<MapLocation> path) {
 		Iterator<MapLocation> iterator = path.iterator();
-		String s = "";
+		String sR = "";
+		String sN = "";
 		while (iterator.hasNext()) {
-			s += "->" + iterator.next();
+			MapLocation locR = iterator.next();
+			sR += "->" + locToString(locR);
+			sN += "->"
+					+ locToString(getCorrespondingTempTarget(locR.y, locR.x));
 		}
-		System.out.println("reduced:" + s);
+		System.out.println("reducedR: " + sR);
+		System.out.println("reducedN: " + sN);
 	}
 
 	@Override

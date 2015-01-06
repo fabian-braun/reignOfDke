@@ -158,4 +158,8 @@ public abstract class PathFinder {
 		}
 		return sb.toString();
 	}
+
+	public static String locToString(MapLocation loc) {
+		return "(" + loc.y + ";" + loc.x + ")";
+	}
 }

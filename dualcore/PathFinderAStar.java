@@ -146,7 +146,7 @@ public class PathFinderAStar extends PathFinder {
 		Iterator<MapLocation> iterator = path.iterator();
 		String s = "";
 		while (iterator.hasNext()) {
-			s += "->" + iterator.next();
+			s += "->" + locToString(iterator.next());
 		}
 		System.out.println("original: " + s);
 	}
