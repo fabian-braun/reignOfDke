@@ -1,9 +1,11 @@
 package dualcore;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -19,7 +21,7 @@ public class PathFinderAStarFast extends PathFinder {
 	private MapLocation target = new MapLocation(0, 0);
 	private MapLocation tempTarget = new MapLocation(-10, -10);
 
-	private PathFinderAStar internalPF;
+	private PathFinder internalPF;
 
 	// variables for reduced map
 	private MapLocation targetR = new MapLocation(0, 0);
@@ -34,9 +36,6 @@ public class PathFinderAStarFast extends PathFinder {
 
 	public PathFinderAStarFast(RobotController rc) {
 		super(rc);
-		// init internal pathfinder for small distances
-		internalPF = new PathFinderAStar(rc, map, hqSelfLoc, hqEnemLoc, ySize,
-				xSize);
 
 		// create reduced map
 		ySizeR = convertNyRy(ySize);
@@ -51,9 +50,26 @@ public class PathFinderAStarFast extends PathFinder {
 		}
 		ySizeR += ((ySize % yDivisor) > 0 ? 1 : 0);
 		xSizeR += ((xSize % xDivisor) > 0 ? 1 : 0);
+
+		// init internal pathfinder for small distances
+		if (yDivisor < 4 && xDivisor < 4) {
+			internalPF = new PathFinderSnailTrail(rc, map, hqSelfLoc,
+					hqEnemLoc, ySize, xSize);
+			System.out.println("use snailtrail for short navigation");
+		} else {
+			internalPF = new PathFinderSnailTrail(rc, map, hqSelfLoc,
+					hqEnemLoc, ySize, xSize);
+			System.out.println("use a* for short navigation");
+		}
 		mapR = new TerrainTile[ySizeR][xSizeR];
 		for (int y = 0; y < ySizeR; y++) {
 			for (int x = 0; x < xSizeR; x++) {
+				TerrainTile cachedTerrain = Channel.getReducedMapTerrain(rc, y,
+						x);
+				if (!cachedTerrain.equals(TerrainTile.OFF_MAP)) {
+					mapR[y][x] = cachedTerrain;
+					continue;
+				}
 				Set<MapLocation> corresp = getCorresponding(y, x);
 				int norm = 0; // traversable tiles
 				int road = 0; // road tiles
@@ -78,10 +94,12 @@ public class PathFinderAStarFast extends PathFinder {
 				} else {
 					mapR[y][x] = TerrainTile.VOID;
 				}
+				// cache the terrain for other soldiers
+				Channel.setReducedMapTerrain(rc, y, x, mapR[y][x]);
 			}
 		}
-		System.out.println(mapToString(map));
-		System.out.println(mapToString(mapR));
+		// System.out.println(mapToString(map));
+		// System.out.println(mapToString(mapR));
 
 	}
 
@@ -147,16 +165,15 @@ public class PathFinderAStarFast extends PathFinder {
 		if (isCorresponding(target, yR, xR)) {
 			return target;
 		}
-		MapLocation tempTarget = new MapLocation(xR * xDivisor, yR * yDivisor);
 		for (int y = yR * yDivisor; y < yR * yDivisor + yDivisor; y++) {
-			for (int x = xR * xDivisor + 1; x < xR * xDivisor + xDivisor; x++) {
+			for (int x = xR * xDivisor; x < xR * xDivisor + xDivisor; x++) {
 				tempTarget = new MapLocation(x, y);
 				if (isTraversableAndNotHq(tempTarget)) {
 					return tempTarget;
 				}
 			}
 		}
-		return tempTarget;
+		return target;
 	}
 
 	private boolean isCorresponding(MapLocation loc, int yR, int xR) {
@@ -166,31 +183,6 @@ public class PathFinderAStarFast extends PathFinder {
 		int xMax = xR * xDivisor + xDivisor;
 		return loc.y >= yMin && loc.y < yMax && loc.x >= xMin && loc.x < xMax;
 	}
-
-	// @Override
-	// public boolean move() throws GameActionException {
-	// if (pathR.isEmpty() && path != null && path.isEmpty()) {
-	// System.out.println("A-Star does not know the way");
-	// return false;
-	// } else {
-	// MapLocation myLoc = rc.getLocation();
-	// if (path == null || myLoc.equals(tempTarget)) {
-	// MapLocation tempTargetR = pathR.pop();
-	// tempTarget = getCorrespondingTempTarget(tempTargetR.y,
-	// tempTargetR.x);
-	// path = aStar(myLoc, tempTarget, map, false);
-	// }
-	// MapLocation next = path.peek();
-	// Direction dir = rc.getLocation().directionTo(next);
-	// if (rc.canMove(dir)) {
-	// rc.move(dir);
-	// path.pop();
-	// return true;
-	// } else {
-	// return false;
-	// }
-	// }
-	// }
 
 	@Override
 	public boolean move() throws GameActionException {
@@ -222,7 +214,7 @@ public class PathFinderAStarFast extends PathFinder {
 		MapLocation currentR = new MapLocation(convertNxRx(current.x),
 				convertNyRy(current.y));
 		pathR = aStar(currentR, targetR, mapR);
-		printPath(pathR);
+		// printPath(pathR);
 		tempTargetR = pathR.pop();
 		tempTarget = getCorrespondingTempTarget(tempTargetR.y, tempTargetR.x);
 		internalPF.setTarget(tempTarget);
@@ -230,16 +222,12 @@ public class PathFinderAStarFast extends PathFinder {
 
 	private void printPath(Stack<MapLocation> path) {
 		Iterator<MapLocation> iterator = path.iterator();
-		String sR = "";
-		String sN = "";
+		List<MapLocation> list = new ArrayList<MapLocation>();
 		while (iterator.hasNext()) {
 			MapLocation locR = iterator.next();
-			sR += "->" + locToString(locR);
-			sN += "->"
-					+ locToString(getCorrespondingTempTarget(locR.y, locR.x));
+			list.add(getCorrespondingTempTarget(locR.y, locR.x));
 		}
-		System.out.println("reducedR: " + sR);
-		System.out.println("reducedN: " + sN);
+		System.out.println(mapToString(map, list.iterator()));
 	}
 
 	@Override
@@ -264,7 +252,7 @@ public class PathFinderAStarFast extends PathFinder {
 
 		open.add(start);
 		gScore.put(start, 0);
-		fScore.put(start, calcFScore(start, target, map));
+		fScore.put(start, calcFScore(start, target));
 
 		// start algorithm
 		while (!open.isEmpty()) {
@@ -276,14 +264,14 @@ public class PathFinderAStarFast extends PathFinder {
 			for (MapLocation neighbour : neighbours) {
 				if (closed.contains(neighbour))
 					continue;
-				int tentative = gScore.get(current) + 2;
+				int tentative = gScore.get(current)
+						+ calcFScore(current, neighbour);
 				if (open.contains(neighbour)
 						&& tentative >= gScore.get(neighbour))
 					continue;
 				ancestors.put(neighbour, current);
 				gScore.put(neighbour, tentative);
-				fScore.put(neighbour,
-						tentative + calcFScore(neighbour, target, map));
+				fScore.put(neighbour, tentative + calcFScore(neighbour, target));
 				if (!open.contains(neighbour))
 					open.add(neighbour);
 			}
@@ -303,7 +291,7 @@ public class PathFinderAStarFast extends PathFinder {
 		return path;
 	}
 
-	private int calcFScore(MapLocation from, MapLocation to, TerrainTile[][] map) {
+	private int calcFScore(MapLocation from, MapLocation to) {
 		int distance = getEuclidianDist(from.y, from.x, to.y, to.x);
 		if (map[from.y][from.x].equals(TerrainTile.ROAD)) {
 			if (distance > 3)

@@ -1,6 +1,7 @@
 package dualcore;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import battlecode.common.GameActionException;
@@ -127,6 +128,47 @@ public abstract class PathFinder {
 	public abstract boolean isTargetReached();
 
 	public static String mapToString(TerrainTile[][] map) {
+		char[][] mapRepresentation = mapToCharArray(map);
+		StringBuilder sb = new StringBuilder();
+		sb.append("  ");
+		for (int x = 0; x < mapRepresentation[0].length; x++) {
+			sb.append(String.format("%3d", x));
+		}
+		sb.append("\n");
+		for (int y = 0; y < mapRepresentation.length; y++) {
+			sb.append(String.format("%2d", y));
+			for (int x = 0; x < mapRepresentation[y].length; x++) {
+				sb.append("  " + mapRepresentation[y][x]);
+			}
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
+
+	public static String mapToString(TerrainTile[][] map,
+			Iterator<MapLocation> path) {
+		char[][] mapRepresentation = mapToCharArray(map);
+		while (path.hasNext()) {
+			MapLocation loc = path.next();
+			mapRepresentation[loc.y][loc.x] = 'O';
+		}
+		StringBuilder sb = new StringBuilder();
+		sb.append("  ");
+		for (int x = 0; x < mapRepresentation[0].length; x++) {
+			sb.append(String.format("%3d", x));
+		}
+		sb.append("\n");
+		for (int y = 0; y < mapRepresentation.length; y++) {
+			sb.append(String.format("%2d", y));
+			for (int x = 0; x < mapRepresentation[y].length; x++) {
+				sb.append("  " + mapRepresentation[y][x]);
+			}
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
+
+	public static char[][] mapToCharArray(TerrainTile[][] map) {
 		char[][] mapRepresentation = new char[map.length][map[0].length];
 		for (int y = 0; y < map.length; y++) {
 			for (int x = 0; x < map[0].length; x++) {
@@ -143,20 +185,8 @@ public abstract class PathFinder {
 				}
 			}
 		}
-		StringBuilder sb = new StringBuilder();
-		sb.append("  ");
-		for (int x = 0; x < mapRepresentation[0].length; x++) {
-			sb.append(String.format("%3d", x));
-		}
-		sb.append("\n");
-		for (int y = 0; y < mapRepresentation.length; y++) {
-			sb.append(String.format("%2d", y));
-			for (int x = 0; x < mapRepresentation[y].length; x++) {
-				sb.append("  " + mapRepresentation[y][x]);
-			}
-			sb.append("\n");
-		}
-		return sb.toString();
+		return mapRepresentation;
+
 	}
 
 	public static String locToString(MapLocation loc) {

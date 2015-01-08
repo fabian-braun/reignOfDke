@@ -66,7 +66,7 @@ public class PathFinderAStar extends PathFinder {
 		this.target = target;
 		MapLocation current = rc.getLocation();
 		path = aStar(current, target);
-		printPath(path);
+		// printPath(path);
 	}
 
 	@Override
@@ -102,7 +102,8 @@ public class PathFinderAStar extends PathFinder {
 			for (MapLocation neighbour : neighbours) {
 				if (closed.contains(neighbour))
 					continue;
-				int tentative = gScore.get(current) + 2;
+				int tentative = gScore.get(current)
+						+ calcFScore(current, neighbour);
 				if (open.contains(neighbour)
 						&& tentative >= gScore.get(neighbour))
 					continue;
