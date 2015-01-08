@@ -76,6 +76,10 @@ public abstract class PathFinder {
 		return getEuclidianDist(loc1.y, loc1.x, loc2.y, loc2.x);
 	}
 
+	public static final int getManhattanDist(MapLocation loc1, MapLocation loc2) {
+		return getManhattanDist(loc1.y, loc1.x, loc2.y, loc2.x);
+	}
+
 	public boolean isHqLocation(MapLocation loc) {
 		return loc.equals(hqEnemLoc) || loc.equals(hqSelfLoc);
 	}
