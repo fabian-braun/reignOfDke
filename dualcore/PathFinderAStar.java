@@ -18,7 +18,8 @@ import battlecode.common.TerrainTile;
 public class PathFinderAStar extends PathFinder {
 
 	private MapLocation target = new MapLocation(0, 0);
-	private Stack<MapLocation> path;
+	private Stack<MapLocation> path; // = new Stack<MapLocation>();
+	public static final int weightedAStarMultiplicator = 3;
 
 	public PathFinderAStar(RobotController rc) {
 		super(rc);
@@ -96,7 +97,7 @@ public class PathFinderAStar extends PathFinder {
 		while (!open.isEmpty()) {
 			MapLocation current = open.poll();
 			if (current.equals(target))
-				return getPath(ancestors, target);
+				return getPath(ancestors, target, start);
 			closed.add(current);
 			Set<MapLocation> neighbours = getNeighbours(current);
 			for (MapLocation neighbour : neighbours) {
@@ -119,10 +120,11 @@ public class PathFinderAStar extends PathFinder {
 	}
 
 	public static Stack<MapLocation> getPath(
-			Map<MapLocation, MapLocation> ancestors, MapLocation target) {
+			Map<MapLocation, MapLocation> ancestors, MapLocation target,
+			MapLocation origin) {
 		Stack<MapLocation> path = new Stack<MapLocation>();
 		MapLocation current = target;
-		while (current != null) {
+		while (!origin.equals(current)) {
 			path.push(current);
 			current = ancestors.get(current);
 		}
@@ -130,7 +132,7 @@ public class PathFinderAStar extends PathFinder {
 	}
 
 	private int calcFScore(MapLocation from, MapLocation to) {
-		int distance = getEuclidianDist(from, to);
+		int distance = getManhattanDist(from, to) * weightedAStarMultiplicator;
 		if (map[from.y][from.x].equals(TerrainTile.ROAD)) {
 			if (distance > 2)
 				distance = distance - 2;
@@ -145,11 +147,7 @@ public class PathFinderAStar extends PathFinder {
 
 	private void printPath(Stack<MapLocation> path) {
 		Iterator<MapLocation> iterator = path.iterator();
-		String s = "";
-		while (iterator.hasNext()) {
-			s += "->" + locToString(iterator.next());
-		}
-		System.out.println("original: " + s);
+		System.out.println(mapToString(map, iterator));
 	}
 
 }

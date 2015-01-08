@@ -18,14 +18,14 @@ import battlecode.common.TerrainTile;
 
 public class PathFinderAStarFast extends PathFinder {
 
-	private MapLocation target = new MapLocation(0, 0);
-	private MapLocation tempTarget = new MapLocation(-10, -10);
+	private MapLocation target = new MapLocation(-1, -1);
+	private MapLocation tempTarget = new MapLocation(-1, -1);
 
 	private PathFinder internalPF;
 
 	// variables for reduced map
-	private MapLocation targetR = new MapLocation(0, 0);
-	private MapLocation tempTargetR = new MapLocation(-10, -10);
+	private MapLocation targetR = new MapLocation(-1, -1);
+	private MapLocation tempTargetR = new MapLocation(-1, -1);
 	private Stack<MapLocation> pathR;
 	private TerrainTile[][] mapR;
 	private int ySizeR;
@@ -51,14 +51,18 @@ public class PathFinderAStarFast extends PathFinder {
 		ySizeR += ((ySize % yDivisor) > 0 ? 1 : 0);
 		xSizeR += ((xSize % xDivisor) > 0 ? 1 : 0);
 
-		// init internal pathfinder for small distances
-		if (yDivisor < 4 && xDivisor < 4) {
+		// init internal pathfinder for granular map navigation
+		if (yDivisor < 3 && xDivisor < 3) {
+			internalPF = new PathFinderGreedy(rc, map, hqSelfLoc, hqEnemLoc,
+					ySize, xSize);
+			System.out.println("use greedy for short navigation");
+		} else if (yDivisor < 4 && xDivisor < 4) {
 			internalPF = new PathFinderSnailTrail(rc, map, hqSelfLoc,
 					hqEnemLoc, ySize, xSize);
 			System.out.println("use snailtrail for short navigation");
 		} else {
-			internalPF = new PathFinderSnailTrail(rc, map, hqSelfLoc,
-					hqEnemLoc, ySize, xSize);
+			internalPF = new PathFinderAStar(rc, map, hqSelfLoc, hqEnemLoc,
+					ySize, xSize);
 			System.out.println("use a* for short navigation");
 		}
 		mapR = new TerrainTile[ySizeR][xSizeR];
@@ -135,25 +139,32 @@ public class PathFinderAStarFast extends PathFinder {
 		MapLocation tempTarget;
 
 		if (currentR.x < xR && currentR.y < yR) { // top left
-			tempTarget = new MapLocation((xR + 1) * xDivisor, (yR + 1)
-					* yDivisor);
+			// System.out.println("top left");
+			tempTarget = new MapLocation(xR * xDivisor, yR * yDivisor);
 		} else if (currentR.x == xR && currentR.y < yR) { // top
-			tempTarget = new MapLocation(current.x, (yR + 1) * yDivisor);
-		} else if (currentR.x < xR && currentR.y < yR) { // top right
-			tempTarget = new MapLocation((xR * xDivisor) - 1, (yR + 1)
+			// System.out.println("top");
+			tempTarget = new MapLocation(current.x, yR * yDivisor);
+		} else if (currentR.x > xR && currentR.y < yR) { // top right
+			// System.out.println("top right");
+			tempTarget = new MapLocation((currentR.x * xDivisor) - 1, yR
 					* yDivisor);
-		} else if (currentR.x < xR && currentR.y < yR) { // left
-			tempTarget = new MapLocation((xR + 1) * xDivisor, current.y);
-		} else if (currentR.x < xR && currentR.y < yR) { // right
-			tempTarget = new MapLocation((xR * xDivisor) - 1, current.y);
-		} else if (currentR.x < xR && currentR.y < yR) { // bottom left
-			tempTarget = new MapLocation((xR + 1) * xDivisor,
-					(yR * yDivisor) - 1);
-		} else if (currentR.x < xR && currentR.y < yR) { // bottom
-			tempTarget = new MapLocation(current.x, (yR * yDivisor) - 1);
+		} else if (currentR.x < xR && currentR.y == yR) { // left
+			// System.out.println("left");
+			tempTarget = new MapLocation(xR * xDivisor, current.y);
+		} else if (currentR.x > xR && currentR.y == yR) { // right
+			// System.out.println("right");
+			tempTarget = new MapLocation((currentR.x * xDivisor) - 1, current.y);
+		} else if (currentR.x < xR && currentR.y > yR) { // bottom left
+			// System.out.println("bottom left");
+			tempTarget = new MapLocation(xR * xDivisor,
+					(currentR.y * yDivisor) - 1);
+		} else if (currentR.x == xR && currentR.y > yR) { // bottom
+			// System.out.println("bottom");
+			tempTarget = new MapLocation(current.x, (currentR.y * yDivisor) - 1);
 		} else { // bottom right
-			tempTarget = new MapLocation((xR * xDivisor) - 1,
-					(yR * yDivisor) - 1);
+			// System.out.println("bottom right");
+			tempTarget = new MapLocation((currentR.x * xDivisor) - 1,
+					(currentR.y * yDivisor) - 1);
 		}
 		if (!isTraversableAndNotHq(tempTarget)) {
 			tempTarget = getCorrespondingTempTargetSimple(yR, xR);
@@ -227,7 +238,7 @@ public class PathFinderAStarFast extends PathFinder {
 			MapLocation locR = iterator.next();
 			list.add(getCorrespondingTempTarget(locR.y, locR.x));
 		}
-		System.out.println(mapToString(map, list.iterator()));
+		// System.out.println(mapToString(map, list.iterator()));
 	}
 
 	@Override
@@ -258,7 +269,7 @@ public class PathFinderAStarFast extends PathFinder {
 		while (!open.isEmpty()) {
 			MapLocation current = open.poll();
 			if (current.equals(target))
-				return getPath(ancestors, target);
+				return PathFinderAStar.getPath(ancestors, target, start);
 			closed.add(current);
 			Set<MapLocation> neighbours = getNeighboursR(current);
 			for (MapLocation neighbour : neighbours) {
@@ -280,23 +291,8 @@ public class PathFinderAStarFast extends PathFinder {
 		return new Stack<MapLocation>();
 	}
 
-	public static Stack<MapLocation> getPath(
-			Map<MapLocation, MapLocation> ancestors, MapLocation target) {
-		Stack<MapLocation> path = new Stack<MapLocation>();
-		MapLocation current = target;
-		while (current != null) {
-			path.push(current);
-			current = ancestors.get(current);
-		}
-		return path;
-	}
-
 	private int calcFScore(MapLocation from, MapLocation to) {
-		int distance = getEuclidianDist(from.y, from.x, to.y, to.x);
-		if (map[from.y][from.x].equals(TerrainTile.ROAD)) {
-			if (distance > 3)
-				distance = distance - 3;
-		}
+		int distance = getManhattanDist(from.y, from.x, to.y, to.x);
 		return distance;
 	}
 

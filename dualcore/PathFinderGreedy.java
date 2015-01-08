@@ -6,6 +6,7 @@ import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.TerrainTile;
 
 public class PathFinderGreedy extends PathFinder {
 
@@ -16,6 +17,12 @@ public class PathFinderGreedy extends PathFinder {
 	public PathFinderGreedy(RobotController rc, Random randall) {
 		super(rc);
 		this.randall = randall;
+	}
+
+	public PathFinderGreedy(RobotController rc, TerrainTile[][] map,
+			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
+		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize);
+		this.randall = new Random();
 	}
 
 	@Override
