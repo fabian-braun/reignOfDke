@@ -5,6 +5,7 @@ import java.util.List;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
 import battlecode.common.RobotController;
@@ -17,9 +18,10 @@ public class Soldier extends AbstractRobotType {
 	private boolean inactive = false;
 	private int teamId;
 	private int id;
-	private PathFinderMLineBug pathFinderMLineBug;
+	private PathFinderSnailTrail pathFinderSnailTrail;
 	private PathFinderAStar pathFinderAStar;
 	protected PathFinderGreedy pathFinderGreedy;
+	private MapLocation myPreviousLocation;
 	private Team us;
 	private Team opponent;
 	private MapLocation enemyHq;
@@ -30,6 +32,9 @@ public class Soldier extends AbstractRobotType {
 	Task task = Task.GOTO;
 	MapLocation target = new MapLocation(0, 0);
 	MapLocation myLoc;
+
+	private static final int CLOSE_TEAM_MEMBER_DISTANCE_THRESHOLD = 5;
+	private static final double WAIT_FOR_TEAM_FRACTION_THRESHOLD = 0.5;
 
 	public Soldier(RobotController rc) {
 		super(rc);
@@ -71,13 +76,16 @@ public class Soldier extends AbstractRobotType {
 
 		us = rc.getTeam();
 		opponent = us.opponent();
-		pathFinderAStar = new PathFinderAStar(rc);
-		pathFinderMLineBug = new PathFinderMLineBug(rc, pathFinderAStar.map,
-				pathFinderAStar.hqSelfLoc, pathFinderAStar.hqEnemLoc,
-				pathFinderAStar.ySize, pathFinderAStar.xSize);
-		pathFinderMLineBug.setTarget(target);
+		pathFinderAStar = new PathFinderAStar(rc, id);
+		pathFinderSnailTrail = new PathFinderSnailTrail(rc,
+				pathFinderAStar.map, pathFinderAStar.hqSelfLoc,
+				pathFinderAStar.hqEnemLoc, pathFinderAStar.ySize,
+				pathFinderAStar.xSize);
+		pathFinderSnailTrail.setTarget(target);
 		pathFinderGreedy = new PathFinderGreedy(rc, randall);
 		enemyHq = pathFinderAStar.hqEnemLoc;
+
+		myPreviousLocation = rc.getLocation();
 	}
 
 	private void actMicro(MapLocation target, Task task)
@@ -114,11 +122,62 @@ public class Soldier extends AbstractRobotType {
 					break;
 				}
 			case GOTO:
-				if (!target.equals(pathFinderAStar.getTarget())) {
-					pathFinderAStar.setTarget(target);
-				}
-				if (!pathFinderAStar.move()) {
-					doRandomMove();
+				// Check if I am the leader of my team
+				if (amILeader()) {
+					// Sense how many of my team members are close
+					int closeTeamMembers = getNumberOfCloseTeamMembers();
+					int totalTeamMembers = Channel.getSoldierCountOfTeam(rc,
+							teamId) - 1; // -1 cause we ourselves are 1
+					rc.setIndicatorString(2, "Leading " + closeTeamMembers
+							+ "/" + totalTeamMembers + " team members");
+					double closeTeamFraction = closeTeamMembers
+							/ (totalTeamMembers * 1.0);
+					// Check if we need to wait for our team members
+					if (closeTeamFraction > WAIT_FOR_TEAM_FRACTION_THRESHOLD) {
+						// Calculate the route to the target
+						if (!target.equals(pathFinderAStar.getTarget())) {
+							pathFinderAStar.setTarget(target);
+						}
+						// If we have reached the target, set temporary target
+						// to
+						// target
+						if (myLoc.equals(target)) {
+							Channel.broadcastTemporaryTarget(rc, teamId, target);
+						} else if (!pathFinderAStar.move()) {
+							// Something went wrong
+							doRandomMove();
+						} else {
+							// Means the leader moved
+							// Broadcast temporary target (current + direction)
+							MapLocation tempTarget = myLoc
+									.add(myPreviousLocation.directionTo(myLoc));
+							Channel.broadcastTemporaryTarget(rc, teamId,
+									tempTarget);
+							// Save my previous location
+							myPreviousLocation = myLoc;
+						}
+					}
+				} else {
+					rc.setIndicatorString(2, "Following");
+					// If I am not the leader, check if my leader has set a
+					// temporary target
+					MapLocation tempTarget = Channel.getTemporaryTarget(rc,
+							teamId);
+					if (tempTarget.x > 0 || tempTarget.y > 0) {
+						rc.setIndicatorString(2, "Following to " + tempTarget);
+						// Move to temporary target
+						if (!tempTarget
+								.equals(pathFinderSnailTrail.getTarget())) {
+							pathFinderSnailTrail.setTarget(tempTarget);
+						}
+						// If we fail to move where we want to go
+						if (!pathFinderSnailTrail.move()) {
+							// Move random
+							doRandomMove();
+						}
+					} else {
+						doRandomMove();
+					}
 				}
 				break;
 			case CIRCULATE:
@@ -182,6 +241,35 @@ public class Soldier extends AbstractRobotType {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private boolean amILeader() {
+		// Return whether or not my ID is the ID of the leader of my team
+		return id == Channel.getLeaderIdOfTeam(rc, teamId);
+	}
+
+	private int getNumberOfCloseTeamMembers() {
+		int closeTeamMembers = 0;
+		// Loop through all robots
+		for (int id = 0; id < GameConstants.MAX_ROBOTS; id++) {
+			if (id != this.id) {
+				// Check if the robot is alive
+				if (Channel.isAlive(rc, id)) {
+					// Check the alive robot is on the same team
+					if (teamId == Channel.getTeamIdOfSoldier(rc, id)) {
+						// Get the position of this robot
+						MapLocation teamMemberLocation = Channel
+								.getLocationOfSoldier(rc, id);
+						int distance = PathFinder.distance(myLoc,
+								teamMemberLocation);
+						if (distance <= CLOSE_TEAM_MEMBER_DISTANCE_THRESHOLD) {
+							closeTeamMembers++;
+						}
+					}
+				}
+			}
+		}
+		return closeTeamMembers;
 	}
 
 	/**

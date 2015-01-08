@@ -26,9 +26,10 @@ public class Channel {
 	 * (+2) task of the team;<br\>
 	 * (+3) target of the team;<br\>
 	 * (+4) positional center of the team;<br\>
+	 * (+5) temporary target of the team, set by leader;<br\>
 	 */
 	public static final int chTeam = 1001;
-	private static final int teamChannelCount = 5;
+	private static final int teamChannelCount = 10;
 
 	/**
 	 * individual soldier channels reserved from 1 to 600. channels contain:<br\>
@@ -54,6 +55,7 @@ public class Channel {
 	 * (+2) task of the team;<br\>
 	 * (+3) target of the team;<br\>
 	 * (+4) positional center of the team;<br\>
+	 * (+5) temporary target of the team, set by leader;<br\>
 	 * 
 	 * @param teamId
 	 * @return
@@ -166,6 +168,22 @@ public class Channel {
 		return 0;
 	}
 
+	public static int getLeaderIdOfTeam(RobotController rc, int teamId) {
+		// Loop through all robots
+		for (int id = 0; id < GameConstants.MAX_ROBOTS; id++) {
+			// Check if the robot is alive
+			if (isAlive(rc, id)) {
+				// Check the alive robot is on the same team
+				if (teamId == getTeamIdOfSoldier(rc, id)) {
+					// The robot with the lowest ID is the leader
+					return id;
+				}
+			}
+		}
+		// Didn't find an alive robot in this team, return -1
+		return -1;
+	}
+
 	public static MapLocation getLocationOfSoldier(RobotController rc,
 			int soldierId) {
 		int c = getSoldierChannel(soldierId);
@@ -175,6 +193,26 @@ public class Channel {
 			e.printStackTrace();
 		}
 		return new MapLocation(0, 0);
+	}
+
+	public static int getSoldierCountOfTeam(RobotController rc, int teamId) {
+		int c = getTeamChannel(teamId);
+		try {
+			return rc.readBroadcast(c + 1);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	public static void broadcastSoldierCountOfTeam(RobotController rc,
+			int teamId, int members) {
+		int c = getTeamChannel(teamId);
+		try {
+			rc.broadcast(c + 1, members);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static MapLocation getPositionalCenterOfTeam(RobotController rc,
@@ -193,6 +231,26 @@ public class Channel {
 		int c = getTeamChannel(teamId);
 		try {
 			rc.broadcast(c + 4, toInt(center));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static MapLocation getTemporaryTarget(RobotController rc, int teamId) {
+		int c = getTeamChannel(teamId);
+		try {
+			return toMapLocation(rc.readBroadcast(c + 5));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return new MapLocation(0, 0);
+	}
+
+	public static void broadcastTemporaryTarget(RobotController rc, int teamId,
+			MapLocation target) {
+		int c = getTeamChannel(teamId);
+		try {
+			rc.broadcast(c + 5, toInt(target));
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}

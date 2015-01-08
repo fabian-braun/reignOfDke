@@ -55,6 +55,10 @@ public class Team {
 				teams[teamId].incSoldierCount();
 			}
 		}
+		// Broadcast the new member counts
+		for (Team team : teams) {
+			Channel.broadcastSoldierCountOfTeam(rc, team.id, team.soldierCount);
+		}
 	}
 
 	public static void updateTeamLocation(RobotController rc, Team[] teams) {
