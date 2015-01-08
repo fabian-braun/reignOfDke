@@ -41,9 +41,9 @@ public class HQ extends AbstractRobotType {
 						.directionTo(myHq);
 				spawningDefault = away;
 			}
-			if (rc.canMove(spawningDefault))
+			if (rc.canMove(spawningDefault)) {
 				rc.spawn(spawningDefault);
-			else {
+			} else {
 				int i = 0;
 				Direction dir = spawningDefault;
 				while (!rc.canMove(dir) && i < C.DIRECTIONS.length) {
@@ -60,9 +60,9 @@ public class HQ extends AbstractRobotType {
 					(myHq.x * 3 / 4 + otherHq.x / 4),
 					(myHq.y * 3 / 4 + otherHq.y / 4));
 
-			teams[0].setTask(Task.ACCUMULATE, target);
-			teams[1].setTask(Task.ACCUMULATE, target);
-			teams[2].setTask(Task.ACCUMULATE, target);
+			teams[0].setTask(Task.CIRCULATE, target);
+			teams[1].setTask(Task.CIRCULATE, target);
+			teams[2].setTask(Task.CIRCULATE, target);
 		} else {
 			MapLocation[] pastrLocations = rc.sensePastrLocations(rc.getTeam()
 					.opponent());
@@ -75,9 +75,11 @@ public class HQ extends AbstractRobotType {
 							xSize);
 					if (!pastPastrLocations.contains(mapAnalyzer
 							.evaluateBestPastrLoc())) {
-						teams[2].setTask(Task.BUILD_PASTR,
+						teams[1].setTask(Task.BUILD_PASTR,
 								mapAnalyzer.evaluateBestPastrLoc());
-						teams[1].setTask(Task.BUILD_NOISETOWER,
+						teams[2].setTask(Task.CIRCULATE,
+								mapAnalyzer.evaluateBestPastrLoc());
+						teams[0].setTask(Task.CIRCULATE,
 								mapAnalyzer.evaluateBestPastrLoc());
 						pastPastrLocations.add(mapAnalyzer
 								.evaluateBestPastrLoc());

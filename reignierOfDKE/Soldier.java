@@ -26,6 +26,8 @@ public class Soldier extends AbstractRobotType {
 	private Team opponent;
 	private MapLocation enemyHq;
 	private int fleeCounter = 0;
+	private final int MAX_CIRCULATE = 30;
+	private final int MIN_CIRCULATE = 10;
 
 	Task task = Task.GOTO;
 	MapLocation target = new MapLocation(0, 0);
@@ -48,21 +50,11 @@ public class Soldier extends AbstractRobotType {
 		Channel.signalAlive(rc, id);
 		myLoc = rc.getLocation();
 		updateTask();
-		if (inactive || !rc.isActive()) {
+		if (rc.isActive()) {
+			actMicro(target, task);
+		} else {
 			return;
 		}
-		if (rc.isConstructing()) {
-			if (task.equals(Task.BUILD_PASTR))
-				Channel.broadcastTask(rc, Task.BUILD_NOISETOWER, target, teamId);
-			else if (task.equals(Task.BUILD_NOISETOWER)) {
-				MapLocation newTarget = target.add(target.directionTo(enemyHq),
-						3);
-				Channel.broadcastTask(rc, Task.ACCUMULATE, newTarget, teamId);
-			}
-			inactive = true;
-			return;
-		}
-		actMicro(target, task);
 	}
 
 	/*
@@ -118,11 +110,14 @@ public class Soldier extends AbstractRobotType {
 			case BUILD_NOISETOWER:
 				if (myLoc.isAdjacentTo(target)
 						&& rc.senseObjectAtLocation(target) != null) {
+					Channel.broadcastTask(rc, Task.CIRCULATE, target, teamId);
 					rc.construct(RobotType.NOISETOWER);
 					break;
 				}
 			case BUILD_PASTR:
 				if (myLoc.equals(target)) {
+					Channel.broadcastTask(rc, Task.BUILD_NOISETOWER, target,
+							teamId);
 					rc.construct(RobotType.PASTR);
 					break;
 				}
@@ -186,6 +181,7 @@ public class Soldier extends AbstractRobotType {
 				}
 				break;
 			case CIRCULATE:
+				circulate(target);
 				break;
 			case ACCUMULATE:
 				pathFinderGreedy.setTarget(target);
@@ -287,5 +283,26 @@ public class Soldier extends AbstractRobotType {
 			return 0;
 		}
 		return array.length;
+	}
+
+	private void circulate(MapLocation center) {
+		int distance = myLoc.distanceSquaredTo(center);
+
+		if (distance >= MIN_CIRCULATE && distance <= MAX_CIRCULATE) {
+			doRandomMove();
+		} else {
+			if (distance < MIN_CIRCULATE) {
+				pathFinderGreedy
+						.setTarget(myLoc.add(center.directionTo(myLoc)));
+			} else {
+				pathFinderGreedy.setTarget(center);
+			}
+			try {
+				pathFinderGreedy.move();
+			} catch (GameActionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 }

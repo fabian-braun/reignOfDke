@@ -1,7 +1,6 @@
 package dualcore;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import battlecode.common.GameActionException;
@@ -42,7 +41,7 @@ public abstract class PathFinder {
 		}
 	}
 
-	public static final int getRequiredMoves(int y1, int x1, int y2, int x2) {
+	public static final int distance(int y1, int x1, int y2, int x2) {
 		int dx = x1 - x2;
 		int dy = y1 - y2;
 		if (dx < 0)
@@ -52,28 +51,8 @@ public abstract class PathFinder {
 		return dx > dy ? dx : dy;
 	}
 
-	public static final int getEuclidianDist(int y1, int x1, int y2, int x2) {
-		int dx = x1 - x2;
-		int dy = y1 - y2;
-		return (int) Math.sqrt(dx * dx + dy * dy);
-	}
-
-	public static final int getManhattanDist(int y1, int x1, int y2, int x2) {
-		int dx = x1 - x2;
-		int dy = y1 - y2;
-		if (dx < 0)
-			dx *= -1;
-		if (dy < 0)
-			dy *= -1;
-		return dx + dy;
-	}
-
-	public static final int getRequiredMoves(MapLocation loc1, MapLocation loc2) {
-		return getRequiredMoves(loc1.y, loc1.x, loc2.y, loc2.x);
-	}
-
-	public static final int getEuclidianDist(MapLocation loc1, MapLocation loc2) {
-		return getEuclidianDist(loc1.y, loc1.x, loc2.y, loc2.x);
+	public static final int distance(MapLocation loc1, MapLocation loc2) {
+		return distance(loc1.y, loc1.x, loc2.y, loc2.x);
 	}
 
 	public static final int getManhattanDist(MapLocation loc1, MapLocation loc2) {
@@ -92,33 +71,21 @@ public abstract class PathFinder {
 		return y >= 0 && y < ySize;
 	}
 
-	public static boolean isXonMap(int x, TerrainTile[][] map) {
-		return x >= 0 && x < map[0].length;
-	}
-
-	public static boolean isYonMap(int y, TerrainTile[][] map) {
-		return y >= 0 && y < map.length;
-	}
-
 	public Set<MapLocation> getNeighbours(MapLocation loc) {
 		Set<MapLocation> neighbours = new HashSet<MapLocation>();
 		for (int i = 0; i < C.DIRECTIONS.length; i++) {
 			MapLocation n = loc.add(C.DIRECTIONS[i]);
-			if (isTraversableAndNotHq(n)) {
+			if (isTraversable(n)) {
 				neighbours.add(n);
 			}
 		}
 		return neighbours;
 	}
 
-	public boolean isTraversableAndNotHq(MapLocation location) {
-		return isTraversable(location, map) && !isHqLocation(location);
-	}
-
-	public static boolean isTraversable(MapLocation location,
-			TerrainTile[][] map) {
-		return isXonMap(location.x, map) && isYonMap(location.y, map)
-				&& !map[location.y][location.x].equals(TerrainTile.VOID);
+	public boolean isTraversable(MapLocation location) {
+		return isXonMap(location.x) && isYonMap(location.y)
+				&& !map[location.y][location.x].equals(TerrainTile.VOID)
+				&& !isHqLocation(location);
 	}
 
 	public abstract boolean move() throws GameActionException;
@@ -129,71 +96,4 @@ public abstract class PathFinder {
 
 	public abstract MapLocation getTarget();
 
-	public abstract boolean isTargetReached();
-
-	public static String mapToString(TerrainTile[][] map) {
-		char[][] mapRepresentation = mapToCharArray(map);
-		StringBuilder sb = new StringBuilder();
-		sb.append("  ");
-		for (int x = 0; x < mapRepresentation[0].length; x++) {
-			sb.append(String.format("%3d", x));
-		}
-		sb.append("\n");
-		for (int y = 0; y < mapRepresentation.length; y++) {
-			sb.append(String.format("%2d", y));
-			for (int x = 0; x < mapRepresentation[y].length; x++) {
-				sb.append("  " + mapRepresentation[y][x]);
-			}
-			sb.append("\n");
-		}
-		return sb.toString();
-	}
-
-	public static String mapToString(TerrainTile[][] map,
-			Iterator<MapLocation> path) {
-		char[][] mapRepresentation = mapToCharArray(map);
-		while (path.hasNext()) {
-			MapLocation loc = path.next();
-			mapRepresentation[loc.y][loc.x] = 'O';
-		}
-		StringBuilder sb = new StringBuilder();
-		sb.append("  ");
-		for (int x = 0; x < mapRepresentation[0].length; x++) {
-			sb.append(String.format("%3d", x));
-		}
-		sb.append("\n");
-		for (int y = 0; y < mapRepresentation.length; y++) {
-			sb.append(String.format("%2d", y));
-			for (int x = 0; x < mapRepresentation[y].length; x++) {
-				sb.append("  " + mapRepresentation[y][x]);
-			}
-			sb.append("\n");
-		}
-		return sb.toString();
-	}
-
-	public static char[][] mapToCharArray(TerrainTile[][] map) {
-		char[][] mapRepresentation = new char[map.length][map[0].length];
-		for (int y = 0; y < map.length; y++) {
-			for (int x = 0; x < map[0].length; x++) {
-				TerrainTile tile = map[y][x];
-				switch (tile) {
-				case NORMAL:
-					mapRepresentation[y][x] = '.';
-					break;
-				case ROAD:
-					mapRepresentation[y][x] = '#';
-					break;
-				default:
-					mapRepresentation[y][x] = 'X';
-				}
-			}
-		}
-		return mapRepresentation;
-
-	}
-
-	public static String locToString(MapLocation loc) {
-		return "(" + loc.y + ";" + loc.x + ")";
-	}
 }

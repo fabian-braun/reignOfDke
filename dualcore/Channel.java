@@ -6,7 +6,6 @@ import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
-import battlecode.common.TerrainTile;
 
 public class Channel {
 
@@ -19,11 +18,6 @@ public class Channel {
 
 	public static final int chNextTeamId = 65531;
 	public static final int chNextSoldierId = 65530;
-
-	/**
-	 * channels 10000 - 30020 contain info about reduced map
-	 */
-	public static final int chReducedMapInfo = 10000;
 
 	/**
 	 * team channels reserved from 1001 to 1100. channels contain:<br\>
@@ -294,60 +288,11 @@ public class Channel {
 	}
 
 	private static int toInt(MapLocation location) {
-		return toInt(location.y, location.x);
-	}
-
-	private static int toInt(int y, int x) {
-		return x * 1000 + y;
+		return location.x * 10000 + location.y;
 	}
 
 	private static MapLocation toMapLocation(int encoded) {
-		return new MapLocation(encoded / 1000, encoded % 1000);
+		return new MapLocation(encoded / 10000, encoded % 10000);
 	}
 
-	public static TerrainTile getReducedMapTerrain(RobotController rc, int yR,
-			int xR) {
-		int channelOfLoc = chReducedMapInfo + toInt(yR, xR);
-		int iTerrain = 0;
-		try {
-			iTerrain = rc.readBroadcast(channelOfLoc);
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-		switch (iTerrain) {
-		case 1:
-			return TerrainTile.NORMAL;
-		case 2:
-			return TerrainTile.ROAD;
-		case 3:
-			return TerrainTile.VOID;
-		default: // 0
-			return TerrainTile.OFF_MAP;
-		}
-	}
-
-	public static void setReducedMapTerrain(RobotController rc, int yR, int xR,
-			TerrainTile terrain) {
-		int channelOfLoc = chReducedMapInfo + toInt(yR, xR);
-		int iTerrain = 0;
-		switch (terrain) {
-		case NORMAL:
-			iTerrain = 1;
-			break;
-		case ROAD:
-			iTerrain = 2;
-			break;
-		case VOID:
-			iTerrain = 3;
-			break;
-		default:
-			// iTerrain = 0
-			break;
-		}
-		try {
-			rc.broadcast(channelOfLoc, iTerrain);
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-	}
 }

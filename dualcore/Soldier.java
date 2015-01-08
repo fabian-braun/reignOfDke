@@ -18,7 +18,7 @@ public class Soldier extends AbstractRobotType {
 	private int teamId;
 	private int id;
 	private PathFinderMLineBug pathFinderMLineBug;
-	private PathFinderAStarFast pathFinderAStar;
+	private PathFinderAStar pathFinderAStar;
 	protected PathFinderGreedy pathFinderGreedy;
 	private Team us;
 	private Team opponent;
@@ -79,7 +79,7 @@ public class Soldier extends AbstractRobotType {
 
 		us = rc.getTeam();
 		opponent = us.opponent();
-		pathFinderAStar = new PathFinderAStarFast(rc);
+		pathFinderAStar = new PathFinderAStar(rc);
 		pathFinderMLineBug = new PathFinderMLineBug(rc, pathFinderAStar.map,
 				pathFinderAStar.hqSelfLoc, pathFinderAStar.hqEnemLoc,
 				pathFinderAStar.ySize, pathFinderAStar.xSize);
@@ -123,7 +123,9 @@ public class Soldier extends AbstractRobotType {
 					pathFinderAStar.setTarget(target);
 				}
 				if (!pathFinderAStar.move()) {
+					// if (PathFinder.distance(myLoc, target) > 4) {
 					doRandomMove();
+					// }
 				}
 				break;
 			case ACCUMULATE:
