@@ -65,4 +65,8 @@ public class PathFinderGreedy extends PathFinder {
 		return target;
 	}
 
+	@Override
+	public boolean isTargetReached() {
+		return rc.getLocation().equals(target);
+	}
 }
