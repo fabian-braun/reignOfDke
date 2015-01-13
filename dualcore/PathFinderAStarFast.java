@@ -34,7 +34,7 @@ public class PathFinderAStarFast extends PathFinder {
 	private int xDivisor = 1;
 	public static final int reducedDim = 20;
 
-	public PathFinderAStarFast(RobotController rc) {
+	public PathFinderAStarFast(RobotController rc, int soldierId) {
 		super(rc);
 
 		// create reduced map
@@ -61,8 +61,8 @@ public class PathFinderAStarFast extends PathFinder {
 					hqEnemLoc, ySize, xSize);
 			System.out.println("use snailtrail for short navigation");
 		} else {
-			internalPF = new PathFinderAStar(rc, map, hqSelfLoc, hqEnemLoc,
-					ySize, xSize);
+			internalPF = new PathFinderAStar(rc, soldierId, map, hqSelfLoc,
+					hqEnemLoc, ySize, xSize);
 			System.out.println("use a* for short navigation");
 		}
 		mapR = new TerrainTile[ySizeR][xSizeR];

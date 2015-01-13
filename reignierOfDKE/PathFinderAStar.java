@@ -3,6 +3,7 @@ package reignierOfDKE;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -17,7 +18,8 @@ import battlecode.common.TerrainTile;
 public class PathFinderAStar extends PathFinder {
 
 	private MapLocation target = new MapLocation(0, 0);
-	private Stack<MapLocation> path;
+	private Stack<MapLocation> path; // = new Stack<MapLocation>();
+	public static final int weightedAStarMultiplicator = 3;
 	private int soldierId = -1;
 
 	public PathFinderAStar(RobotController rc, int soldierId) {
@@ -69,6 +71,7 @@ public class PathFinderAStar extends PathFinder {
 		this.target = target;
 		MapLocation current = rc.getLocation();
 		path = aStar(current, target);
+		// printPath(path);
 	}
 
 	@Override
@@ -100,13 +103,14 @@ public class PathFinderAStar extends PathFinder {
 			Channel.signalAlive(rc, soldierId);
 			MapLocation current = open.poll();
 			if (current.equals(target))
-				return getPath(ancestors, target);
+				return getPath(ancestors, target, start);
 			closed.add(current);
 			Set<MapLocation> neighbours = getNeighbours(current);
 			for (MapLocation neighbour : neighbours) {
 				if (closed.contains(neighbour))
 					continue;
-				int tentative = gScore.get(current) + 2;
+				int tentative = gScore.get(current)
+						+ calcFScore(current, neighbour);
 				if (open.contains(neighbour)
 						&& tentative >= gScore.get(neighbour))
 					continue;
@@ -122,10 +126,11 @@ public class PathFinderAStar extends PathFinder {
 	}
 
 	public static Stack<MapLocation> getPath(
-			Map<MapLocation, MapLocation> ancestors, MapLocation target) {
+			Map<MapLocation, MapLocation> ancestors, MapLocation target,
+			MapLocation origin) {
 		Stack<MapLocation> path = new Stack<MapLocation>();
 		MapLocation current = target;
-		while (current != null) {
+		while (!origin.equals(current)) {
 			path.push(current);
 			current = ancestors.get(current);
 		}
@@ -133,12 +138,22 @@ public class PathFinderAStar extends PathFinder {
 	}
 
 	private int calcFScore(MapLocation from, MapLocation to) {
-		int distance = 4 * distance(from, to);
+		int distance = getManhattanDist(from, to) * weightedAStarMultiplicator;
 		if (map[from.y][from.x].equals(TerrainTile.ROAD)) {
 			if (distance > 2)
 				distance = distance - 2;
 		}
 		return distance;
+	}
+
+	@Override
+	public boolean isTargetReached() {
+		return rc.getLocation().equals(target);
+	}
+
+	private void printPath(Stack<MapLocation> path) {
+		Iterator<MapLocation> iterator = path.iterator();
+		System.out.println(mapToString(map, iterator));
 	}
 
 }
