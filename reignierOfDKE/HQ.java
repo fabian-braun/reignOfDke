@@ -67,6 +67,7 @@ public class HQ extends AbstractRobotType {
 				// Send our teams 0 and 1 in for the kill
 				teams[0].setTask(Task.GOTO, opponentPastrLocations[0]);
 				teams[1].setTask(Task.GOTO, opponentPastrLocations[0]);
+				teams[2].setTask(Task.GOTO, opponentPastrLocations[0]);
 			} else {
 				if (rc.senseRobotCount() > 5) {
 					// Check if we have any active PASTRs
