@@ -113,51 +113,7 @@ public class Soldier extends AbstractRobotType {
 					break;
 				}
 			case GOTO:
-				// Check if I am the leader of my team
-				if (amILeader()) {
-					// Sense how many of my team members are close
-					int closeTeamMembers = getNumberOfCloseTeamMembers();
-					if (closeTeamMembers < 1) {
-						System.out.println("prevent divide by zero");
-						closeTeamMembers = 1;
-					}
-					int totalTeamMembers = Channel.getSoldierCountOfTeam(rc,
-							teamId);
-					if (totalTeamMembers < 1) {
-						System.out.println("prevent divide by zero");
-						totalTeamMembers = 1;
-					}
-					rc.setIndicatorString(2, "Leading " + closeTeamMembers
-							+ "/" + totalTeamMembers + " team members");
-					double closeTeamFraction = closeTeamMembers
-							/ totalTeamMembers;
-					// Check if we need to wait for our team members
-					if (closeTeamFraction > WAIT_FOR_TEAM_FRACTION_THRESHOLD) {
-						doAStarMoveTo(target);
-					}
-					// If we have reached the target, set temporary target
-					// to target
-					if (myLoc.equals(target)) {
-						Channel.broadcastTemporaryTarget(rc, teamId, target);
-					} else {
-						// Means the leader moved
-						// Broadcast temporary target (current + direction)
-						MapLocation tempTarget = myLoc;
-						Channel.broadcastTemporaryTarget(rc, teamId, tempTarget);
-					}
-				} else {
-					rc.setIndicatorString(2, "Following");
-					// If I am not the leader, check if my leader has set a
-					// temporary target
-					MapLocation tempTarget = Channel.getTemporaryTarget(rc,
-							teamId);
-					if (tempTarget.x > 0 || tempTarget.y > 0) {
-						rc.setIndicatorString(2, "Following to " + tempTarget);
-						doAStarMoveTo(tempTarget);
-					} else {
-						doRandomMove();
-					}
-				}
+				doAStarMoveTo(target);
 				break;
 			case CIRCULATE:
 				circulate(target);
