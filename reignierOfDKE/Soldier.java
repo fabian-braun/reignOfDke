@@ -20,7 +20,6 @@ public class Soldier extends AbstractRobotType {
 	private int id;
 	private PathFinderAStarFast pathFinderAStar;
 	protected PathFinderGreedy pathFinderGreedy;
-	private MapLocation myPreviousLocation;
 	private Team us;
 	private Team opponent;
 	private MapLocation enemyHq;
@@ -78,8 +77,6 @@ public class Soldier extends AbstractRobotType {
 		pathFinderAStar = new PathFinderAStarFast(rc, id);
 		pathFinderGreedy = new PathFinderGreedy(rc, randall);
 		enemyHq = pathFinderAStar.hqEnemLoc;
-
-		myPreviousLocation = rc.getLocation();
 	}
 
 	private void actMicro(MapLocation target, Task task)
@@ -122,6 +119,10 @@ public class Soldier extends AbstractRobotType {
 					int closeTeamMembers = getNumberOfCloseTeamMembers();
 					int totalTeamMembers = Channel.getSoldierCountOfTeam(rc,
 							teamId);
+					if (totalTeamMembers < 1) {
+						System.out.println("prevent divide by zero");
+						totalTeamMembers = 1;
+					}
 					rc.setIndicatorString(2, "Leading " + closeTeamMembers
 							+ "/" + totalTeamMembers + " team members");
 					double closeTeamFraction = closeTeamMembers
@@ -143,12 +144,9 @@ public class Soldier extends AbstractRobotType {
 						} else {
 							// Means the leader moved
 							// Broadcast temporary target (current + direction)
-							MapLocation tempTarget = myLoc
-									.add(myPreviousLocation.directionTo(myLoc));
+							MapLocation tempTarget = myLoc;
 							Channel.broadcastTemporaryTarget(rc, teamId,
 									tempTarget);
-							// Save my previous location
-							myPreviousLocation = myLoc;
 						}
 					}
 				} else {

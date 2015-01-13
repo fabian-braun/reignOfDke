@@ -152,11 +152,16 @@ public abstract class PathFinder {
 	public static String mapToString(TerrainTile[][] map,
 			Iterator<MapLocation> path) {
 		char[][] mapRepresentation = mapToCharArray(map);
+		String locations = "";
+		int i = 0;
 		while (path.hasNext()) {
 			MapLocation loc = path.next();
-			mapRepresentation[loc.y][loc.x] = 'O';
+			locations += "->" + locToString(loc);
+			mapRepresentation[loc.y][loc.x] = ("" + i)
+					.charAt(("" + i).length() - 1); // ugly
+			i++;
 		}
-		StringBuilder sb = new StringBuilder();
+		StringBuilder sb = new StringBuilder(locations + "\n");
 		sb.append("  ");
 		for (int x = 0; x < mapRepresentation[0].length; x++) {
 			sb.append(String.format("%3d", x));
