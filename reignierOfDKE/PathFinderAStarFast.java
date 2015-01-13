@@ -54,15 +54,15 @@ public class PathFinderAStarFast extends PathFinder {
 		xSizeR += ((xSize % xDivisor) > 0 ? 1 : 0);
 
 		// init internal pathfinder for granular map navigation
-		if (yDivisor < 3 && xDivisor < 3) {
-			internalPF = new PathFinderGreedy(rc, map, hqSelfLoc, hqEnemLoc,
-					ySize, xSize);
-			System.out.println("use greedy for short navigation");
-		} else {
-			internalPF = new PathFinderAStar(rc, soldierId, map, hqSelfLoc,
-					hqEnemLoc, ySize, xSize);
-			System.out.println("use a* for short navigation");
-		}
+		// if (yDivisor < 3 && xDivisor < 3) {
+		// internalPF = new PathFinderGreedy(rc, map, hqSelfLoc, hqEnemLoc,
+		// ySize, xSize);
+		// System.out.println("use greedy for short navigation");
+		// } else {
+		internalPF = new PathFinderAStar(rc, soldierId, map, hqSelfLoc,
+				hqEnemLoc, ySize, xSize);
+		System.out.println("use a* for short navigation");
+		// }
 		mapR = new TerrainTile[ySizeR][xSizeR];
 		for (int y = 0; y < ySizeR; y++) {
 			for (int x = 0; x < xSizeR; x++) {
@@ -305,8 +305,10 @@ public class PathFinderAStarFast extends PathFinder {
 					open.add(neighbour);
 			}
 		}
-		// no path exists
-		return new Stack<MapLocation>();
+		// no path exists, make sure we at least have a target
+		Stack<MapLocation> noPathStack = new Stack<MapLocation>();
+		noPathStack.push(this.target);
+		return noPathStack;
 	}
 
 	private int calcFScore(MapLocation from, MapLocation to) {

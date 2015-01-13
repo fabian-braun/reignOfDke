@@ -1,8 +1,5 @@
 package reignierOfDKE;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -21,7 +18,6 @@ public class HQ extends AbstractRobotType {
 	private Team[] teams;
 	private Direction spawningDefault;
 	private int teamId = 0;
-	private Set<MapLocation> pastPastrLocations = new HashSet<MapLocation>();
 
 	public HQ(RobotController rc) {
 		super(rc);
@@ -64,25 +60,27 @@ public class HQ extends AbstractRobotType {
 			teams[1].setTask(Task.CIRCULATE, target);
 			teams[2].setTask(Task.CIRCULATE, target);
 		} else {
-			MapLocation[] pastrLocations = rc.sensePastrLocations(rc.getTeam()
-					.opponent());
-			if (Soldier.size(pastrLocations) > 0) {
-				teams[0].setTask(Task.GOTO, pastrLocations[0]);
-				teams[1].setTask(Task.GOTO, pastrLocations[0]);
+			MapLocation[] opponentPastrLocations = rc.sensePastrLocations(rc
+					.getTeam().opponent());
+			// If the opponent has any PASTRs
+			if (Soldier.size(opponentPastrLocations) > 0) {
+				// Send our teams 0 and 1 in for the kill
+				teams[0].setTask(Task.GOTO, opponentPastrLocations[0]);
+				teams[1].setTask(Task.GOTO, opponentPastrLocations[0]);
 			} else {
 				if (rc.senseRobotCount() > 5) {
-					mapAnalyzer = new MapAnalyzer(rc, myHq, otherHq, ySize,
-							xSize);
-					if (!pastPastrLocations.contains(mapAnalyzer
-							.evaluateBestPastrLoc())) {
-						teams[1].setTask(Task.BUILD_PASTR,
-								mapAnalyzer.evaluateBestPastrLoc());
-						teams[2].setTask(Task.CIRCULATE,
-								mapAnalyzer.evaluateBestPastrLoc());
-						teams[0].setTask(Task.CIRCULATE,
-								mapAnalyzer.evaluateBestPastrLoc());
-						pastPastrLocations.add(mapAnalyzer
-								.evaluateBestPastrLoc());
+					// Check if we have any active PASTRs
+					MapLocation[] ownPastrLocations = rc.sensePastrLocations(rc
+							.getTeam());
+					if (Soldier.size(ownPastrLocations) == 0) {
+						// We need to build a PASTR, determine the best PASTR
+						// location
+						MapLocation bestPastrLocation = mapAnalyzer
+								.evaluateBestPastrLoc();
+						// Assign the correct tasks to the teams
+						teams[0].setTask(Task.CIRCULATE, bestPastrLocation);
+						teams[1].setTask(Task.BUILD_PASTR, bestPastrLocation);
+						teams[2].setTask(Task.CIRCULATE, bestPastrLocation);
 					}
 				}
 			}
