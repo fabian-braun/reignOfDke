@@ -79,7 +79,7 @@ public class Soldier extends AbstractRobotType {
 
 		us = rc.getTeam();
 		opponent = us.opponent();
-		pathFinderAStar = new PathFinderAStarFast(rc);
+		pathFinderAStar = new PathFinderAStarFast(rc, id);
 		pathFinderMLineBug = new PathFinderMLineBug(rc, pathFinderAStar.map,
 				pathFinderAStar.hqSelfLoc, pathFinderAStar.hqEnemLoc,
 				pathFinderAStar.ySize, pathFinderAStar.xSize);

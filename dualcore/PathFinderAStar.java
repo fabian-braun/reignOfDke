@@ -20,14 +20,18 @@ public class PathFinderAStar extends PathFinder {
 	private MapLocation target = new MapLocation(0, 0);
 	private Stack<MapLocation> path; // = new Stack<MapLocation>();
 	public static final int weightedAStarMultiplicator = 3;
+	private int soldierId = -1;
 
-	public PathFinderAStar(RobotController rc) {
+	public PathFinderAStar(RobotController rc, int soldierId) {
 		super(rc);
+		this.soldierId = soldierId;
 	}
 
-	public PathFinderAStar(RobotController rc, TerrainTile[][] map,
-			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
+	public PathFinderAStar(RobotController rc, int soldierId,
+			TerrainTile[][] map, MapLocation hqSelfLoc, MapLocation hqEnemLoc,
+			int ySize, int xSize) {
 		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize);
+		this.soldierId = soldierId;
 	}
 
 	@Override
@@ -95,6 +99,8 @@ public class PathFinderAStar extends PathFinder {
 
 		// start algorithm
 		while (!open.isEmpty()) {
+			// broadcast being alive
+			Channel.signalAlive(rc, soldierId);
 			MapLocation current = open.poll();
 			if (current.equals(target))
 				return getPath(ancestors, target, start);

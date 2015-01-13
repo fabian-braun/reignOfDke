@@ -18,8 +18,7 @@ public class Soldier extends AbstractRobotType {
 	private boolean inactive = false;
 	private int teamId;
 	private int id;
-	private PathFinderSnailTrail pathFinderSnailTrail;
-	private PathFinderAStar pathFinderAStar;
+	private PathFinderAStarFast pathFinderAStar;
 	protected PathFinderGreedy pathFinderGreedy;
 	private MapLocation myPreviousLocation;
 	private Team us;
@@ -34,7 +33,7 @@ public class Soldier extends AbstractRobotType {
 	MapLocation myLoc;
 
 	private static final int CLOSE_TEAM_MEMBER_DISTANCE_THRESHOLD = 5;
-	private static final double WAIT_FOR_TEAM_FRACTION_THRESHOLD = 0.5;
+	private static final double WAIT_FOR_TEAM_FRACTION_THRESHOLD = 0.4;
 
 	public Soldier(RobotController rc) {
 		super(rc);
@@ -76,12 +75,7 @@ public class Soldier extends AbstractRobotType {
 
 		us = rc.getTeam();
 		opponent = us.opponent();
-		pathFinderAStar = new PathFinderAStar(rc, id);
-		pathFinderSnailTrail = new PathFinderSnailTrail(rc,
-				pathFinderAStar.map, pathFinderAStar.hqSelfLoc,
-				pathFinderAStar.hqEnemLoc, pathFinderAStar.ySize,
-				pathFinderAStar.xSize);
-		pathFinderSnailTrail.setTarget(target);
+		pathFinderAStar = new PathFinderAStarFast(rc, id);
 		pathFinderGreedy = new PathFinderGreedy(rc, randall);
 		enemyHq = pathFinderAStar.hqEnemLoc;
 
@@ -127,11 +121,11 @@ public class Soldier extends AbstractRobotType {
 					// Sense how many of my team members are close
 					int closeTeamMembers = getNumberOfCloseTeamMembers();
 					int totalTeamMembers = Channel.getSoldierCountOfTeam(rc,
-							teamId) - 1; // -1 cause we ourselves are 1
+							teamId);
 					rc.setIndicatorString(2, "Leading " + closeTeamMembers
 							+ "/" + totalTeamMembers + " team members");
 					double closeTeamFraction = closeTeamMembers
-							/ (totalTeamMembers * 1.0);
+							/ totalTeamMembers;
 					// Check if we need to wait for our team members
 					if (closeTeamFraction > WAIT_FOR_TEAM_FRACTION_THRESHOLD) {
 						// Calculate the route to the target
@@ -166,12 +160,11 @@ public class Soldier extends AbstractRobotType {
 					if (tempTarget.x > 0 || tempTarget.y > 0) {
 						rc.setIndicatorString(2, "Following to " + tempTarget);
 						// Move to temporary target
-						if (!tempTarget
-								.equals(pathFinderSnailTrail.getTarget())) {
-							pathFinderSnailTrail.setTarget(tempTarget);
+						if (!tempTarget.equals(pathFinderAStar.getTarget())) {
+							pathFinderAStar.setTarget(tempTarget);
 						}
 						// If we fail to move where we want to go
-						if (!pathFinderSnailTrail.move()) {
+						if (!pathFinderAStar.move()) {
 							// Move random
 							doRandomMove();
 						}
@@ -252,19 +245,17 @@ public class Soldier extends AbstractRobotType {
 		int closeTeamMembers = 0;
 		// Loop through all robots
 		for (int id = 0; id < GameConstants.MAX_ROBOTS; id++) {
-			if (id != this.id) {
-				// Check if the robot is alive
-				if (Channel.isAlive(rc, id)) {
-					// Check the alive robot is on the same team
-					if (teamId == Channel.getTeamIdOfSoldier(rc, id)) {
-						// Get the position of this robot
-						MapLocation teamMemberLocation = Channel
-								.getLocationOfSoldier(rc, id);
-						int distance = PathFinder.distance(myLoc,
-								teamMemberLocation);
-						if (distance <= CLOSE_TEAM_MEMBER_DISTANCE_THRESHOLD) {
-							closeTeamMembers++;
-						}
+			// Check if the robot is alive
+			if (Channel.isAlive(rc, id)) {
+				// Check the alive robot is on the same team
+				if (teamId == Channel.getTeamIdOfSoldier(rc, id)) {
+					// Get the position of this robot
+					MapLocation teamMemberLocation = Channel
+							.getLocationOfSoldier(rc, id);
+					int distance = PathFinder.getRequiredMoves(myLoc,
+							teamMemberLocation);
+					if (distance <= CLOSE_TEAM_MEMBER_DISTANCE_THRESHOLD) {
+						closeTeamMembers++;
 					}
 				}
 			}

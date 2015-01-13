@@ -17,7 +17,7 @@ public class TestGeneric {
 		hqs[1] = new MapLocation(90, 60);
 		RobotController rc = new RobotControllerMock(getMap1(), hqs,
 				new MapLocation(1, 1));
-		PathFinderAStarFast pathFinder = new PathFinderAStarFast(rc);
+		PathFinderAStarFast pathFinder = new PathFinderAStarFast(rc, 0);
 		pathFinder.setTarget(new MapLocation(89, 59));
 		int saveCounter = 200;
 		while (!pathFinder.isTargetReached() && saveCounter > 0) {

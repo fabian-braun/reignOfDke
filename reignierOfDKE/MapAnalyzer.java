@@ -199,7 +199,7 @@ public class MapAnalyzer {
 						}
 					}
 				}
-				int distance = PathFinder.distance(new MapLocation(x, y),
+				int distance = PathFinder.getRequiredMoves(new MapLocation(x, y),
 						otherHq);
 				if (realDistanceReady) {
 					distance = getRealDistanceToOpponentHq(new MapLocation(x, y));

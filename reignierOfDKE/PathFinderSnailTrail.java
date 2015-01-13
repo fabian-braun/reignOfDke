@@ -14,14 +14,17 @@ public class PathFinderSnailTrail extends PathFinder {
 
 	private HashMap<MapLocation, Integer> lastVisited = new HashMap<MapLocation, Integer>();
 	private MapLocation target;
+	private MapLocation current;
 
 	public PathFinderSnailTrail(RobotController rc, TerrainTile[][] map,
 			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
 		super(rc, map, hqEnemLoc, hqEnemLoc, ySize, xSize);
+		current = rc.getLocation();
 	}
 
 	public PathFinderSnailTrail(RobotController rc) {
 		super(rc);
+		current = rc.getLocation();
 	}
 
 	private Direction getNextDirection() {
@@ -31,7 +34,7 @@ public class PathFinderSnailTrail extends PathFinder {
 		Direction dir = Direction.NONE;
 		int bestRating = Integer.MAX_VALUE;
 		for (MapLocation next : neighbours) {
-			int dist = distance(next, target);
+			int dist = getRequiredMoves(next, target);
 			if (lastVisited.containsKey(next)) {
 				// this tile has been visited. Make the rating worse: increase
 				// it by roundnumber of last visit + max distance on this map
@@ -47,9 +50,15 @@ public class PathFinderSnailTrail extends PathFinder {
 
 	@Override
 	public boolean move() throws GameActionException {
+		if (!current.equals(rc.getLocation())) {
+			// moves have been performed outside of this class
+			// therefore lastVisited is not valid anymore
+			lastVisited.clear();
+		}
 		Direction dir = getNextDirection();
 		if (rc.canMove(dir)) {
 			rc.move(dir);
+			current = rc.getLocation();
 			return true;
 		}
 		return false;
@@ -74,5 +83,10 @@ public class PathFinderSnailTrail extends PathFinder {
 	@Override
 	public MapLocation getTarget() {
 		return target;
+	}
+
+	@Override
+	public boolean isTargetReached() {
+		return rc.getLocation().equals(target);
 	}
 }
