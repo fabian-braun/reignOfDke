@@ -53,16 +53,8 @@ public class PathFinderAStarFast extends PathFinder {
 		ySizeR += ((ySize % yDivisor) > 0 ? 1 : 0);
 		xSizeR += ((xSize % xDivisor) > 0 ? 1 : 0);
 
-		// init internal pathfinder for granular map navigation
-		// if (yDivisor < 3 && xDivisor < 3) {
-		// internalPF = new PathFinderGreedy(rc, map, hqSelfLoc, hqEnemLoc,
-		// ySize, xSize);
-		// System.out.println("use greedy for short navigation");
-		// } else {
 		internalPF = new PathFinderAStar(rc, soldierId, map, hqSelfLoc,
 				hqEnemLoc, ySize, xSize);
-		System.out.println("use a* for short navigation");
-		// }
 		mapR = new TerrainTile[ySizeR][xSizeR];
 		for (int y = 0; y < ySizeR; y++) {
 			for (int x = 0; x < xSizeR; x++) {
@@ -138,33 +130,33 @@ public class PathFinderAStarFast extends PathFinder {
 				convertNyRy(current.y));
 		MapLocation tempTarget;
 
-		System.out.println("currentR = " + locToString(currentR)
-				+ " ; targetR = " + locToString(new MapLocation(xR, yR)));
+		// System.out.println("currentR = " + locToString(currentR)
+		// + " ; targetR = " + locToString(new MapLocation(xR, yR)));
 		if (currentR.x < xR && currentR.y < yR) { // top left
-			System.out.println("top left");
+			// System.out.println("top left");
 			tempTarget = new MapLocation(xR * xDivisor, yR * yDivisor);
 		} else if (currentR.x == xR && currentR.y < yR) { // top
-			System.out.println("top");
+			// System.out.println("top");
 			tempTarget = new MapLocation(current.x, yR * yDivisor);
 		} else if (currentR.x > xR && currentR.y < yR) { // top right
-			System.out.println("top right");
+			// System.out.println("top right");
 			tempTarget = new MapLocation((currentR.x * xDivisor) - 1, yR
 					* yDivisor);
 		} else if (currentR.x < xR && currentR.y == yR) { // left
-			System.out.println("left");
+			// System.out.println("left");
 			tempTarget = new MapLocation(xR * xDivisor, current.y);
 		} else if (currentR.x > xR && currentR.y == yR) { // right
-			System.out.println("right");
+			// System.out.println("right");
 			tempTarget = new MapLocation((currentR.x * xDivisor) - 1, current.y);
 		} else if (currentR.x < xR && currentR.y > yR) { // bottom left
-			System.out.println("bottom left");
+			// System.out.println("bottom left");
 			tempTarget = new MapLocation(xR * xDivisor,
 					(currentR.y * yDivisor) - 1);
 		} else if (currentR.x == xR && currentR.y > yR) { // bottom
-			System.out.println("bottom");
+			// System.out.println("bottom");
 			tempTarget = new MapLocation(current.x, (currentR.y * yDivisor) - 1);
 		} else if (currentR.x > xR && currentR.y > yR) { // bottom right
-			System.out.println("bottom right");
+			// System.out.println("bottom right");
 			tempTarget = new MapLocation((currentR.x * xDivisor) - 1,
 					(currentR.y * yDivisor) - 1);
 		} else {
@@ -179,7 +171,7 @@ public class PathFinderAStarFast extends PathFinder {
 	}
 
 	private MapLocation getCorrespondingTempTargetSimple(int yR, int xR) {
-		System.out.println("call to getCorrespondingTempTargetSimple");
+		// System.out.println("call to getCorrespondingTempTargetSimple");
 		if (isCorresponding(target, yR, xR)) {
 			return target;
 		}
@@ -191,7 +183,7 @@ public class PathFinderAStarFast extends PathFinder {
 				}
 			}
 		}
-		System.out.println("fallback case in getCorrespondingTempTargetSimple");
+		// System.out.println("fallback case in getCorrespondingTempTargetSimple");
 		return target;
 	}
 

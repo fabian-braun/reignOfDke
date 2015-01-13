@@ -3,6 +3,7 @@ package reignierOfDKE;
 import java.util.ArrayList;
 import java.util.List;
 
+import reignierOfDKE.C.MapComplexity;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -15,10 +16,9 @@ import battlecode.common.Team;
 
 public class Soldier extends AbstractRobotType {
 
-	private boolean inactive = false;
 	private int teamId;
 	private int id;
-	private PathFinderAStarFast pathFinderAStar;
+	private PathFinder pathFinderComplex;
 	protected PathFinderGreedy pathFinderGreedy;
 	private Team us;
 	private Team opponent;
@@ -32,7 +32,6 @@ public class Soldier extends AbstractRobotType {
 	MapLocation myLoc;
 
 	private static final int CLOSE_TEAM_MEMBER_DISTANCE_THRESHOLD = 5;
-	private static final double WAIT_FOR_TEAM_FRACTION_THRESHOLD = 0.4;
 
 	public Soldier(RobotController rc) {
 		super(rc);
@@ -74,9 +73,14 @@ public class Soldier extends AbstractRobotType {
 
 		us = rc.getTeam();
 		opponent = us.opponent();
-		pathFinderAStar = new PathFinderAStarFast(rc, id);
+		MapComplexity complexity = Channel.getMapComplexity(rc);
+		if (complexity.equals(MapComplexity.COMPLEX)) {
+			pathFinderComplex = new PathFinderAStarFast(rc, id);
+		} else {
+			pathFinderComplex = new PathFinderSnailTrail(rc);
+		}
 		pathFinderGreedy = new PathFinderGreedy(rc, randall);
-		enemyHq = pathFinderAStar.hqEnemLoc;
+		enemyHq = pathFinderComplex.hqEnemLoc;
 	}
 
 	private void actMicro(MapLocation target, Task task)
@@ -185,23 +189,18 @@ public class Soldier extends AbstractRobotType {
 	 * @param target
 	 */
 	private void doAStarMoveTo(MapLocation target) {
-		if (!target.equals(pathFinderAStar.getTarget())) {
-			pathFinderAStar.setTarget(target);
+		if (!target.equals(pathFinderComplex.getTarget())) {
+			pathFinderComplex.setTarget(target);
 		}
 		// If we fail to move where we want to go
 		try {
-			if (!pathFinderAStar.move()) {
+			if (!pathFinderComplex.move()) {
 				// Move random
 				doRandomMove();
 			}
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}
-	}
-
-	private boolean amILeader() {
-		// Return whether or not my ID is the ID of the leader of my team
-		return id == Channel.getLeaderIdOfTeam(rc, teamId);
 	}
 
 	private int getNumberOfCloseTeamMembers() {
