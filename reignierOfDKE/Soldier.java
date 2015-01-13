@@ -133,14 +133,7 @@ public class Soldier extends AbstractRobotType {
 							/ totalTeamMembers;
 					// Check if we need to wait for our team members
 					if (closeTeamFraction > WAIT_FOR_TEAM_FRACTION_THRESHOLD) {
-						// Calculate the route to the target
-						if (!target.equals(pathFinderAStar.getTarget())) {
-							pathFinderAStar.setTarget(target);
-						}
-						if (!pathFinderAStar.move()) {
-							// Something went wrong
-							doRandomMove();
-						}
+						doAStarMoveTo(target);
 					}
 					// If we have reached the target, set temporary target
 					// to target
@@ -160,15 +153,7 @@ public class Soldier extends AbstractRobotType {
 							teamId);
 					if (tempTarget.x > 0 || tempTarget.y > 0) {
 						rc.setIndicatorString(2, "Following to " + tempTarget);
-						// Move to temporary target
-						if (!tempTarget.equals(pathFinderAStar.getTarget())) {
-							pathFinderAStar.setTarget(tempTarget);
-						}
-						// If we fail to move where we want to go
-						if (!pathFinderAStar.move()) {
-							// Move random
-							doRandomMove();
-						}
+						doAStarMoveTo(tempTarget);
 					} else {
 						doRandomMove();
 					}
@@ -237,6 +222,27 @@ public class Soldier extends AbstractRobotType {
 		}
 	}
 
+	/**
+	 * convenience method: updates the target if necessary. tries to perform a
+	 * move. if not possible performs a random move.
+	 * 
+	 * @param target
+	 */
+	private void doAStarMoveTo(MapLocation target) {
+		if (!target.equals(pathFinderAStar.getTarget())) {
+			pathFinderAStar.setTarget(target);
+		}
+		// If we fail to move where we want to go
+		try {
+			if (!pathFinderAStar.move()) {
+				// Move random
+				doRandomMove();
+			}
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private boolean amILeader() {
 		// Return whether or not my ID is the ID of the leader of my team
 		return id == Channel.getLeaderIdOfTeam(rc, teamId);
@@ -279,21 +285,19 @@ public class Soldier extends AbstractRobotType {
 
 	private void circulate(MapLocation center) {
 		int distance = myLoc.distanceSquaredTo(center);
-
 		if (distance >= MIN_CIRCULATE && distance <= MAX_CIRCULATE) {
 			doRandomMove();
 		} else {
 			if (distance < MIN_CIRCULATE) {
 				pathFinderGreedy
 						.setTarget(myLoc.add(center.directionTo(myLoc)));
+				try {
+					pathFinderGreedy.move();
+				} catch (GameActionException e) {
+					e.printStackTrace();
+				}
 			} else {
-				pathFinderGreedy.setTarget(center);
-			}
-			try {
-				pathFinderGreedy.move();
-			} catch (GameActionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				doAStarMoveTo(center);
 			}
 		}
 	}
