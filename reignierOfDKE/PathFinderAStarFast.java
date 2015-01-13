@@ -101,8 +101,9 @@ public class PathFinderAStarFast extends PathFinder {
 			}
 		}
 		// System.out.println(mapToString(map));
-		System.out.println(mapToString(mapR));
-		System.out.println("yDivisor,xDivisor = " + yDivisor + "," + xDivisor);
+		// System.out.println(mapToString(mapR));
+		// System.out.println("yDivisor,xDivisor = " + yDivisor + "," +
+		// xDivisor);
 
 	}
 
@@ -232,8 +233,8 @@ public class PathFinderAStarFast extends PathFinder {
 		MapLocation currentR = new MapLocation(convertNxRx(current.x),
 				convertNyRy(current.y));
 		pathR = aStar(currentR, targetR, mapR);
-		printPath(pathR);
-		printReducedPath(pathR);
+		// printPath(pathR);
+		// printReducedPath(pathR);
 		tempTargetR = pathR.pop();
 		tempTarget = getCorrespondingTempTarget(tempTargetR.y, tempTargetR.x);
 		internalPF.setTarget(tempTarget);

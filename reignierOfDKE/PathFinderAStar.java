@@ -71,7 +71,7 @@ public class PathFinderAStar extends PathFinder {
 		this.target = target;
 		MapLocation current = rc.getLocation();
 		path = aStar(current, target);
-		printPath(path);
+		// printPath(path);
 	}
 
 	@Override

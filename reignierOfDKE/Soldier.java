@@ -117,6 +117,10 @@ public class Soldier extends AbstractRobotType {
 				if (amILeader()) {
 					// Sense how many of my team members are close
 					int closeTeamMembers = getNumberOfCloseTeamMembers();
+					if (closeTeamMembers < 1) {
+						System.out.println("prevent divide by zero");
+						closeTeamMembers = 1;
+					}
 					int totalTeamMembers = Channel.getSoldierCountOfTeam(rc,
 							teamId);
 					if (totalTeamMembers < 1) {
@@ -133,21 +137,20 @@ public class Soldier extends AbstractRobotType {
 						if (!target.equals(pathFinderAStar.getTarget())) {
 							pathFinderAStar.setTarget(target);
 						}
-						// If we have reached the target, set temporary target
-						// to
-						// target
-						if (myLoc.equals(target)) {
-							Channel.broadcastTemporaryTarget(rc, teamId, target);
-						} else if (!pathFinderAStar.move()) {
+						if (!pathFinderAStar.move()) {
 							// Something went wrong
 							doRandomMove();
-						} else {
-							// Means the leader moved
-							// Broadcast temporary target (current + direction)
-							MapLocation tempTarget = myLoc;
-							Channel.broadcastTemporaryTarget(rc, teamId,
-									tempTarget);
 						}
+					}
+					// If we have reached the target, set temporary target
+					// to target
+					if (myLoc.equals(target)) {
+						Channel.broadcastTemporaryTarget(rc, teamId, target);
+					} else {
+						// Means the leader moved
+						// Broadcast temporary target (current + direction)
+						MapLocation tempTarget = myLoc;
+						Channel.broadcastTemporaryTarget(rc, teamId, tempTarget);
 					}
 				} else {
 					rc.setIndicatorString(2, "Following");
