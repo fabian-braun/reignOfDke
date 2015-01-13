@@ -85,9 +85,9 @@ public class PathFinderAStarFast extends PathFinder {
 						bloc++;
 					}
 				}
-				// if there are two times more traversable tiles than void, the
-				// square is treated as traversable. This is pessimistic.
-				if (norm + road >= bloc * 2) {
+				// if there are more traversable tiles than void, the
+				// square is treated as traversable.
+				if (norm + road >= bloc) {
 					if (road * 2 > norm) {
 						mapR[y][x] = TerrainTile.ROAD;
 					} else {
