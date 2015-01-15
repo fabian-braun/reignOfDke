@@ -27,12 +27,18 @@ public class HQ extends AbstractRobotType {
 	private Direction spawningDefault;
 	private int teamId = teamIdAssignment[0];
 	private int pastrThreshold;
-	private int countBrdCastingOppSoldiers;
-	private MapLocation oppSoldiersCenter;
-	private int oppSoldiersMeanDistToCenter;
+
+	private MapLocation pastr1 = new MapLocation(-1, -1);
+	private MapLocation pastr2 = new MapLocation(-1, -1);
 
 	private static final int[] teamIdAssignment = new int[] { 0, 1, 0, 2 };
 	private int teamIndex = 0;
+
+	// info about opponent, is updated in updateInfoAboutOpponent()
+	private int countBrdCastingOppSoldiers = 0;
+	private MapLocation oppSoldiersCenter;
+	private int oppSoldiersMeanDistToCenter = 0;
+	private int oppMilkQuantity = 0;
 
 	public HQ(RobotController rc) {
 		super(rc);
@@ -79,33 +85,56 @@ public class HQ extends AbstractRobotType {
 			teams[1].setTask(Task.CIRCULATE, target);
 			teams[2].setTask(Task.CIRCULATE, target);
 		} else {
-			MapLocation[] opponentPastrLocations = rc.sensePastrLocations(rc
-					.getTeam().opponent());
-			// If the opponent has any PASTRs
-			if (Soldier.size(opponentPastrLocations) > 0) {
-				// Send our teams 0 and 1 in for the kill
-				teams[0].setTask(Task.GOTO, opponentPastrLocations[0]);
-				teams[1].setTask(Task.GOTO, opponentPastrLocations[0]);
-				teams[2].setTask(Task.GOTO, opponentPastrLocations[0]);
-			} else {
-				if (rc.senseRobotCount() > pastrThreshold) {
+			coordinateTroops();
+		}
+	}
 
-					// Check if we have any active PASTRs
-					MapLocation[] ownPastrLocations = rc.sensePastrLocations(rc
-							.getTeam());
-					if (Soldier.size(ownPastrLocations) == 0) {
-						// We need to build a PASTR, determine the best PASTR
-						// location
-						MapLocation bestPastrLocation = mapAnalyzer
-								.evaluateBestPastrLoc();
-						// Assign the correct tasks to the teams
-						teams[0].setTask(Task.CIRCULATE, bestPastrLocation);
-						teams[1].setTask(Task.BUILD_PASTR, bestPastrLocation);
-						teams[2].setTask(Task.CIRCULATE, bestPastrLocation);
+	private void coordinateTroops() {
+		MapLocation[] opponentPastrLocations = rc.sensePastrLocations(rc
+				.getTeam().opponent());
+		// If the opponent has any PASTRs
+		if (Soldier.size(opponentPastrLocations) > 0) {
+			// Send our teams 0 and 1 in for the kill
+			teams[0].setTask(Task.GOTO, opponentPastrLocations[0]);
+			teams[2].setTask(Task.GOTO, opponentPastrLocations[0]);
+			if (oppMilkQuantity > 5000000) {
+				teams[1].setTask(Task.GOTO, opponentPastrLocations[0]);
+			} else {
+				boolean pastrTaskAssigned = buildPastr(1);
+			}
+		} else {
+			boolean pastrTaskAssigned = buildPastr(1);
+			if (pastrTaskAssigned) {
+				teams[0].setTask(Task.CIRCULATE, Channel.getTarget(rc, 1));
+				teams[2].setTask(Task.CIRCULATE, Channel.getTarget(rc, 1));
+			}
+		}
+	}
+
+	private boolean buildPastr(int teamId) {
+		if (Channel.getTarget(rc, teamId).equals(pastr1)) {
+			return false;
+		}
+		if (rc.senseRobotCount() > pastrThreshold) {
+			// Check if we have any active PASTRs
+			MapLocation[] ownPastrLocations = rc.sensePastrLocations(rc
+					.getTeam());
+			pastr1 = mapAnalyzer.evaluateBestPastrLoc();
+			boolean build = true;
+			if (Soldier.size(ownPastrLocations) > 0) {
+				for (MapLocation mapLocation : ownPastrLocations) {
+					if (mapLocation.equals(pastr1)) {
+						build = false;
 					}
 				}
 			}
+			// Assign the correct tasks to the teams
+			if (build) {
+				teams[teamId].setTask(Task.BUILD_PASTR, pastr1);
+			}
+			return build;
 		}
+		return false;
 	}
 
 	@Override
@@ -147,5 +176,6 @@ public class HQ extends AbstractRobotType {
 		countBrdCastingOppSoldiers = Channel.getCountOppBrdCastingSoldiers(rc);
 		oppSoldiersCenter = Channel.getPositionalCenterOfOpponent(rc);
 		oppSoldiersMeanDistToCenter = Channel.getOpponentMeanDistToCenter(rc);
+		oppMilkQuantity = Channel.getOpponentMilkQuantity(rc);
 	}
 }
