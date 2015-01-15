@@ -125,13 +125,13 @@ public class MapAnalyzer {
 	}
 
 	private MapType determineMapType() {
-		if (ySize < MAP_SIZE_SMALL_THRESHOLD
-				&& xSize < MAP_SIZE_SMALL_THRESHOLD) {
+		if (ySize <= MAP_SIZE_SMALL_THRESHOLD
+				&& xSize <= MAP_SIZE_SMALL_THRESHOLD) {
 			// If both dimensions are smaller than the Small threshold
 			return MapType.Small;
 		}
-		if (ySize < MAP_SIZE_MEDIUM_THRESHOLD
-				&& xSize < MAP_SIZE_MEDIUM_THRESHOLD) {
+		if (ySize <= MAP_SIZE_MEDIUM_THRESHOLD
+				&& xSize <= MAP_SIZE_MEDIUM_THRESHOLD) {
 			// If both dimensions are smaller than the Medium threshold
 			return MapType.Medium;
 		}
