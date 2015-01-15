@@ -1,4 +1,4 @@
-package test_pathfinding;
+package testing;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
