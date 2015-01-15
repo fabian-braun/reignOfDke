@@ -16,7 +16,7 @@ public abstract class PathFinder {
 	protected final int ySize;
 	protected final int xSize;
 	protected final RobotController rc;
-	protected final TerrainTile[][] map;
+	protected TerrainTile[][] map;
 
 	public PathFinder(RobotController rc, TerrainTile[][] map,
 			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
@@ -34,11 +34,8 @@ public abstract class PathFinder {
 		xSize = rc.getMapWidth();
 		hqSelfLoc = rc.senseHQLocation();
 		hqEnemLoc = rc.senseEnemyHQLocation();
-		map = new TerrainTile[ySize][xSize];
-		for (int y = 0; y < ySize; y++) {
-			for (int x = 0; x < xSize; x++) {
-				map[y][x] = rc.senseTerrainTile(new MapLocation(x, y));
-			}
+		if (map == null) {
+			initializeMap();
 		}
 	}
 
@@ -200,5 +197,14 @@ public abstract class PathFinder {
 
 	public static String locToString(MapLocation loc) {
 		return "(" + loc.y + ";" + loc.x + ")";
+	}
+
+	public void initializeMap() {
+		map = new TerrainTile[ySize][xSize];
+		for (int y = 0; y < ySize; y++) {
+			for (int x = 0; x < xSize; x++) {
+				map[y][x] = rc.senseTerrainTile(new MapLocation(x, y));
+			}
+		}
 	}
 }

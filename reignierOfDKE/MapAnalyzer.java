@@ -21,6 +21,7 @@ public class MapAnalyzer {
 	private MapType mapType;
 
 	private MapLocation bestForPastr;
+	private MapLocation[][] best;
 	private char[][] mapRepresentation;
 	private double[][] mapCowGrowth;
 	private double[][] mapPastrRating;
@@ -216,6 +217,54 @@ public class MapAnalyzer {
 			}
 		}
 		return bestForPastr;
+	}
+
+	public MapLocation[][] getBestLocations() {
+		mapCowGrowth = rc.senseCowGrowth();
+		mapPastrRating = new double[ySize][xSize];
+		double currentBestRating = 0;
+		bestForPastr = new MapLocation(0, 0);
+		int xStep = xSize / 25 + 1;
+		int yStep = ySize / 25 + 1;
+		for (int y = 2; y < ySize; y += yStep) {
+			for (int x = 2; x < xSize; x += xStep) {
+				TerrainTile tile = rc.senseTerrainTile(new MapLocation(x, y));
+				if (tile != TerrainTile.NORMAL && tile != TerrainTile.ROAD) {
+					continue;
+				}
+				double sumCowGrowth = 0;
+				for (int ylocal = y - 1; ylocal <= y + 1; ylocal++) {
+					for (int xlocal = x - 1; xlocal <= x + 1; xlocal++) {
+						if (ylocal >= 0 && xlocal >= 0 && ylocal < ySize
+								&& xlocal < xSize) {
+							// mapCowGrowth has x before y.. this is no bug
+							sumCowGrowth += mapCowGrowth[x][y];
+						}
+					}
+				}
+				int distance = PathFinder.getRequiredMoves(
+						new MapLocation(x, y), otherHq);
+				if (realDistanceReady) {
+					distance = getRealDistanceToOpponentHq(new MapLocation(x, y));
+				}
+				mapPastrRating[y][x] = distance * sumCowGrowth;
+
+				if (best == null) {
+				}
+
+				if (mapPastrRating[y][x] > currentBestRating) {
+					currentBestRating = mapPastrRating[y][x];
+					bestForPastr = new MapLocation(x, y);
+				}
+			}
+		}
+
+		// find Location
+		// rate Location
+		// compare to other ratings and check for distance
+		// add accordingly
+
+		return best;
 	}
 
 	/**
