@@ -56,7 +56,9 @@ public class Core extends Soldier {
 		} else if (!secondInitFinished) {
 			// do remaining initialization parts after reaching a save location
 			// init pathFinder to help other soldiers build the reduced map
-			pathFinderAStarFast = new PathFinderAStarFast(rc, id);
+			if (Channel.getMapComplexity(rc).equals(MapComplexity.COMPLEX)) {
+				pathFinderAStarFast = new PathFinderAStarFast(rc, id);
+			}
 			Channel.signalAlive(rc, id);
 			secondInitFinished = true;
 		}
