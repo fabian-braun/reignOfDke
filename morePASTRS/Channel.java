@@ -1,6 +1,6 @@
 package morePASTRS;
 
-import reignierOfDKE.C.MapComplexity;
+import morePASTRS.C.MapComplexity;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;

@@ -88,7 +88,7 @@ public class MapAnalyzer2 extends PathFinder {
 		}
 	}
 
-	public ArrayList<Location> evaluateBestPastrLocs() {
+	public ArrayList<Location> evaluateBestPastrLocs(int maximum) {
 		mapCowGrowth = rc.senseCowGrowth();
 		mapPastrRating = new double[ySize][xSize];
 		double currentBestRating = 0;
@@ -150,12 +150,15 @@ public class MapAnalyzer2 extends PathFinder {
 		return bestLocations;
 	}
 
-	public void insertInList(Location loc) {
+	public void insertInList(Location loc, int maximum) {
 		boolean inserted = false;
 		if (bestLocations.isEmpty()) {
 			bestLocations.add(loc);
 			inserted = true;
 		} else {
+			if (bestLocations.size() <= maximum) {
+
+			}
 			for (int i = 0; i < bestLocations.size(); i++) {
 				int difference = bestLocations.get(i).compareTo(loc);
 				if (difference == 0 || inserted == true) {
