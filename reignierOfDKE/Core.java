@@ -107,8 +107,7 @@ public class Core extends Soldier {
 		int y = 0;
 		int x = 0;
 		if (Soldier.size(locations) < 1) {
-			return new MapLocation(pathFinderGreedy.ySize / 2,
-					pathFinderGreedy.xSize / 2);
+			return pathFinderGreedy.hqEnemLoc;
 		}
 		for (MapLocation loc : locations) {
 			y += loc.y;
