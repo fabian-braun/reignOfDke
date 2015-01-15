@@ -197,7 +197,7 @@ public class PathFinderAStarFast extends PathFinder {
 
 	@Override
 	public boolean move() throws GameActionException {
-		if (internalPF.isTargetReached()) {
+		if (isCorresponding(rc.getLocation(), tempTargetR.y, tempTargetR.x)) {
 			if (!pathR.isEmpty()) {
 				tempTargetR = pathR.pop();
 				tempTarget = getCorrespondingTempTarget(tempTargetR.y,
