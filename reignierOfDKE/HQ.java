@@ -31,7 +31,7 @@ public class HQ extends AbstractRobotType {
 	private MapLocation pastr1 = new MapLocation(-1, -1);
 	private MapLocation pastr2 = new MapLocation(-1, -1);
 
-	private static final int[] teamIdAssignment = new int[] { 0, 1, 0, 2 };
+	private static final int[] teamIdAssignment = new int[] { 2, 0, 1, 0 };
 	private int teamIndex = 0;
 
 	// info about opponent, is updated in updateInfoAboutOpponent()

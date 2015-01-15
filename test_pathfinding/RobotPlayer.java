@@ -14,7 +14,7 @@ public class RobotPlayer {
 	private static MapLocation myHq;
 	private static MapLocation otherHq;
 	private static MapLocation start;
-	private static PathFinder pathFinder;
+	private static BaseFinder pathFinder;
 	private static boolean initComplete = false;
 	private static String pfType = "";
 	private static MapLocation target;
@@ -50,9 +50,9 @@ public class RobotPlayer {
 					int robotCount = rc.readBroadcast(0);
 					switch (robotCount) {
 					case 1:
-						// pfType = "PathFinderGreedy";
-						// pathFinder = new PathFinderGreedy(rc, randall);
-						// break;
+						pfType = "PathFinderAStarFast";
+						pathFinder = new PathFinderAStarFast2(rc, 0);
+						break;
 					case 2:
 						pfType = "PathFinderMLineBug";
 						pathFinder = new PathFinderMLineBug(rc);

@@ -1,6 +1,6 @@
-package reignierOfDKE;
+package test_pathfinding;
 
-import reignierOfDKE.C.MapComplexity;
+import test_pathfinding.C.MapComplexity;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -322,7 +322,7 @@ public class Channel {
 		int c = getSoldierChannel(soldierId);
 		try {
 			int round = rc.readBroadcast(c + 1);
-			return round > Clock.getRoundNum() - 12 && round > 0;
+			return round > Clock.getRoundNum() - 8 && round > 0;
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}

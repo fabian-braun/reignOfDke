@@ -57,7 +57,7 @@ public class Core extends Soldier {
 			// do remaining initialization parts after reaching a save location
 			// init pathFinder to help other soldiers build the reduced map
 			pathFinderAStarFast = new PathFinderAStarFast(rc, id);
-
+			Channel.signalAlive(rc, id);
 			secondInitFinished = true;
 		}
 		analyzeOpponentBehavior();

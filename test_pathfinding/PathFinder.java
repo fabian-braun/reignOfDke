@@ -8,7 +8,7 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.TerrainTile;
 
-public abstract class PathFinder {
+public abstract class PathFinder extends BaseFinder {
 
 	protected final MapLocation hqSelfLoc;
 	protected final MapLocation hqEnemLoc;

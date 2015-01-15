@@ -1,4 +1,4 @@
-package reignierOfDKE;
+package test_pathfinding;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -15,19 +15,19 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.TerrainTile;
 
-public class PathFinderAStar extends PathFinder {
+public class PathFinderAStar2 extends PathFinder2 {
 
 	private MapLocation target = new MapLocation(0, 0);
 	private Stack<MapLocation> path; // = new Stack<MapLocation>();
 	public static final int weightedAStarMultiplicator = 3;
 	private int soldierId = -1;
 
-	public PathFinderAStar(RobotController rc, int soldierId) {
+	public PathFinderAStar2(RobotController rc, int soldierId) {
 		super(rc);
 		this.soldierId = soldierId;
 	}
 
-	public PathFinderAStar(RobotController rc, int soldierId,
+	public PathFinderAStar2(RobotController rc, int soldierId,
 			TerrainTile[][] map, MapLocation hqSelfLoc, MapLocation hqEnemLoc,
 			int ySize, int xSize) {
 		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize);
@@ -110,7 +110,7 @@ public class PathFinderAStar extends PathFinder {
 				if (closed.contains(neighbour))
 					continue;
 				int tentative = gScore.get(current)
-						+ getManhattanDist(current, neighbour);
+						+ calcFScore(current, neighbour);
 				if (open.contains(neighbour)
 						&& tentative >= gScore.get(neighbour))
 					continue;

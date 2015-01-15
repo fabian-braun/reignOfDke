@@ -1,4 +1,4 @@
-package reignierOfDKE;
+package test_pathfinding;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -16,13 +16,12 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.TerrainTile;
 
-public class PathFinderAStarFast extends PathFinder {
+public class PathFinderAStarFast2 extends PathFinder2 {
 
 	private MapLocation target = new MapLocation(-1, -1);
 	private MapLocation tempTarget = new MapLocation(-1, -1);
-	public static final int weightedAStarMultiplicator = 2;
 
-	private PathFinder internalPF;
+	private PathFinder2 internalPF;
 
 	// variables for reduced map
 	private MapLocation targetR = new MapLocation(-1, -1);
@@ -36,7 +35,7 @@ public class PathFinderAStarFast extends PathFinder {
 	private int soldierId;
 	public static final int reducedDim = 20;
 
-	public PathFinderAStarFast(RobotController rc, int soldierId) {
+	public PathFinderAStarFast2(RobotController rc, int soldierId) {
 		super(rc);
 		this.soldierId = soldierId;
 
@@ -54,12 +53,11 @@ public class PathFinderAStarFast extends PathFinder {
 		ySizeR += ((ySize % yDivisor) > 0 ? 1 : 0);
 		xSizeR += ((xSize % xDivisor) > 0 ? 1 : 0);
 
-		internalPF = new PathFinderAStar(rc, soldierId, map, hqSelfLoc,
+		internalPF = new PathFinderAStar2(rc, soldierId, map, hqSelfLoc,
 				hqEnemLoc, ySize, xSize);
 		mapR = new TerrainTile[ySizeR][xSizeR];
 		for (int y = 0; y < ySizeR; y++) {
 			for (int x = 0; x < xSizeR; x++) {
-				Channel.signalAlive(rc, soldierId);
 				TerrainTile cachedTerrain = Channel.getReducedMapTerrain(rc, y,
 						x);
 				if (!cachedTerrain.equals(TerrainTile.OFF_MAP)) {
@@ -281,14 +279,14 @@ public class PathFinderAStarFast extends PathFinder {
 			Channel.signalAlive(rc, soldierId);
 			MapLocation current = open.poll();
 			if (current.equals(target))
-				return PathFinderAStar.getPath(ancestors, target, start);
+				return PathFinderAStar2.getPath(ancestors, target, start);
 			closed.add(current);
 			Set<MapLocation> neighbours = getNeighboursR(current);
 			for (MapLocation neighbour : neighbours) {
 				if (closed.contains(neighbour))
 					continue;
 				int tentative = gScore.get(current)
-						+ getManhattanDist(current, neighbour);
+						+ calcFScore(current, neighbour);
 				if (open.contains(neighbour)
 						&& tentative >= gScore.get(neighbour))
 					continue;
@@ -306,8 +304,7 @@ public class PathFinderAStarFast extends PathFinder {
 	}
 
 	private int calcFScore(MapLocation from, MapLocation to) {
-		int distance = getManhattanDist(from.y, from.x, to.y, to.x)
-				* weightedAStarMultiplicator;
+		int distance = getManhattanDist(from.y, from.x, to.y, to.x);
 		return distance;
 	}
 

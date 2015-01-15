@@ -1,4 +1,4 @@
-package test_pathfinding;
+package testing;
 
 import org.junit.Test;
 
