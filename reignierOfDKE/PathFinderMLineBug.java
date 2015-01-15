@@ -99,7 +99,7 @@ public class PathFinderMLineBug extends PathFinder {
 	public boolean move() throws GameActionException {
 		if (!current.equals(rc.getLocation())) {
 			// moves have been performed outside of this class
-			// therefore lastVisited is not valid anymore
+			// therefore mline is not valid anymore
 			updateMLine();
 		}
 		Direction moveTo = getNextDirection();
