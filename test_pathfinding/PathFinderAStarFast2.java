@@ -20,7 +20,7 @@ public class PathFinderAStarFast2 extends PathFinder2 {
 
 	private MapLocation target = new MapLocation(-1, -1);
 	private MapLocation tempTarget = new MapLocation(-1, -1);
-	public static final int weightedAStarMultiplicator = 1;
+	public static final int weightedAStarMultiplicator = 2;
 
 	private PathFinder2 internalPF;
 

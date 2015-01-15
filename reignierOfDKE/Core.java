@@ -56,7 +56,9 @@ public class Core extends Soldier {
 		} else if (!secondInitFinished) {
 			// do remaining initialization parts after reaching a save location
 			// init pathFinder to help other soldiers build the reduced map
-			pathFinderAStarFast = new PathFinderAStarFast(rc, id);
+			if (Channel.getMapComplexity(rc).equals(MapComplexity.COMPLEX)) {
+				pathFinderAStarFast = new PathFinderAStarFast(rc, id);
+			}
 			Channel.signalAlive(rc, id);
 			secondInitFinished = true;
 		}
@@ -111,8 +113,7 @@ public class Core extends Soldier {
 		int y = 0;
 		int x = 0;
 		if (Soldier.size(locations) < 1) {
-			return new MapLocation(pathFinderGreedy.ySize / 2,
-					pathFinderGreedy.xSize / 2);
+			return pathFinderGreedy.hqEnemLoc;
 		}
 		for (MapLocation loc : locations) {
 			y += loc.y;
