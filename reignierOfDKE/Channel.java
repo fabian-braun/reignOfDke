@@ -23,6 +23,10 @@ public class Channel {
 
 	public static final int chMapComplexity = 65529;
 
+	public static final int chOppCenter = 65528;
+	public static final int chOppMeanDistToCenter = 65527;
+	public static final int countOppBrdCastingSoldiers = 65526;
+
 	/**
 	 * channels 10000 - 30020 contain info about reduced map
 	 */
@@ -441,5 +445,59 @@ public class Channel {
 		}
 		return MapComplexity.COMPLEX;
 
+	}
+
+	public static MapLocation getPositionalCenterOfOpponent(RobotController rc) {
+		try {
+			return toMapLocation(rc.readBroadcast(chOppCenter));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return new MapLocation(0, 0);
+	}
+
+	public static void broadcastPositionalCenterOfOpponent(RobotController rc,
+			MapLocation center) {
+		try {
+			rc.broadcast(chOppCenter, toInt(center));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static int getOpponentMeanDistToCenter(RobotController rc) {
+		try {
+			return rc.readBroadcast(chOppMeanDistToCenter);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return 100000;
+	}
+
+	public static void broadcastOpponentMeanDistToCenter(RobotController rc,
+			int meanDist) {
+		try {
+			rc.broadcast(chOppMeanDistToCenter, meanDist);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static int getCountOppBrdCastingSoldiers(RobotController rc) {
+		try {
+			return rc.readBroadcast(countOppBrdCastingSoldiers);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return 100000;
+	}
+
+	public static void broadcastCountOppBrdCastingSoldiers(RobotController rc,
+			int count) {
+		try {
+			rc.broadcast(countOppBrdCastingSoldiers, count);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
 	}
 }

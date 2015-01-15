@@ -16,12 +16,23 @@ public class HQ extends AbstractRobotType {
 	private MapLocation myHq;
 	private MapLocation otherHq;
 	private MapAnalyzer mapAnalyzer;
+	/**
+	 * soldiers are distributed over 3 teams: <br>
+	 * team 0: 50% of soldiers -> flexible attacking team <br>
+	 * team 1: 25% of soldiers -> build pastr / defend pastr <br>
+	 * team 2: 25% of soldiers -> flexible attacking team / build 2nd pastr /
+	 * defend 2nd pastr <br>
+	 */
 	private Team[] teams;
 	private Direction spawningDefault;
-	private int teamId = 0;
+	private int teamId = teamIdAssignment[0];
 	private int pastrThreshold;
-	private MapLocation[] oppSoldiersLocations;
-	private int countOppSoldiers;
+	private int countBrdCastingOppSoldiers;
+	private MapLocation oppSoldiersCenter;
+	private int oppSoldiersMeanDistToCenter;
+
+	private static final int[] teamIdAssignment = new int[] { 0, 1, 0, 2 };
+	private int teamIndex = 0;
 
 	public HQ(RobotController rc) {
 		super(rc);
@@ -32,8 +43,11 @@ public class HQ extends AbstractRobotType {
 		Team.updateSoldierCount(rc, teams);
 		// Check if a robot is spawnable and spawn one if it is
 		if (rc.isActive() && rc.senseRobotCount() < GameConstants.MAX_ROBOTS) {
+			// determine team id of soldier to spawn:
+			teamIndex++;
+			teamIndex %= teams.length;
+			teamId = teamIdAssignment[teamIndex];
 			Channel.assignTeamId(rc, teamId);
-			teamId = (teamId + 1) % teams.length;
 			Robot[] closeOpponents = rc.senseNearbyGameObjects(Robot.class,
 					RobotType.HQ.sensorRadiusSquared, rc.getTeam().opponent());
 			if (Soldier.size(closeOpponents) > 0) {
@@ -54,6 +68,7 @@ public class HQ extends AbstractRobotType {
 				}
 			}
 		}
+		updateInfoAboutOpponent();
 		if (rc.senseRobotCount() < 1) {
 			// location between our HQ and opponent's HQ:
 			MapLocation target = new MapLocation(
@@ -93,29 +108,6 @@ public class HQ extends AbstractRobotType {
 		}
 	}
 
-	private void analyzeOpponentBehavior() {
-		oppSoldiersLocations = rc.senseBroadcastingRobotLocations(rc.getTeam()
-				.opponent());
-		if (Soldier.size(oppSoldiersLocations) < 1) {
-			// prevent NullPtrException
-			oppSoldiersLocations = new MapLocation[0];
-		}
-		countOppSoldiers = oppSoldiersLocations.length;
-	}
-
-	private MapLocation getCenter(MapLocation[] locations) {
-		int y = 0;
-		int x = 0;
-		if (Soldier.size(locations) < 1) {
-			return new MapLocation(ySize / 2, xSize / 2);
-		}
-		for (MapLocation loc : locations) {
-			y += loc.y;
-			x += loc.x;
-		}
-		return new MapLocation(y / locations.length, x / locations.length);
-	}
-
 	@Override
 	protected void init() throws GameActionException {
 		ySize = rc.getMapHeight();
@@ -149,5 +141,11 @@ public class HQ extends AbstractRobotType {
 			pastrThreshold = 10;
 			break;
 		}
+	}
+
+	private void updateInfoAboutOpponent() {
+		countBrdCastingOppSoldiers = Channel.getCountOppBrdCastingSoldiers(rc);
+		oppSoldiersCenter = Channel.getPositionalCenterOfOpponent(rc);
+		oppSoldiersMeanDistToCenter = Channel.getOpponentMeanDistToCenter(rc);
 	}
 }
