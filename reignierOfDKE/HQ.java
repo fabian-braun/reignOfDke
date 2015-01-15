@@ -104,10 +104,8 @@ public class HQ extends AbstractRobotType {
 			}
 		} else {
 			boolean pastrTaskAssigned = buildPastr(1);
-			if (pastrTaskAssigned) {
-				teams[0].setTask(Task.CIRCULATE, Channel.getTarget(rc, 1));
-				teams[2].setTask(Task.CIRCULATE, Channel.getTarget(rc, 1));
-			}
+			teams[0].setTask(Task.CIRCULATE, Channel.getTarget(rc, 1));
+			teams[2].setTask(Task.CIRCULATE, Channel.getTarget(rc, 1));
 		}
 	}
 
