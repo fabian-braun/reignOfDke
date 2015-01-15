@@ -152,6 +152,10 @@ public class MapAnalyzer {
 		}
 	}
 
+	public MapType getMapType() {
+		return mapType;
+	}
+
 	public int getRealDistanceToOpponentHq(MapLocation loc) {
 		if (realDistanceReady)
 			return realDistanceFromOpponentHQ[loc.y][loc.x];
@@ -199,8 +203,8 @@ public class MapAnalyzer {
 						}
 					}
 				}
-				int distance = PathFinder.getRequiredMoves(new MapLocation(x, y),
-						otherHq);
+				int distance = PathFinder.getRequiredMoves(
+						new MapLocation(x, y), otherHq);
 				if (realDistanceReady) {
 					distance = getRealDistanceToOpponentHq(new MapLocation(x, y));
 				}

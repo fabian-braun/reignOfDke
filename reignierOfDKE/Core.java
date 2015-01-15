@@ -14,7 +14,9 @@ public class Core extends Soldier {
 	private boolean reachedSavePlace = false;
 	private int encounteredObstacles = 0;
 	private MapLocation savePlace;
+	private boolean secondInitFinished = false;
 	private Team[] teams;
+	private PathFinderAStarFast pathFinderAStarFast;
 
 	public Core(RobotController rc) {
 		super(rc);
@@ -47,6 +49,12 @@ public class Core extends Soldier {
 						|| encounteredObstacles > 2;
 			}
 			return;
+		} else if (!secondInitFinished) {
+			// do remaining initialization parts after reaching a save location
+			// init pathFinder to help other soldiers build the reduced map
+			pathFinderAStarFast = new PathFinderAStarFast(rc, id);
+
+			secondInitFinished = true;
 		}
 		Team.updateTeamLocation(rc, teams);
 	}

@@ -1,5 +1,6 @@
 package reignierOfDKE;
 
+import reignierOfDKE.C.MapType;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -18,6 +19,9 @@ public class HQ extends AbstractRobotType {
 	private Team[] teams;
 	private Direction spawningDefault;
 	private int teamId = 0;
+	private int pastrThreshold;
+	private MapLocation[] oppSoldiersLocations;
+	private int countOppSoldiers;
 
 	public HQ(RobotController rc) {
 		super(rc);
@@ -69,7 +73,8 @@ public class HQ extends AbstractRobotType {
 				teams[1].setTask(Task.GOTO, opponentPastrLocations[0]);
 				teams[2].setTask(Task.GOTO, opponentPastrLocations[0]);
 			} else {
-				if (rc.senseRobotCount() > 5) {
+				if (rc.senseRobotCount() > pastrThreshold) {
+
 					// Check if we have any active PASTRs
 					MapLocation[] ownPastrLocations = rc.sensePastrLocations(rc
 							.getTeam());
@@ -88,6 +93,29 @@ public class HQ extends AbstractRobotType {
 		}
 	}
 
+	private void analyzeOpponentBehavior() {
+		oppSoldiersLocations = rc.senseBroadcastingRobotLocations(rc.getTeam()
+				.opponent());
+		if (Soldier.size(oppSoldiersLocations) < 1) {
+			// prevent NullPtrException
+			oppSoldiersLocations = new MapLocation[0];
+		}
+		countOppSoldiers = oppSoldiersLocations.length;
+	}
+
+	private MapLocation getCenter(MapLocation[] locations) {
+		int y = 0;
+		int x = 0;
+		if (Soldier.size(locations) < 1) {
+			return new MapLocation(ySize / 2, xSize / 2);
+		}
+		for (MapLocation loc : locations) {
+			y += loc.y;
+			x += loc.x;
+		}
+		return new MapLocation(y / locations.length, x / locations.length);
+	}
+
 	@Override
 	protected void init() throws GameActionException {
 		ySize = rc.getMapHeight();
@@ -99,11 +127,27 @@ public class HQ extends AbstractRobotType {
 		mapAnalyzer = new MapAnalyzer(rc, myHq, otherHq, ySize, xSize);
 		// mapAnalyzer.generateRealDistanceMap(); // TODO: too expensive
 		// mapAnalyzer.printMapAnalysisDistance();
+		initPastrTreshold();
 		spawningDefault = myHq.directionTo(otherHq);
 		int i = 0;
 		while (!rc.canMove(spawningDefault) && i < C.DIRECTIONS.length) {
 			spawningDefault = C.DIRECTIONS[i];
 			i++;
+		}
+	}
+
+	private void initPastrTreshold() {
+		MapType size = mapAnalyzer.getMapType();
+		switch (size) {
+		case Large:
+			pastrThreshold = 2;
+			break;
+		case Medium:
+			pastrThreshold = 5;
+			break;
+		default: // Small
+			pastrThreshold = 10;
+			break;
 		}
 	}
 }
