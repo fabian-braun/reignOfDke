@@ -118,9 +118,8 @@ public class MapAnalyzer2 extends PathFinder {
 				// 3 possibilities to get the distance to the enemies HQ
 				// minimum moves required, manhattan or euclidian distance
 				// TODO: Test for best method
-				int distance = getRequiredMoves(current, hqEnemLoc);
-				// int distance = getManhattanDist(current,
-				// hqEnemLoc);
+				// int distance = getRequiredMoves(current, hqEnemLoc);
+				int distance = getManhattanDist(current, hqEnemLoc);
 				// int distance = getEuclidianDist(current,
 				// hqEnemLoc);
 
@@ -128,50 +127,37 @@ public class MapAnalyzer2 extends PathFinder {
 				Location currentLoc = new Location(current,
 						mapPastrRating[y][x]);
 
-				insertInList(currentLoc);
-
-				if (bestLocations.isEmpty()) {
-					bestLocations.add(currentLoc);
-				} else {
-					for (int i = 0; i < bestLocations.size(); i++) {
-						int difference = bestLocations.get(i).compareTo(
-								currentLoc);
-						if (difference == 0) {
-							break;
-						} else if (difference == 1) {
-							bestLocations.add(i, currentLoc);
-							break;
-						}
-					}
-				}
+				insertInList(currentLoc, maximum);
 
 			}
 		}
 		return bestLocations;
 	}
 
-	public void insertInList(Location loc) {
-		boolean inserted = false;
+	public void insertInList(Location loc, int maximum) {
+		// if the list is empty -> add the first Location tested.
 		if (bestLocations.isEmpty()) {
 			bestLocations.add(loc);
-			inserted = true;
-		} else {
-			if (bestLocations.size() <= maximum) {
+		}
+		// if the list has less than the maximum entries -> add the next entry
+		// sorted
 
-			}
+		// if the list has the maximum amount of entries -> add the next entry
+		// if it is larger than the rest and delete the one with the lowest
+		// rating
+	}
+
+	public String listToString() {
+		String s = "";
+		if (bestLocations.isEmpty()) {
+			return s;
+		} else {
 			for (int i = 0; i < bestLocations.size(); i++) {
-				int difference = bestLocations.get(i).compareTo(loc);
-				if (difference == 0 || inserted == true) {
-					break;
-				} else if (difference == 1) {
-					bestLocations.add(i, loc);
-					inserted = true;
-				}
-			}
-			if (inserted == false) {
-				bestLocations.add(loc);
+				s += bestLocations.get(i).toString();
+				s += "\n";
 			}
 		}
+		return s;
 	}
 
 }

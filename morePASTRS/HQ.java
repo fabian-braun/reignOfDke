@@ -28,6 +28,7 @@ public class HQ extends AbstractRobotType {
 	private final int MAXIMUM_OWN_PASTRS = 5;
 	private MapLocation[] opponentsPASTRS;
 	private MapLocation[] ownPASTRS;
+	private ArrayList<Location> bestLocations;
 
 	public HQ(RobotController rc) {
 		super(rc);
@@ -87,8 +88,11 @@ public class HQ extends AbstractRobotType {
 					if (Soldier.size(ownPASTRS) < MAXIMUM_OWN_PASTRS) {
 						// We need to build a PASTR, determine the best PASTR
 						// location
-						ArrayList<Location> bestLocations = mapAnalyzer2
-								.evaluateBestPastrLocs();
+						if (bestLocations.isEmpty()) {
+							bestLocations = mapAnalyzer2
+									.evaluateBestPastrLocs(MAXIMUM_OWN_PASTRS);
+							System.out.println(mapAnalyzer2.listToString());
+						}
 						MapLocation bestPastrLocation = bestLocations.get(0)
 								.getLoc();
 						for (int i = 0; i < bestLocations.size(); i++) {
@@ -142,8 +146,10 @@ public class HQ extends AbstractRobotType {
 		myHq = rc.senseHQLocation();
 		otherHq = rc.senseEnemyHQLocation();
 		teams = Team.getTeams(rc);
+		bestLocations = new ArrayList<Location>();
 
 		mapAnalyzer2 = new MapAnalyzer2(rc, null, myHq, otherHq, ySize, xSize);
+		System.out.println("I'm initialized!");
 
 		// mapAnalyzer = new MapAnalyzer(rc, myHq, otherHq, ySize, xSize);
 		// mapAnalyzer.generateRealDistanceMap(); // TODO: too expensive
@@ -175,11 +181,6 @@ public class HQ extends AbstractRobotType {
 	private boolean isPASTRthere(MapLocation goal) {
 		for (int i = 0; i < ownPASTRS.length; i++) {
 			if (goal.equals(ownPASTRS[i])) {
-				return true;
-			}
-		}
-		for (int j = 0; j < opponentsPASTRS.length; j++) {
-			if (goal.equals(opponentsPASTRS[j])) {
 				return true;
 			}
 		}

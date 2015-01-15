@@ -40,4 +40,8 @@ public class Location implements Comparable<Location> {
 		}
 		return 0;
 	}
+
+	public String toString() {
+		return loc.toString() + ", " + rating;
+	}
 }
