@@ -150,7 +150,7 @@ public class MapAnalyzer2 extends PathFinder {
 		return bestLocations;
 	}
 
-	public void insertInList(Location loc, int maximum) {
+	public void insertInList(Location loc) {
 		boolean inserted = false;
 		if (bestLocations.isEmpty()) {
 			bestLocations.add(loc);
