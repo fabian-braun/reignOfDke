@@ -1,4 +1,4 @@
-package reignierOfDKE;
+package morePASTRS;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -43,9 +43,6 @@ public abstract class PathFinder {
 		}
 	}
 
-	/**
-	 * dx > dy ? dx : dy
-	 */
 	public static final int getRequiredMoves(int y1, int x1, int y2, int x2) {
 		int dx = x1 - x2;
 		int dy = y1 - y2;
@@ -56,18 +53,12 @@ public abstract class PathFinder {
 		return dx > dy ? dx : dy;
 	}
 
-	/**
-	 * sqrt(dx^2 + dy^2)
-	 */
 	public static final int getEuclidianDist(int y1, int x1, int y2, int x2) {
 		int dx = x1 - x2;
 		int dy = y1 - y2;
 		return (int) Math.sqrt(dx * dx + dy * dy);
 	}
 
-	/**
-	 * dx + dy
-	 */
 	public static final int getManhattanDist(int y1, int x1, int y2, int x2) {
 		int dx = x1 - x2;
 		int dy = y1 - y2;
@@ -78,23 +69,14 @@ public abstract class PathFinder {
 		return dx + dy;
 	}
 
-	/**
-	 * dx > dy ? dx : dy
-	 */
 	public static final int getRequiredMoves(MapLocation loc1, MapLocation loc2) {
 		return getRequiredMoves(loc1.y, loc1.x, loc2.y, loc2.x);
 	}
 
-	/**
-	 * sqrt(dx^2 + dy^2)
-	 */
 	public static final int getEuclidianDist(MapLocation loc1, MapLocation loc2) {
 		return getEuclidianDist(loc1.y, loc1.x, loc2.y, loc2.x);
 	}
 
-	/**
-	 * dx + dy
-	 */
 	public static final int getManhattanDist(MapLocation loc1, MapLocation loc2) {
 		return getManhattanDist(loc1.y, loc1.x, loc2.y, loc2.x);
 	}
