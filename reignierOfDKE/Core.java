@@ -64,22 +64,26 @@ public class Core extends Soldier {
 	}
 
 	private void determinePathFinder() {
+		// Get the map from the pathFinder
 		TerrainTile[][] map = pathFinderGreedy.map;
-		int rating = 0;
-		for (int y = 1; y < pathFinderGreedy.ySize; y += 2) {
+		boolean complexMap = false;
+		// We only check half the map, since they are mirrored
+		int halfwayCoord = (int) Math.ceil(Math.min(pathFinderGreedy.ySize,
+				pathFinderGreedy.xSize) / 2.0);
+		for (int i = 0; i < halfwayCoord; i++) {
 			Channel.signalAlive(rc, id);
-			for (int x = 0; x < pathFinderGreedy.xSize; x += 2) {
-				if (map[y][x].equals(TerrainTile.VOID)) {
-					rating -= 6;
-				} else {
-					rating++;
-				}
+			if (map[i][i].equals(TerrainTile.VOID)) {
+				// If we find a VOID tile anywhere on this cross section, it's a
+				// complex map
+				complexMap = true;
+				break;
 			}
 		}
-		if (rating > 0) {
-			Channel.broadcastMapComplexity(rc, MapComplexity.SIMPLE);
-		} else {
+
+		if (complexMap) {
 			Channel.broadcastMapComplexity(rc, MapComplexity.COMPLEX);
+		} else {
+			Channel.broadcastMapComplexity(rc, MapComplexity.SIMPLE);
 		}
 	}
 
