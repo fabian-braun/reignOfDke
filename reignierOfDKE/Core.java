@@ -36,6 +36,7 @@ public class Core extends Soldier {
 		pathFinderGreedy = new PathFinderGreedy(rc, randall);
 		pathFinderGreedy.setTarget(savePlace);
 		teams = Team.getTeams(rc);
+		Channel.signalAlive(rc, id);
 		determinePathFinder();
 	}
 
@@ -66,6 +67,7 @@ public class Core extends Soldier {
 		TerrainTile[][] map = pathFinderGreedy.map;
 		int rating = 0;
 		for (int y = 1; y < pathFinderGreedy.ySize; y += 2) {
+			Channel.signalAlive(rc, id);
 			for (int x = 0; x < pathFinderGreedy.xSize; x += 2) {
 				if (map[y][x].equals(TerrainTile.VOID)) {
 					rating -= 6;
@@ -89,14 +91,16 @@ public class Core extends Soldier {
 			brdCastingOppSoldiersLocations = new MapLocation[0];
 		}
 		int countBrdCastingOppSoldiers = brdCastingOppSoldiersLocations.length;
-		MapLocation oppSoldiersCenter = getCenter(brdCastingOppSoldiersLocations);
-		int oppSoldiersMeanDistToCenter = getMeanDistance(
-				brdCastingOppSoldiersLocations, oppSoldiersCenter);
-		Channel.broadcastPositionalCenterOfOpponent(rc, oppSoldiersCenter);
-		Channel.broadcastOpponentMeanDistToCenter(rc,
-				oppSoldiersMeanDistToCenter);
 		Channel.broadcastCountOppBrdCastingSoldiers(rc,
 				countBrdCastingOppSoldiers);
+		MapLocation oppSoldiersCenter = getCenter(brdCastingOppSoldiersLocations);
+		Channel.broadcastPositionalCenterOfOpponent(rc, oppSoldiersCenter);
+		int oppSoldiersMeanDistToCenter = getMeanDistance(
+				brdCastingOppSoldiersLocations, oppSoldiersCenter);
+		Channel.broadcastOpponentMeanDistToCenter(rc,
+				oppSoldiersMeanDistToCenter);
+		int milk = (int) rc.senseTeamMilkQuantity(rc.getTeam().opponent());
+		Channel.broadcastOpponentMilkQuantity(rc, milk);
 	}
 
 	private MapLocation getCenter(MapLocation[] locations) {
