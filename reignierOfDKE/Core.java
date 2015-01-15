@@ -18,6 +18,9 @@ public class Core extends Soldier {
 	private Team[] teams;
 	private PathFinderAStarFast pathFinderAStarFast;
 
+	// information about opponent
+	private MapLocation[] brdCastingOppSoldiersLocations;
+
 	public Core(RobotController rc) {
 		super(rc);
 	}
@@ -56,7 +59,7 @@ public class Core extends Soldier {
 
 			secondInitFinished = true;
 		}
-		Team.updateTeamLocation(rc, teams);
+		analyzeOpponentBehavior();
 	}
 
 	private void determinePathFinder() {
@@ -76,5 +79,48 @@ public class Core extends Soldier {
 		} else {
 			Channel.broadcastMapComplexity(rc, MapComplexity.COMPLEX);
 		}
+	}
+
+	private void analyzeOpponentBehavior() {
+		brdCastingOppSoldiersLocations = rc.senseBroadcastingRobotLocations(rc
+				.getTeam().opponent());
+		if (Soldier.size(brdCastingOppSoldiersLocations) < 1) {
+			// prevent NullPtrException
+			brdCastingOppSoldiersLocations = new MapLocation[0];
+		}
+		int countBrdCastingOppSoldiers = brdCastingOppSoldiersLocations.length;
+		MapLocation oppSoldiersCenter = getCenter(brdCastingOppSoldiersLocations);
+		int oppSoldiersMeanDistToCenter = getMeanDistance(
+				brdCastingOppSoldiersLocations, oppSoldiersCenter);
+		Channel.broadcastPositionalCenterOfOpponent(rc, oppSoldiersCenter);
+		Channel.broadcastOpponentMeanDistToCenter(rc,
+				oppSoldiersMeanDistToCenter);
+		Channel.broadcastCountOppBrdCastingSoldiers(rc,
+				countBrdCastingOppSoldiers);
+	}
+
+	private MapLocation getCenter(MapLocation[] locations) {
+		int y = 0;
+		int x = 0;
+		if (Soldier.size(locations) < 1) {
+			return new MapLocation(pathFinderGreedy.ySize / 2,
+					pathFinderGreedy.xSize / 2);
+		}
+		for (MapLocation loc : locations) {
+			y += loc.y;
+			x += loc.x;
+		}
+		return new MapLocation(y / locations.length, x / locations.length);
+	}
+
+	private int getMeanDistance(MapLocation[] locations, MapLocation to) {
+		if (Soldier.size(locations) < 1) {
+			return 100000;
+		}
+		int dist = 0;
+		for (MapLocation loc : locations) {
+			dist += PathFinder.getManhattanDist(loc, to);
+		}
+		return dist / locations.length;
 	}
 }

@@ -20,8 +20,6 @@ public class HQ extends AbstractRobotType {
 	private Direction spawningDefault;
 	private int teamId = 0;
 	private int pastrThreshold;
-	private MapLocation[] oppSoldiersLocations;
-	private int countOppSoldiers;
 
 	public HQ(RobotController rc) {
 		super(rc);
@@ -91,29 +89,6 @@ public class HQ extends AbstractRobotType {
 				}
 			}
 		}
-	}
-
-	private void analyzeOpponentBehavior() {
-		oppSoldiersLocations = rc.senseBroadcastingRobotLocations(rc.getTeam()
-				.opponent());
-		if (Soldier.size(oppSoldiersLocations) < 1) {
-			// prevent NullPtrException
-			oppSoldiersLocations = new MapLocation[0];
-		}
-		countOppSoldiers = oppSoldiersLocations.length;
-	}
-
-	private MapLocation getCenter(MapLocation[] locations) {
-		int y = 0;
-		int x = 0;
-		if (Soldier.size(locations) < 1) {
-			return new MapLocation(ySize / 2, xSize / 2);
-		}
-		for (MapLocation loc : locations) {
-			y += loc.y;
-			x += loc.x;
-		}
-		return new MapLocation(y / locations.length, x / locations.length);
 	}
 
 	@Override
