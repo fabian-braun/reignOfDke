@@ -20,6 +20,7 @@ public class PathFinderAStarFast2 extends PathFinder2 {
 
 	private MapLocation target = new MapLocation(-1, -1);
 	private MapLocation tempTarget = new MapLocation(-1, -1);
+	public static final int weightedAStarMultiplicator = 1;
 
 	private PathFinder2 internalPF;
 
@@ -58,6 +59,7 @@ public class PathFinderAStarFast2 extends PathFinder2 {
 		mapR = new TerrainTile[ySizeR][xSizeR];
 		for (int y = 0; y < ySizeR; y++) {
 			for (int x = 0; x < xSizeR; x++) {
+				Channel.signalAlive(rc, soldierId);
 				TerrainTile cachedTerrain = Channel.getReducedMapTerrain(rc, y,
 						x);
 				if (!cachedTerrain.equals(TerrainTile.OFF_MAP)) {
@@ -286,7 +288,7 @@ public class PathFinderAStarFast2 extends PathFinder2 {
 				if (closed.contains(neighbour))
 					continue;
 				int tentative = gScore.get(current)
-						+ calcFScore(current, neighbour);
+						+ getManhattanDist(current, neighbour);
 				if (open.contains(neighbour)
 						&& tentative >= gScore.get(neighbour))
 					continue;
@@ -304,7 +306,8 @@ public class PathFinderAStarFast2 extends PathFinder2 {
 	}
 
 	private int calcFScore(MapLocation from, MapLocation to) {
-		int distance = getManhattanDist(from.y, from.x, to.y, to.x);
+		int distance = getManhattanDist(from.y, from.x, to.y, to.x)
+				* weightedAStarMultiplicator;
 		return distance;
 	}
 
