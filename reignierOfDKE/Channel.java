@@ -1,5 +1,6 @@
 package reignierOfDKE;
 
+import reignierOfDKE.C.MapComplexity;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -19,6 +20,8 @@ public class Channel {
 
 	public static final int chNextTeamId = 65531;
 	public static final int chNextSoldierId = 65530;
+
+	public static final int chMapComplexity = 65529;
 
 	/**
 	 * channels 10000 - 30020 contain info about reduced map
@@ -407,5 +410,36 @@ public class Channel {
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static void broadcastMapComplexity(RobotController rc,
+			MapComplexity c) {
+		try {
+			rc.broadcast(chMapComplexity, c.ordinal());
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void resetMapComplexity(RobotController rc) {
+		try {
+			rc.broadcast(chMapComplexity, -1);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static MapComplexity getMapComplexity(RobotController rc) {
+		try {
+			int ordinal = rc.readBroadcast(chMapComplexity);
+			if (ordinal < 0) {
+				return MapComplexity.COMPLEX;
+			}
+			return MapComplexity.values()[ordinal];
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return MapComplexity.COMPLEX;
+
 	}
 }

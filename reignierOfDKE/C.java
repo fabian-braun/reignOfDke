@@ -18,4 +18,8 @@ public class C {
 		Small, Medium, Large
 	}
 
+	public enum MapComplexity {
+		SIMPLE, MEDIUM, COMPLEX
+	}
+
 }

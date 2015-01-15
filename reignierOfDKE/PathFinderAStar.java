@@ -153,7 +153,8 @@ public class PathFinderAStar extends PathFinder {
 
 	private void printPath(Stack<MapLocation> path) {
 		Iterator<MapLocation> iterator = path.iterator();
-		System.out.println(mapToString(map, iterator));
+		System.out.println(getClass().getSimpleName() + ":\n"
+				+ mapToString(map, iterator));
 	}
 
 }
