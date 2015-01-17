@@ -16,14 +16,17 @@ public class PathFinderMLineBug extends PathFinder {
 	private MapLocation target = new MapLocation(-1, -1);
 	private boolean obstacleMode = false;
 	private Set<MapLocation> mTiles = new HashSet<MapLocation>();
+	private MapLocation current;
 
 	public PathFinderMLineBug(RobotController rc) {
 		super(rc);
+		current = rc.getLocation();
 	}
 
 	public PathFinderMLineBug(RobotController rc, TerrainTile[][] map,
 			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
 		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize);
+		current = rc.getLocation();
 	}
 
 	@Override
@@ -85,7 +88,8 @@ public class PathFinderMLineBug extends PathFinder {
 				moveTo = getNextAroundObstacle();
 				lastDir = moveTo;
 			} else {
-				minDistance = PathFinder.getRequiredMoves(current.add(moveTo), target);
+				minDistance = PathFinder.getRequiredMoves(current.add(moveTo),
+						target);
 			}
 		}
 		return moveTo;
@@ -93,9 +97,15 @@ public class PathFinderMLineBug extends PathFinder {
 
 	@Override
 	public boolean move() throws GameActionException {
+		if (!current.equals(rc.getLocation())) {
+			// moves have been performed outside of this class
+			// therefore mline is not valid anymore
+			updateMLine();
+		}
 		Direction moveTo = getNextDirection();
 		if (rc.canMove(moveTo)) {
 			rc.move(moveTo);
+			current = rc.getLocation();
 			return true;
 		} else {
 			return false;

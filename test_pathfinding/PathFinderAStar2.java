@@ -110,7 +110,7 @@ public class PathFinderAStar2 extends PathFinder2 {
 				if (closed.contains(neighbour))
 					continue;
 				int tentative = gScore.get(current)
-						+ calcFScore(current, neighbour);
+						+ getManhattanDist(current, neighbour);
 				if (open.contains(neighbour)
 						&& tentative >= gScore.get(neighbour))
 					continue;
