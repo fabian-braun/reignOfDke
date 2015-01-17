@@ -17,7 +17,6 @@ public class HQ extends AbstractRobotType {
 	private int xSize;
 	private MapLocation myHq;
 	private MapLocation otherHq;
-	private MapAnalyzer mapAnalyzer;
 	private MapAnalyzer2 mapAnalyzer2;
 	private Team[] teams;
 	private Direction spawningDefault;
@@ -36,6 +35,7 @@ public class HQ extends AbstractRobotType {
 
 	@Override
 	protected void act() throws GameActionException {
+		System.out.println("hi");
 		Team.updateSoldierCount(rc, teams);
 		// Check if a robot is spawnable and spawn one if it is
 		if (rc.isActive() && rc.senseRobotCount() < GameConstants.MAX_ROBOTS) {
@@ -88,7 +88,9 @@ public class HQ extends AbstractRobotType {
 					if (Soldier.size(ownPASTRS) < MAXIMUM_OWN_PASTRS) {
 						// We need to build a PASTR, determine the best PASTR
 						// location
+						System.out.println("blubb");
 						if (bestLocations.isEmpty()) {
+							System.out.println("need..to..analyze..");
 							bestLocations = mapAnalyzer2
 									.evaluateBestPastrLocs(MAXIMUM_OWN_PASTRS);
 							System.out.println(mapAnalyzer2.listToString());

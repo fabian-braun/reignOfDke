@@ -26,8 +26,6 @@ public class MapAnalyzer2 extends PathFinder {
 	private static final int MAP_SIZE_MEDIUM_THRESHOLD = 60;
 	private static final int MAP_SIZE_NO_SQUARE_MEDIUM_THRESHOLD = 50;
 
-	private final int AMOUNT_OF_BEST_LOCATIONS = 3;
-
 	public MapAnalyzer2(RobotController rc) {
 		super(rc);
 		type = determineMapType();
@@ -91,8 +89,6 @@ public class MapAnalyzer2 extends PathFinder {
 	public ArrayList<Location> evaluateBestPastrLocs(int maximum) {
 		mapCowGrowth = rc.senseCowGrowth();
 		mapPastrRating = new double[ySize][xSize];
-		double currentBestRating = 0;
-		MapLocation bestForPastr = new MapLocation(0, 0);
 		bestLocations = new ArrayList<Location>();
 
 		int xStep = xSize / 25 + 1;
@@ -138,13 +134,31 @@ public class MapAnalyzer2 extends PathFinder {
 		// if the list is empty -> add the first Location tested.
 		if (bestLocations.isEmpty()) {
 			bestLocations.add(loc);
+		} else if (!inList(loc)) {
+			int bestIndex = 0;
+			for (int i = 0; i < bestLocations.size(); i++) {
+				int difference = loc.compareTo(bestLocations.get(i));
+				if (difference == 1) {
+					bestIndex = i;
+					break;
+				}
+			}
+			if (bestIndex < maximum) {
+				bestLocations.add(bestIndex, loc);
+			}
+			while (bestLocations.size() > maximum) {
+				bestLocations.remove(bestLocations.size() - 1);
+			}
 		}
-		// if the list has less than the maximum entries -> add the next entry
-		// sorted
+	}
 
-		// if the list has the maximum amount of entries -> add the next entry
-		// if it is larger than the rest and delete the one with the lowest
-		// rating
+	private boolean inList(Location current) {
+		for (int i = 0; i < bestLocations.size(); i++) {
+			if (current.compareTo(bestLocations.get(i)) == 0) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public String listToString() {
