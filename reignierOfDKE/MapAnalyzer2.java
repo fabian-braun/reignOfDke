@@ -1,46 +1,34 @@
 package reignierOfDKE;
 
-import java.util.ArrayList;
-
-import reignierOfDKE.C.MapType;
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.TerrainTile;
 
 public class MapAnalyzer2 extends PathFinder {
 
-	/**
-	 * protected final MapLocation hqSelfLoc; protected final MapLocation
-	 * hqEnemLoc; protected final int ySize; protected final int xSize;
-	 * protected final RobotController rc; protected TerrainTile[][] map;
-	 */
+	private final MapSize type;
 
-	private final MapType type;
-
-	ArrayList<Location> bestLocations = new ArrayList<Location>();
 	private double[][] mapCowGrowth;
 	private double[][] mapPastrRating;
 
-	private static final int MAP_SIZE_SMALL_THRESHOLD = 40;
-	private static final int MAP_SIZE_MEDIUM_THRESHOLD = 60;
-	private static final int MAP_SIZE_NO_SQUARE_MEDIUM_THRESHOLD = 50;
-
-	private final int AMOUNT_OF_BEST_LOCATIONS = 3;
+	private final int MINIMUM_DISTANCE = 2 * GameConstants.NOISE_SCARE_RANGE_LARGE;
+	private MapLocation[] bestLocations;
 
 	public MapAnalyzer2(RobotController rc) {
 		super(rc);
-		type = determineMapType();
+		type = MapSize.get(ySize, xSize);
 	}
 
-	public MapType getMapType() {
+	public MapSize getMapType() {
 		return type;
 	}
 
 	public MapAnalyzer2(RobotController rc, TerrainTile[][] map,
 			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
 		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize);
-		type = determineMapType();
+		type = MapSize.get(ySize, xSize);
 	}
 
 	@Override
@@ -67,33 +55,10 @@ public class MapAnalyzer2 extends PathFinder {
 		return false;
 	}
 
-	private MapType determineMapType() {
-		if (ySize < MAP_SIZE_SMALL_THRESHOLD
-				&& xSize < MAP_SIZE_SMALL_THRESHOLD) {
-			return MapType.Small;
-		}
-		if (ySize < MAP_SIZE_MEDIUM_THRESHOLD
-				&& xSize < MAP_SIZE_MEDIUM_THRESHOLD) {
-			return MapType.Medium;
-		}
-		if (ySize > MAP_SIZE_MEDIUM_THRESHOLD
-				&& xSize < MAP_SIZE_MEDIUM_THRESHOLD) {
-			return MapType.Large;
-		}
-		int largestDimension = Math.max(ySize, xSize);
-		if (largestDimension < MAP_SIZE_NO_SQUARE_MEDIUM_THRESHOLD) {
-			return MapType.Medium;
-		} else {
-			return MapType.Large;
-		}
-	}
-
-	public ArrayList<Location> evaluateBestPastrLocs() {
+	public MapLocation[] evaluateBestPastrLocs(int maximum) {
 		mapCowGrowth = rc.senseCowGrowth();
 		mapPastrRating = new double[ySize][xSize];
-		double currentBestRating = 0;
-		MapLocation bestForPastr = new MapLocation(0, 0);
-		bestLocations = new ArrayList<Location>();
+		bestLocations = new MapLocation[maximum];
 
 		int xStep = xSize / 25 + 1;
 		int yStep = ySize / 25 + 1;
@@ -102,7 +67,8 @@ public class MapAnalyzer2 extends PathFinder {
 			for (int x = 2; x < xSize; x += xStep) {
 				MapLocation current = new MapLocation(x, y);
 				TerrainTile tile = map[y][x];
-				if (tile != TerrainTile.NORMAL && tile != TerrainTile.ROAD) {
+				if ((tile != TerrainTile.NORMAL && tile != TerrainTile.ROAD)
+						|| alreadyInArray(current)) {
 					continue;
 				}
 				double sumCowGrowth = 0;
@@ -118,28 +84,20 @@ public class MapAnalyzer2 extends PathFinder {
 				// 3 possibilities to get the distance to the enemies HQ
 				// minimum moves required, manhattan or euclidian distance
 				// TODO: Test for best method
-				int distance = getRequiredMoves(current, hqEnemLoc);
-				// int distance = getManhattanDist(current,
-				// hqEnemLoc);
-				// int distance = getEuclidianDist(current,
-				// hqEnemLoc);
+				// int distance = getRequiredMoves(current, hqEnemLoc);
+				// int distance = getManhattanDist(current, hqEnemLoc);
+				int distance = getEuclidianDist(current, hqEnemLoc);
 
 				mapPastrRating[y][x] = distance * sumCowGrowth;
-				Location currentLoc = new Location(current,
-						mapPastrRating[y][x]);
-
-				insertInList(currentLoc);
-
-				if (bestLocations.isEmpty()) {
-					bestLocations.add(currentLoc);
-				} else {
-					for (int i = 0; i < bestLocations.size(); i++) {
-						int difference = bestLocations.get(i).compareTo(
-								currentLoc);
-						if (difference == 0) {
-							break;
-						} else if (difference == 1) {
-							bestLocations.add(i, currentLoc);
+				// Decide if current should be add to List or not
+				for (int i = 0; i < bestLocations.length; i++) {
+					if (bestLocations[i] == null) {
+						bestLocations[i] = current;
+						break;
+					} else {
+						MapLocation compare = bestLocations[i];
+						if (mapPastrRating[y][x] > mapPastrRating[compare.y][compare.x]) {
+							addLocation(i, current);
 							break;
 						}
 					}
@@ -150,25 +108,34 @@ public class MapAnalyzer2 extends PathFinder {
 		return bestLocations;
 	}
 
-	public void insertInList(Location loc) {
-		boolean inserted = false;
-		if (bestLocations.isEmpty()) {
-			bestLocations.add(loc);
-			inserted = true;
-		} else {
-			for (int i = 0; i < bestLocations.size(); i++) {
-				int difference = bestLocations.get(i).compareTo(loc);
-				if (difference == 0 || inserted == true) {
-					break;
-				} else if (difference == 1) {
-					bestLocations.add(i, loc);
-					inserted = true;
-				}
-			}
-			if (inserted == false) {
-				bestLocations.add(loc);
+	public boolean alreadyInArray(MapLocation next) {
+		for (int i = 0; i < bestLocations.length; i++) {
+			if (bestLocations[i] == null) {
+				break;
+			} else if (next.distanceSquaredTo(bestLocations[i]) <= MINIMUM_DISTANCE) {
+				return true;
 			}
 		}
+		return false;
+	}
+
+	public void addLocation(int index, MapLocation toAdd) {
+		for (int i = bestLocations.length - 1; i > index; i--) {
+			if (bestLocations[i - 1] != null) {
+				MapLocation toCopy = bestLocations[i - 1];
+				bestLocations[i] = toCopy;
+			}
+		}
+		bestLocations[index] = toAdd;
+	}
+
+	public void printBest() {
+		for (int i = 0; i < bestLocations.length; i++) {
+			MapLocation current = bestLocations[i];
+			System.out.println(current.toString() + ", "
+					+ mapPastrRating[current.y][current.x] + "\n");
+		}
+
 	}
 
 }

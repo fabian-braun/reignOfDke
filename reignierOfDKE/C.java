@@ -14,12 +14,4 @@ public class C {
 			Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST,
 			Direction.NORTH_WEST };
 
-	public enum MapType {
-		Small, Medium, Large
-	}
-
-	public enum MapComplexity {
-		SIMPLE, MEDIUM, COMPLEX
-	}
-
 }
