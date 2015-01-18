@@ -1,7 +1,9 @@
 package testing;
 
+import org.junit.Assert;
 import org.junit.Test;
 
+import reignierOfDKE.PathFinder;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
@@ -43,6 +45,20 @@ public class TestGeneric {
 		}
 
 		return map;
+	}
+
+	@Test
+	public void testDistanceMethods() {
+		MapLocation loc1 = new MapLocation(2, 2);
+		MapLocation loc2 = new MapLocation(0, 15);
+		System.out.println("Euclidian: "
+				+ PathFinder.getEuclidianDist(loc1, loc2));
+		System.out.println("Manhattan: "
+				+ PathFinder.getManhattanDist(loc1, loc2));
+		System.out.println("Real: " + PathFinder.getRealDist(loc1, loc2));
+		System.out.println("Moves: " + PathFinder.getRequiredMoves(loc1, loc2));
+		Assert.assertEquals(PathFinder.getRealDist(loc1, loc2),
+				PathFinder.getRealDist(loc2, loc1), 0);
 	}
 
 }

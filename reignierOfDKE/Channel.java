@@ -41,6 +41,7 @@ public class Channel {
 	 * (+3) target of the team;<br\>
 	 * (+4) positional center of the team;<br\>
 	 * (+5) temporary target of the team, set by leader;<br\>
+	 * (+6) best pastr location for this team<br\>
 	 */
 	public static final int chTeam = 1001;
 	private static final int teamChannelCount = 10;
@@ -70,6 +71,7 @@ public class Channel {
 	 * (+3) target of the team;<br\>
 	 * (+4) positional center of the team;<br\>
 	 * (+5) temporary target of the team, set by leader;<br\>
+	 * (+6) best pastr location for this team<br\>
 	 * 
 	 * @param teamId
 	 * @return
@@ -548,4 +550,25 @@ public class Channel {
 			e.printStackTrace();
 		}
 	}
+
+	public static void announcePastrLocation(RobotController rc,
+			MapLocation location, int teamId) {
+		int c = getTeamChannel(teamId) + 6;
+		try {
+			rc.broadcast(c, toInt(location));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static MapLocation getPastrLocation(RobotController rc, int teamId) {
+		int c = getTeamChannel(teamId) + 6;
+		try {
+			return toMapLocation(rc.readBroadcast(c));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return new MapLocation(-1, -1);
+	}
+
 }

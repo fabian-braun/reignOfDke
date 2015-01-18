@@ -1,8 +1,5 @@
 package reignierOfDKE;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -13,11 +10,9 @@ import battlecode.common.RobotType;
 
 public class HQ extends AbstractRobotType {
 
-	private int ySize;
-	private int xSize;
 	private MapLocation myHq;
 	private MapLocation otherHq;
-	private MapAnalyzer2 mapAnalyzer;
+	private MapAnalyzer mapAnalyzer;
 	/**
 	 * soldiers are distributed over 3 teams: <br>
 	 * team 0: 50% of soldiers -> flexible attacking team <br>
@@ -29,10 +24,6 @@ public class HQ extends AbstractRobotType {
 	private Direction spawningDefault;
 	private int teamId = teamIdAssignment[0];
 	private int pastrThreshold;
-	private Set<MapLocation> pastPastrLocations = new HashSet<MapLocation>();
-
-	private final int MAXIMUM_OWN_PASTRS = 5;
-	private MapLocation[] bestLocations;
 
 	private static final int[] teamIdAssignment = new int[] { 2, 0, 1, 0 };
 	private int teamIndex = 0;
@@ -99,7 +90,7 @@ public class HQ extends AbstractRobotType {
 		if (size(opponentPastrLocations) > 0) {
 			// Send our teams 0 and 2 in for the kill
 			teams[0].setTask(Task.GOTO, opponentPastrLocations[0]);
-			if (oppMilkQuantity > 5000000) {
+			if (oppMilkQuantity > 4000000) {
 				teams[1].setTask(Task.GOTO, opponentPastrLocations[0]);
 				teams[2].setTask(Task.GOTO, opponentPastrLocations[0]);
 			} else if (Channel.getPastrCount(rc) == 0) {
@@ -128,26 +119,14 @@ public class HQ extends AbstractRobotType {
 	}
 
 	private void assignBuildPastrTask(int teamId) {
-		if (size(bestLocations) == 0) {
-			bestLocations = mapAnalyzer
-					.evaluateBestPastrLocs(MAXIMUM_OWN_PASTRS);
-		}
-		if (Channel.getTask(rc, teamId).equals(Task.BUILD_PASTR)
-				|| Channel.getTask(rc, teamId).equals(Task.BUILD_NOISETOWER)) {
+		if (Channel.getTask(rc, teamId).equals(Task.BUILD_NOISETOWER)) {
 			return;
 		}
-		if (rc.senseRobotCount() > pastrThreshold) {
-			int i = 0;
-			while (i < bestLocations.length
-					&& pastPastrLocations.contains(bestLocations[i])) {
-				i++;
-			}
-			if (i >= bestLocations.length) {
-				// we have built a pastr already at all bestLocations
-				i = randall.nextInt(bestLocations.length);
-			}
-			teams[teamId].setTask(Task.BUILD_PASTR, bestLocations[i]);
-			pastPastrLocations.add(bestLocations[i]);
+		if (rc.senseRobotCount() > pastrThreshold
+				&& Channel.getPastrLocation(rc, teamId).y > 0) {
+			// 2nd check is for being sure that there is a valid location
+			teams[teamId].setTask(Task.BUILD_PASTR,
+					Channel.getPastrLocation(rc, teamId));
 		}
 	}
 
@@ -161,15 +140,13 @@ public class HQ extends AbstractRobotType {
 
 	@Override
 	protected void init() throws GameActionException {
-		ySize = rc.getMapHeight();
-		xSize = rc.getMapWidth();
 		myHq = rc.senseHQLocation();
 		otherHq = rc.senseEnemyHQLocation();
 		teams = Team.getTeams(rc);
+		int ySize = rc.getMapHeight();
+		int xSize = rc.getMapHeight();
+		mapAnalyzer = new MapAnalyzer(rc, null, otherHq, myHq, ySize, xSize, 0);
 
-		mapAnalyzer = new MapAnalyzer2(rc, null, myHq, otherHq, ySize, xSize);
-		// mapAnalyzer.generateRealDistanceMap(); // TODO: too expensive
-		// mapAnalyzer.printMapAnalysisDistance();
 		initPastrTreshold();
 		spawningDefault = myHq.directionTo(otherHq);
 		int i = 0;
