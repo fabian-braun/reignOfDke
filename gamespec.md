@@ -1,0 +1,540 @@
+Battlecode 2014 Gameplay Specs
+==============================
+
+Plot
+--------
+
+After Teh Nubs were victorious against the unknown forces at the outer rim, the galaxy felt a little lifeless. The numerous victorious melee robots juked back and forth in triumph, but at what cost! The terrain was strewn with mines and military structures, unfit for industry or agriculture. With the old military government, nothing would be done. But now the Interplanetary Development Committee has ascended to the golden toilet and proclaimed a new interplanetary initiative. Military forces will now be repurposed for herding cattle to produce milk for the galaxy's young and infirm. Two "companies" will be placed on each planet in the spirit of capitalist competition.
+
+Objective
+----------------
+
+Transport milk to space. First build PASTRs (Projected Animal Security and Treatment Region) and herd cows into them. The PASTRs automatically send your milk to space. Remember, you can also shoot your competitor's cowboys, destroy his PASTRs, and disperse and steal his cows.
+
+Good luck!
+
+Major Mechanics for 2014
+-----------------
+- Your company HQ produces the robot cowboys that can herd cows.
+- Robots can move to any adjacent square without needing to turn.
+- The map is known, though vision is not shared between robots. 
+- Movement and attack commands share a delay timer.
+- There's more than one way to move: there's running and sneaking. 
+- Attacks are ranged and manually targeted.
+- To communicate messages among your robots, you can post and read integers to and from a team-shared array. This means message hacking and jamming are no longer possible.  However, broadcasting robots' positions are revealed to all players during the round that they are broadcasting.
+- Cows are a scalar field. Sneaking does not disturb the scalar field, but running and shooting cause cows to run away from the source of noise. In the case of several sources of noise, the cows run away from the center of mass of the noise.
+- A robot may convert itself into a PASTR, which projects a circular containment field and gathers milk from cows inside the field. Cows that run into a PASTR cannot run out of the pasture unless the PASTR is destroyed. In addition, individual robots gather a smaller quantity of milk from cows on their square.
+
+
+Robot Overview
+-----------------
+
+Robots are the central part of the Battlecode world. There are two types of basic robots. Note that we use the terms 'robot' and 'unit' interchangeably. All ranges below are specified as square distances (that is, the square of the Euclidean distance between two points). All these values can be seen in `RobotType.java` under the values `count`, `sensorRadiusSquared`, `attackRadiusMaxSquared`, and `maxHealth`. For example, the SOLDIER max health value is `RobotType.SOLDIER.maxHealth`. Construction turns is under the variable `captureTurns`.
+
+Hitpoints regenerate slowly over time (.5 per turn when it hasn't been damaged in the last 30 turns, based on `GameConstants.HEAL_TURN_DELAY` and `GameConstants.HEAL_RATE`). The HQ does not regenerate.
+
+### HQ
+The HQ is your main base, and by far the most important unit you have. Each team starts the game off with one HQ. The HQ is invincible, and can't be destroyed. Your company HQ produces the robot COWBOYs that can herd cows.
+- Robot count: 0
+- Sight range: 35
+- Attack range: 15
+- Health: Tons
+
+### COWBOY
+COWBOYs form the core of your army. They are the only mobile unit, and are created by the HQ. They allow you to expand your map control and herd cows. These are also called SOLDIERs.
+- Robot count: 1
+- Sight range: 35
+- Attack range: 10
+- Health: 100
+
+### PASTR
+Generates a field to get milk from cows inside the field, and keep cows within the field as long as it remains up. The milking range of the PASTR is specified by `GameConstants.PASTR_RANGE`.
+- Robot count: 2
+- Sight range: 5
+- Attack range: nope
+- Health: 200
+- Takes 50 turns to construct
+
+### NOISE TOWER
+NOISE TOWERs are immobile structures can 'attack' (but for no damage) to create noise in a large range. There are two types of attacks that a NOISE TOWER can use. There is a normal attack (`rc.attackSquare`) and a light attack (`rc.attackSquareLight`). The former generates a noise source scaring all cows in square range 36 (`GameConstants.NOISE_SCARE_RANGE_LARGE`), while a light attack only scares cows in square range 9 (`GameConstants.NOISE_SCARE_RANGE_SMALL`).
+- Robot count: 3
+- Sight range: 35
+- Attack range: 300
+- Health: 100
+- Takes 100 turns to construct
+
+
+Robot Resources
+------------------
+
+Each robot has hitpoints (100, also known as health). When the hitpoints reach zero, the robot is immediately removed from the game.
+
+In the past, robots used a resource to fuel their movement and computation. This year, the resource is action delay. A robot that does more computation will move more slowly (longer move/attack delay). Because move and attack delay are combined this year, this will also mean less damage per second for computationally intensive robots.
+
+The HQ can produce a robot every few rounds until the number of allied robots (including structures) equals `GameConstants.MAX_ROBOTS`. This production delay increases depending on the number of robots currently controlled. Structures such as PASTRs also count as 'robots'.
+
+Victory Conditions
+------------------
+
+A team wins by transporting `GameConstants.WIN_QTY` GigaGallons (GG) to space. If neither team has done so by `GameConstants.ROUND_MAX_LIMIT`, the following tiebreakers apply:
+
+- Quantity of milk transported
+- Total # cows in PASTRs
+- Total # enemy robots killed
+- Lowest ID
+
+Robot Actions
+--------------
+
+Robots are equipped with a variety of high tech equipments and can perform the following actions during their turn.
+
+### Action Delay and Bytecode
+Each robot has an `actiondelay` counter that decrements by 1 at the beginning of every turn. Movement and attacking cannot be performed unless `actiondelay` is less than 1, and they also give a certain amount of `actiondelay`.
+
+Running code uses bytecodes. Each turn, a robot can spend up to 10000 bytecodes on computation (`GameConstants.BYTECODE_LIMIT`). If this limit is reached, the robot's turn is immediately ended and the computation is continued on the next turn. Using `yield()` and `selfDestruct()` can end a turn early, saving bytecodes and ending computation. The former is generally preferred.
+For cowboy robots and for noise towers, each bytecode above 1000 gives 0.00002 `actiondelay` (see `GameConstants.FREE_BYTECODES` and `GameConstants.BYTECODE_PENALTY`).
+
+Example: if a SOLDIER (cowboy) currently has 0 `actiondelay`, then it can attack. After attacking, the SOLDIER will have 2 `actiondelay`. At the beginning of the next turn, this counter decrements to 1. At the beginning of the next turn after, this counter decrements to 0. That means that two turns after the initial attack, the SOLDIER can attack again. In the case of fractional `actiondelay`, a robot is only unable to move or attack if its `actiondelay` is greater than or equal to 1.
+
+
+### Sensors
+
+Info on robots in sight range can be sensed. Vision is not shared between robots. The locations of starting HQs and other map objects are known. 
+
+- The info on all allied robots can be sensed.
+- The info on visible enemy robots can be sensed.
+- The locations of the both HQs can be sensed.
+- The locations of all PASTRs on the map can be sensed.
+- The amount of milk you have and the amount of milk the opponent has. For sensing opponent milk, decreased accuracy causes the value to be rounded down to a multiple of `GameConstants.OPPONENT_MILK_SENSE_ACCURACY`.
+
+Sensing info on a robot includes the robot's location, actiondelay, whether it is currently constructing anything, its type, its health, and more. See `RobotInfo` Java documentation for more details.
+
+There is one exception to this rule. Any SOLDIER on a MapLocation adjacent to their own HQ is under a magic cloak and cannot be sensed by the enemy, as if they were out of sight range. More formally, this includes any SOLDIER within a square radius of `GameConstants.HQ_CLOAK_RADIUS` of their own HQ cannot be sensed by the enemy team.
+
+### Broadcasting
+Radio Sensors: When a robot broadcasts to radio, all robots are made aware of the location of the broadcasting robot for for one turn. They can access the positions with a method call like `rc.senseBroadcastingRobots(Team t)` or `rc.senseBroadcastingRobotLocations(Team t)`.
+
+Messages written to the team-shared integer list persist until overwritten. You can't read or write integers from or to the enemy team's shared integer list. 
+
+The cost of transmitting and receiving are in bytecodes, which, as mentioned earlier, affect movement and attack speeds. The message array is always initially all zeros.
+
+
+### Attack
+Cowboy robots can attack any tile within attack range (square range of 10). Attacking and moving share the same cooldown (action delay). Attacking deals 10 damage (`RobotType.SOLDIER.attackPower`) and gives 2 `actiondelay` (`GameConstants.SOLDIER_ATTACK_ACTION_DELAY`, consistent with `RobotType.SOLDIER.attackDelay`).
+
+An attack destroys all cows at the targeted location. In addition, it makes noise that scares cows at long range at the targeted location.
+
+Your HQ shoots depleted uranium girders out of a railgun, dealing overkill area damage to the target (50 and 25 splash in a square range of 2, based on `RobotType.HQ.attackPower` and `RobotType.HQ.splashPower`). HQ has square range of 15. Watch out for friendly fire.
+
+Noise Towers can also 'attack' in their attack range. Their attacks create noise (can choose to create noise in square range of 9 or square range of 36) but deal no damage. Noise Towers attacks give an `actiondelay` of 2 (`RobotType.NOISETOWER.attackDelay`).
+
+### Movement
+Cowboy robots can move to any unoccupied adjacent square if their delay is less than one. Using bytecodes adds small fractions to the delay that eventually add up to one, requiring a momentary pause in movement or attack, representing careful thought. When a robot moves, its destination square is the source of noise.
+
+Running is faster (shorter move delay), but creates noise, scaring cows at short range. Sneaking is slower but creates no noise. By sneaking, you can actually move among cows.
+
+Running gives 2 actiondelay (`GameConstants.SOLDIER_MOVE_ACTION_DELAY`) and sneaking gives 3 actiondelay (`GameConstants.SOLDIER_SNEAK_ACTION_DELAY`) for lateral movement. Diagonal movement gives 1.4 times the actiondelay of lateral movement (`GameConstants.SOLDIER_DIAGONAL_MOVEMENT_ACTION_DELAY_FACTOR`).
+
+### Spawning, Construction, and Robot Count
+The HQ can spawn soldiers, subject to a production delay (20 turns plus total number of robots^1.5, see `GameConstants.HQ_SPAWN_DELAY_CONSTANT_1` and `GameConstants.HQ_SPAWN_DELAY_CONSTANT_2`) and a maximum robot number (25, `GameConstants.MAX_ROBOTS`). Cowboys count for one robot, PASTRs count for two robots, and Noise Towers count for three robots. The HQ cannot attack during this production delay amount.
+
+Cowboy robots can construct structures on the square they are currently on. The robot will become unable to take any action for a certain number of turns (50 for PASTRs, 100 for Noise Towers) and then will be removed and replaced with the constructed structure.
+
+### Suicide
+Calling `selfDestruct()` immediately removes the calling robot from the game and deals area damage (41+half of remaining hp to square range of 2, based on `GameConstants.SELF_DESTRUCT_BASE_DAMAGE` and `GameConstants.SELF_DESTRUCT_DAMAGE_FACTOR`). This scares cows in square range 36 and destroys all cows on affected squares (square range 2). This replaces the `suicide()` method. PASTRs cannot self destruct. NOISETOWERS can self destruct, but it will not do any damage or scare any cows.
+
+### Team Memory
+Official matches will usually be sets of multiple games. Each team can save a small amount of information (`GameConstants.TEAM_MEMORY_LENGTH` longs) for the next game using the function `setTeamMemory()`. This information may be retrieved using `getTeamMemory()`. If there was no previous game in the match, or no information was saved, then the memory will be filled with zeros.
+
+### Control Bits, Indicator Strings, and Breakpoints
+Each robot can set strings that are visible when viewing the client, as a debugging tool. 
+
+There are several ways that the user can interact with robots. First, any robot can use `setIndicatorString(int,String)` to set a string that is visible to the user when selecting the robot. Second, the user can manually set a long for each robot, which the robot can query using `getControlBits()`. Finally, a robot can call `breakpoint()`, which flags the game engine to pause computation at the end of the round. These methods are for debug purposes only. During tournaments and scrimmages, the user will not be able to interact with the robots. For more information on these debugging interfaces, check out Debugging below.
+
+### Ending turn
+
+Calling `yield()` and `selfDestruct()` instantly end the turn of a robot, potentially saving bytecodes. Otherwise a turn ends naturally when the bytecode limit is hit. Every turn a robot gets 10000 bytecodes to run code.
+
+### Cows
+Cows are a scalar field. Each location on the map has a certain natural cow growth. During each turn, each location gains a number of cows equal to the natural cow growth, and then 0.5% of the cows (`GameConstants.NEUTRALS_TURN_DECAY`) on that location die a natural death.
+
+Cows can be influenced by noise and attacks. After each turn, cows will run away from the averaged location of all the noises they heard that turn. Short-range noises (running, Noise Tower light attacks) scare cows in range^2 9 (`GameConstants.MOVEMENT_SCARE_RANGE` and `GameConstants.NOISE_SCARE_RANGE_SMALL`), and long-range noises (shooting, Noise Tower normal attacks, and soldier self destructs) scare cows in range^2 36 (`GameConstants.ATTACK_SCARE_RANGE` and `GameConstants.NOISE_SCARE_RANGE_LARGE`). If the direction away from this averaged location points between two locations, the cows will split evenly between those locations. If the cows cannot move away from the average noise source, they will not move at all. If the average noise source is the current square of the cows, then the cows will scatter, dividing themselves equally amongst valid neighboring locations (including diagonals).
+
+Cows in a PASTR containment field cannot leave the field, and cows on the same square as a robot will not leave that square due to noise until the robot moves. If a cow is in two PASTR containments, then it will stay within both PASTR containments.
+In addition, attacking a square (except for Noise Tower attacks) destroys all cows on that square and soldier self destructs will destroy all cows within range. All weapons used are certified humane.
+
+The cow field is processed only at the end of the turn. First, all cows that were attacked are destroyed. Next, cows move based on all the noise they heard that turn. Finally, cows decay and then grow, in that order.
+
+### Milk
+Milk comes from cows. They are automatically milked by either being within the containment field of a PASTR, or by being on the same square as a robot (which milks them in its spare time). SOLDIER robots only give 5% of the milk that a PASTR would generate (`GameConstants.ROBOT_MILK_PERCENTAGE`). Destroying an enemy PASTR gives 1/10 of `GameConstants.WIN_QTY` milk (`GameConstants.MILK_GAIN_FACTOR`). The amount of milk gained from a PASTR is exactly equal to the quantity of cows herded by that PASTR when the total number of cows is less than 8000 (`GameConstants.MAX_EFFICIENT_COWS`), and equal to (8000 + ((x-8000)^0.95)) otherwise (`GameConstants.MAX_EFFICIENT_COWS` and `GameConstants.MILKING_INEFFICIENCY`), where x is the number of cows contained in the PASTR.
+
+When more than one PASTR controls a square, the PASTR with the smallest ID takes all the cows. In addition, if a robot SOLDIER is located on a square within PASTR range, then the SOLDIER will not get any milk.
+
+Since PASTRs cannot self destruct, any PASTR that explodes for any reason other than being attacked will spill milk, resulting in milk being awarded to the opposing team as if it had been destroyed by them (an amount equal to `GameConstants.MILK_PENALTY_FACTOR` times the win quantity).
+
+
+Maps
+-----
+Battlecode maps are a rectangular grid of squares, each with a pair of integer coordinates. Each tile is an instance of `MapLocation`. Squares outside the map have TerrainType.OFF_MAP. The northwest map square is the origin (0,0). Maps specify the spawn points of the teams.
+
+There are three types of terrain: GROUND, VOID, and ROAD. VOID terrain is not traversable and do not have cows. ROAD terrain discounts movement-related and sneaking-related actiondelays (only if you start on a ROAD) by a factor of 0.5 for robots on the terrain (`GameConstants.ROAD_ACTION_DELAY_FACTOR`).
+
+### Map Files
+
+Maps are specified by XML files, and can be found in the maps folder of the release archive. The schema for the files should be fairly intuitive, so if you'd like to add your own maps you can use the provided maps as a basis. Each map has an associated random number seed, which the RNG uses to generate random numbers in games played on that map.
+
+### Map Constraints
+Official maps used in scrimmages and tournaments must all satisfy the following conditions (see relevant game constants).
+- Maps are completely symmetric either by reflection or 180 degree rotation.
+- The width and height of the map are guaranteed to be between 20 and 100, inclusive.
+- The distance between the spawn points will be at least 10 units (Euclidean distance). 
+- The two headquarters are on connected locations.
+
+
+Writing a Player
+------------------------
+
+### Introduction
+
+Your player program must reside in a Java package named `teamXXX`, where `XXX` is your three-digit team number, with leading zeros included. You may have whatever sub-packages you like. You must define `teamXXX.RobotPlayer`, which must have a public static `run` method that takes one argument of type `battlecode.common.RobotController`. Whenever a new robot is created, the game calls the run method with the robots RobotController as its argument. If this method ever finishes, either because it returned or because of an uncaught exception, the robot dies and is removed from the game. You are encouraged to wrap your code in loops and exception handlers so that this does not happen.
+
+### RobotController
+
+The RobotController argument to the RobotPlayer constructor is very important -- this is how you will control your robot. RobotController has methods for sensing (e.g. `senseRobotInfo(Robot)`) and performing actions (e.g., `move()`). If you're not sure how to get your robot to do something, the Javadocs for RobotController are a good place to start.
+
+### Example: examplefuncsplayer
+
+
+```java
+package examplefuncsplayer;
+
+import battlecode.common.Direction;
+import battlecode.common.GameConstants;
+import battlecode.common.RobotController;
+import battlecode.common.RobotType;
+import battlecode.common.*;
+import java.util.*;
+
+public class RobotPlayer {
+	static Random rand;
+	
+	public static void run(RobotController rc) {
+		rand = new Random();
+		Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
+		
+		while(true) {
+			if (rc.getType() == RobotType.HQ) {
+				try {					
+					//Check if a robot is spawnable and spawn one if it is
+					if (rc.isActive() && rc.senseRobotCount() <= 25) {
+						Direction toEnemy = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
+						if (rc.senseObjectAtLocation(rc.getLocation().add(toEnemy)) == null) {
+							rc.spawn(toEnemy);
+						}
+					}
+				} catch (Exception e) {
+					System.out.println("HQ Exception");
+				}
+			}
+			
+			if (rc.getType() == RobotType.SOLDIER) {
+				try {
+					if (rc.isActive()) {
+						int action = (rc.getRobot().getID()*rand.nextInt(101) + 50)%101;
+						//Construct a PASTR
+						if (action < 1 && rc.getLocation().distanceSquaredTo(rc.senseHQLocation()) > 2) {
+							rc.construct(RobotType.PASTR);
+						//Attack a random nearby enemy
+						} else if (action < 30) {
+							Robot[] nearbyEnemies = rc.senseNearbyGameObjects(Robot.class,10,rc.getTeam().opponent());
+							if (nearbyEnemies.length > 0) {
+								RobotInfo robotInfo = rc.senseRobotInfo(nearbyEnemies[0]);
+								rc.attackSquare(robotInfo.location);
+							}
+						//Move in a random direction
+						} else if (action < 80) {
+							Direction moveDirection = directions[rand.nextInt(8)];
+							if (rc.canMove(moveDirection)) {
+								rc.move(moveDirection);
+							}
+						//Sneak towards the enemy
+						} else {
+							Direction toEnemy = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
+							if (rc.canMove(toEnemy)) {
+								rc.sneak(toEnemy);
+							}
+						}
+					}
+				} catch (Exception e) {
+					System.out.println("Soldier Exception");
+				}
+			}
+			
+			rc.yield();
+		}
+	}
+}
+```
+
+
+Notice the while(true) loop, which prevents the run method from returning. While the robot is alive, it will be continually cycling through this loop. The try/catch block inside the loop prevents the robot from throwing an uncaught exception and dying. 
+
+
+
+
+Execution Order
+------------------
+
+The game is comprised of a number of rounds. During each round, all robots get a turn in order of their IDs. Robots that were created earlier have lower IDs. Newly spawned robots will have a turn on the same round they were created.
+
+The following is a detailed list of a robot's execution order within a single turn. If it dies halfway through, the remainder of the list does not get executed. In particular, note that changes to a robot's state do not happen while player code is being executed. All actions instead get sent to an action queue, and they are executed after the player code is run. For example, if a SOLDIER calls move() and then getLocation(), it will not reflect the location of the robot yet.
+
+1. Robot executes up to `GameConstants.BYTECODE_LIMIT` of player code. Self destructs happen here.
+2. Channels are updated with new broadcasts
+3. Actions are performed
+
+    a. The robot moves
+
+    b. Attacks happen
+
+
+Timing
+------------------------
+
+Each robot is allowed a certain amount of computation each round. Computation is measured in terms of Java bytecodes, the atomic instructions of compiled Java code. Individual bytecodes are simple instructions such as "subtract" or "get field", and a single line of code generally contains several bytecodes. (For details see http://en.wikipedia.org/wiki/Java_bytecode) Each round, every player runs a number of bytecodes determined by `GameConstants.BYTECODE_LIMIT`. When a robot hits the bytecode limit, its computation is paused while other robots get to do their computation for the same round or the next round. On the next round, the robot's computation is resumed exactly where it left off. Thus, to the robot's code, the round change is invisible. Nothing will jump out and shout at you when a round ends.
+
+Because the round can change at the end of any bytecode, unexpected things can happen. For instance, consider the following example:
+
+```java
+Robot[] nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+MapLocation loc = myRC.senseRobotInfo(nearbyRobots[0]);
+```
+
+In the first line, the robot gets a list of all other robots in its sensor range. In the second line, the robot senses the RobotInfo of the first robot in the list. However, what happens if the round changes between the first and second line? A robot that was in sensor range when line 1 was executed might be out of sensor range when line 2 is executed, resulting in an exception. Because of this, your code should be written defensively. Think of this as a "real-world" robot, where things can fail at any time, and you have to be prepared to handle it.
+
+However, there are ways of dealing with this, as we'll see in the next section.
+
+### Yielding
+
+One way to deal with timing complexities is to use `yield()` judiciously. Calling `RobotController.yield()` ends the robot's computation for the current round. This has two advantages.
+
+First, robots gain action delay based on how many bytecodes they use every turn. A player that uses fewer bytecodes in a turn will be able to move and attack more frequently.
+
+Second, after a call to `RobotController.yield()`, subsequent code is executed at the beginning of a new round. Then, you have the full amount of bytecodes for your robot to do computations before the round changes. For instance, let's modify the example above to be:
+
+```java
+myRC.yield();
+Robot[] nearbyRobots = myRC.senseNearbyGameObjects(Robot.class);
+MapLocation loc = myRC.senseRobotInfo(nearbyRobots[0]);
+```
+
+Since yield is called in line 1, line 2 will be executed at the beginning of a new round. Since `senseNearbyGameObjects()` does not take very many bytecodes, it is pretty much guaranteed that there won't be a round change between lines 2 and 3.
+
+A common paradigm is to have a main loop, with a `yield()` at the bottom of the loop. Thus, the top of the loop is always executed at the beginning of the round. If all the robot's computation for one iteration of the loop can fit in one round, then there should be minimal problems with unexpected round changes. Note that team000 above does this.
+
+### Monitoring
+
+The Clock class provides a way to identify the current round ( `Clock.getRoundNum()` ), and how many bytecodes have been executed during the current round ( `Clock.getBytecodeNum()` ).
+
+### GameActionExceptions
+
+GameActionExceptions are thrown when an ability cannot be performed. It is often the result of uncertainty about the game world, or an unexpected round change in your code. Thus, you must write your player defensively and handle GameActionExceptions judiciously. Each GameActionException has a GameActionExceptionType, which tells roughly what went wrong. You should also be prepared for any ability to fail and make sure that this has as little effect as possible on the control flow of your program.
+
+Exceptions cause a bytecode penalty of `GameConstants.EXCEPTION_BYTECODE_PENALTY`.
+
+
+Mechanics
+--------------------
+
+This section deals with some of the mechanics of how your players are run in the game engine, including bytecode-counting, library restrictions, etc.
+
+### Java Language Usage
+
+Players may use classes from any of the packages listed in AllowedPackages.txt, except for classes listed in DisallowedPackages.txt.
+
+Furthermore, the following restrictions apply:
+
+`Object.wait`, `Object.notify`, `Object.notifyAll`, `Class.forName`, and `String.intern` are not allowed.
+`java.lang.System` only supports `out`, `arraycopy`, and `getProperty`. Furthermore, `getProperty` can only be used to get properties with names beginning with "bc.testing."
+`java.io.PrintStream` may not be used to open files.
+Scala functions such as `scala.Console.readByte()` that attempt to read from standard input will always throw an `EOFException`.
+
+Note that violating any of the above restrictions will cause the robots to self-destruct when run, even if the source files compile without problems.
+
+### Bytecode costs
+
+Classes in `java.util`, `java.math`, and scala and their subpackages are bytecode counted as if they were your own code. The following functions in `java.lang` are also bytecode counted as if they were your own code.
+
+```
+Math.random
+StrictMath.random
+String.matches
+String.replaceAll
+String.replaceFirst
+String.split
+```
+
+The function `System.arraycopy` costs one bytecode for each element copied. All other functions have a fixed bytecode cost. These costs are listed in the `MethodCosts.txt` file. Functions not listed in `MethodCosts.txt` are free. The bytecode costs of battlecode.common functions are also listed in the javadoc.
+
+### Memory Usage
+
+Robots must keep their memory usage reasonable. If a robot uses more than 8 Mb of heap space during a tournament or scrimmage match, the robot may be killed.
+
+### Exceptions
+
+Throwing exceptions of any kind incurs a bytecode penalty given by `GameConstants.EXCEPTION_BYTECODE_PENALTY`, so unnecessary throwing of exceptions should be avoided.
+
+### Virtual Machine Errors
+
+Your player cannot catch virtual machine errors such as `StackOverflowError` and `OutOfMemoryError`. If your robot throws one of these exceptions, it will die.
+
+### Java version
+
+Our scrimmage and tournament servers will be running Java 6 and Scala 2.9. The Battlecode software should run on Java 7, but please be aware that our compile server will not recognize Java 7 specific language features.
+
+
+
+Debugging
+-------------------
+
+This section describes some of the features of the game engine intended to make debugging somewhat less painful. Debug mode reveals valuable information about robots at development time but will be turned off for scrimmages and real tournaments.
+
+### System.out
+
+Any output that your robots print to System.out is directed to the output stream of the Battlecode engine, prefixed with information about the robot.
+
+### Setting Indicator Strings
+
+You'll find that your primary source of debugging is setting one of 3 indicator strings that are viewable in the client.  Unlike System.out which is not synchronized to match execution (as the engine precomputes the game faster than the client views it), Indicator strings are synchronized to the round number and can be used for debugging complex robot behaviors. 
+
+Use `setIndicatorString(int,String)` to change a robot's indicator string. The are viewable in the top right corner of the client when the robot is selected. Indicator strings maintain value until they are changed.
+
+### Debug Methods
+
+The game engine has a feature that allows you to separate out debugging code that is unimportant to your player's performance in the tournament. Methods that have names beginning with debug_ and that have a void return type are given special status. By default, these methods are skipped during execution of the player. When the System property debugMethodsEnabled is set to true, however, the methods are executed normally except that they do not count against your robot's bytecode limit. Code that prepares the arguments to such a method may consume bytecodes, but the body of the method and any methods that it invokes are not counted.
+
+### System Properties
+
+Your robot can read system properties whose names begin with "bc.testing.". You can set a property by adding a line to bc.conf like this:
+
+```
+bc.testing.team-a-strategy=experimental
+```
+
+You can check the value of the property like this:
+
+```java
+String strategy = System.getProperty("bc.testing.team-a-strategy");
+```
+
+### Breakpoints
+
+Breakpoints allow you to pause the game engine's calculations. If breakpoints are enabled (see the software page), and a robot calls RobotController.breakpoint(), the game engine will stop computing at the end of the round. This gives you a chance to see exactly what's going on in the game when your robot hits a certain point in its code. You can resume the game engine's computation in the client, by hitting the "resume" button. If the match is being dumped straight to a file (i.e., there is no client to resume the game), breakpoints are ignored.
+
+Note that when a robot calls breakpoint(), computation will be stopped at the end of the round, not immediately when breakpoint() is called. Depending on the circumstances, you might want to use breakpoint(); yield(); instead.
+
+
+Tournaments & Course Credit
+---------------------------
+
+There are five tournaments: the Sprint, Seeding, Qualifying, Final, and Newbie tournaments. Check the Calendar page for dates and locations. Here, we'll explain the mechanics of how the tournaments are run.
+
+The Sprint Tournament is a single elimination tournament. Contestants are seeded based on scrimmage ranking, and play continues until there is only one undefeated team.
+
+The Seeding Tournament is a double elimination tournament. Contestants are seeded based on scrimmage ranking, and play continues until there is only one undefeated team. The results of this tournament are used to determine seeds for the Qualifying and Newbie tournaments. Teams are ranked by the following criteria, in order:
+
+- Furthest round achieved
+- Bayesian Elo rating for the tournament (computed on a per-game basis, not a per-match basis)
+
+The Qualifying Tournament is a double elimination tournament (see e.g. http://en.wikipedia.org/wiki/Image:NSB-doubleelim-draw-2004.png). Play continues until there are 16 teams remaining. These teams move on to the Final Tournament. Teams are seeded for the final tournament as follows:
+
+- The eight teams that did not lose a match receive the top eight seeds.
+- Teams that did not lose a single game are ranked by their qualifying seeds.
+- The remaining teams are ranked by Bayesian Elo rating for the tournament (computed on a per-game basis).
+- The Final Tournament is another double elimination tournament. The Final Tournament starts with a blank state, i.e., any losses in the Qualifying Tournament are erased.
+
+The Newbie Tournament will run concurrently with the Qualifying Tournament. All teams consisting entirely of MIT students who have not participated in Battlecode before will automatically be entered into the Newbie tournament in addition to the other tournaments. The Newbie Tournament will progress until there are 2 teams left in a double elimination format, and these two teams will compete with each other at the Newbie Finals (with losses reset).
+
+In order to receive credit for the course, or to be eligible for the newbie tournament, you must register with an mit.edu e-mail address. If you already registered with a different e-mail address, please let us know.
+
+You can receive credit for the course by defeating the reference player. You must defeat Teh Devs in an unranked scrimmage on a certain set of maps. These maps will be announced approximately two weeks into the course. If your player beats the reference player, everyone on your team receives 6 credits.
+
+If your submission does not beat the reference player, then you can get credit an alternate way, by sending us a 2-page report on your player: its code design, how it works, an explanation of any AI paradigms you used, etc. We will look over your source code and your report, and if both show a significant amount of effort, thought, and good design techniques, we will give you 6 credits.
+
+We give prizes for the best strategy reports, so we encourage you to submit a report even if you defeat the reference player.
+
+Also, note that you are allowed to drop 6.370 (6.147) without penalty very late into IAP.
+
+
+Getting Help
+-------------
+
+We have both a forum (https://www.battlecode.org/contestants/forum/) and an IRC Channel (#battlecode on irc.freenode.net). Hang out and chat with us -- we're friendly!
+
+
+Disclaimers
+-------------
+
+We have done our best to test and balance the properties of the Battlecode world. Inevitably, however, we will need to make adjustments in the interest of having a fair competition that allows a variety of creative strategies. We will endeavor to keep these changes to a minimum, and release them as early as possible. All changes will be carefully documented in the Changelog.
+
+Despite our best efforts, there may be bugs or exploits that allow players to operate outside the spirit of the competition. Using such exploits for the tournament or scrimmage will result in immediate disqualification, at the discretion of the directors. Such exploits might include, but are not limited to, robot communication without messages, bypassing the bytecode limit, or terminating the game engine. If you are not sure what qualifies as "in the spirit of the competition", ask the devs before submitting your code.
+
+
+Changelog
+-------------
+* **1.0.0** (1/6/2014) - Initial specs released
+* **1.0.1** (1/6/2014) - Basic improvements and fixes
+    * Improve game finish message so that it does not always say the game ends on tiebreaks.
+    * Removing references to mining and capturing in RobotController documentation.
+    * Changing bytecode penalty to 0.00005.
+* **1.1.0** (1/7/2014) - Minor API Changes
+    * Removing references to old things. maxEnergon and isEncampment in RobotType are now maxHealth and isBuilding. RobotInfo now tells action delay.
+    * Fix non-milk tiebreaker code so that tiebreaks are functional.
+    * HQ and Noise towers no longer herd or farm milk (update engine to comply with specs).
+    * Added more detailed unit descriptions in specs as well as fixing typographical errors.
+    * Improve Java documentation.
+    * Added an example for action delay in the specs.
+    * You can now sense the locations of the broadcasting robots instead of just the robots.
+    * You can now sense your own and your opponent's milk quantity.
+* **1.1.1** (1/9/2014) - Various fixes and updates + client speed-up
+    * Fix typographical errors and add clarifications in specs. Note that noise towers and cowboys (soldiers) both have an actiondelay penalty related to bytecodes. PASTRs split milk in the case of overlap. RobotType attackDelay values now are consistent with game constants.
+    * Minor bug fixes. MethodCosts.txt boolean values updated. If a PASTR dies because its run method returned, the opponent will be rewarded milk.
+    * Hats are no longer free to wear.
+    * Client changes and optimizations: The "U" key now cycles between "important cows", "all cows", "no cows". In addition, you can remove maps from the client launcher without clicking one first.
+    * Self destructing to destroy an opponent PASTR correctly rewards milk now.
+    * Fixed bug with cow movement algorithm to comply with specs (behavior of cows on a noise tower's attack square, and no longer splitting cows proportionally based on angle).
+    * Everything but the HQ regenerates health now.
+    * You can now save match files outside of your home directory.
+* **1.2.0** (1/15/2014) - Small gameplay changes and client graphics update:
+    * Fix bug: HQ can no longer attack during spawn delay. isActive() now will need to return true for the HQ to attack, and roundsUntilActive() now correctly reflects this.
+    * Only 1000 free bytecodes per round instead of 2000.
+    * Spawn rate increased (the constant delay goes from 30 to 20).
+    * Noise Tower changes: attack range goes down from 400 to 300, and attack action delay goes from 1 to 2.
+    * Self destruct base damage moves from 30 to 40.
+    * The road action delay bonus is now 0.5.
+    * PASTRs no longer get exactly x milk from x cows when x is too large, due to inefficiencies in milking large numbers of cows. See changes in the Milk section. In addition, overlapping PASTRs no longer share milk: the PASTR with the smallest ID wins it all.
+* **1.2.1** (1/15/2014) - Fix backwards compatibility.
+* **1.2.2** (1/19/2014) - Lower BYTECODE_PENALTY to 40% of its previous value.
+    * Specs clarifications (roads).
+* **1.2.3** (1/21/2014) - The client is now much faster.
+* **1.3.0** (1/26/2014) - Minor gameplay and client changes.
+    * Cow growth on a VOID square is sensed as 0, regardless of the map's value there.
+    * All robots can now wear hats, not only just soldiers. HQ's first hat does not cost milk.
+    * Client updates, such as continuous motion (use "d" to toggle) and showing action delay.
+    * Self destruct has been buffed (40->41 base damage).
+    * Soldiers next to their own HQ cannot be sensed by the enemy. See the Sensing section for more details.
+    * Regeneration rate is now doubled (0.25->0.5 per turn).
+    * Noisetowers can self destruct for no damage and no noise.
+* **1.3.1** (1/26/2014) - Small bug fix with sensing.
+* **1.3.2** (1/28/2014) - Client bug fix with robot info strings. Specs clarifications on map connectedness and execution order.
+    * Decrease HAT_MILK_COST to 100000.
+* **1.3.3** (02/08/2014) - Post-finals release to give out the new maps. Also has minor client changes (fix bug where action delay does not change sometimes). New client key effects.
+
+Appendices
+------------
+
+### Appendix A: Javadocs and Game Constants
+
+Javadocs can be found here, and they are also included in the software distribution.
+
+The javadocs include the values of the game constants and robot attributes.
