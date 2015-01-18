@@ -57,7 +57,7 @@ public class NoiseTower extends AbstractRobotType {
 			return;
 		}
 		if (attackingLocation.distanceSquaredTo(myLocation) < GameConstants.PASTR_RANGE) {
-			directionIndex = (directionIndex + 1) % C.DIRECTIONS.length;
+			directionIndex = (directionIndex + 3) % C.DIRECTIONS.length;
 			attackingLocation = getMaxInDirection(myLocation,
 					C.DIRECTIONS[directionIndex]);
 		} else {
