@@ -87,7 +87,15 @@ public class Soldier extends AbstractRobotType {
 		Robot[] closeOpponents = rc.senseNearbyGameObjects(Robot.class,
 				RobotType.SOLDIER.sensorRadiusSquared, opponent);
 		boolean oppHqInRange = myLoc.distanceSquaredTo(enemyHq) <= RobotType.SOLDIER.sensorRadiusSquared;
-		if (fleeCounter > 0) {
+		if (Channel.needSelfDestruction(rc)) {
+			MapLocation toDestroy = Channel.getSelfDestructionLocation(rc);
+			if (rc.canAttackSquare(toDestroy)) {
+				rc.attackSquare(toDestroy);
+			} else if (rc.getLocation().distanceSquaredTo(toDestroy) < MAX_CIRCULATE) {
+				pathFinderComplex.setTarget(toDestroy);
+				pathFinderComplex.move();
+			}
+		} else if (fleeCounter > 0) {
 			if (fleeCounter == 1) {
 				// this adds a "random" factor, such that the robots not always
 				// go backwards and forward on the same line

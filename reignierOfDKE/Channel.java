@@ -3,6 +3,7 @@ package reignierOfDKE;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
+import battlecode.common.GameObject;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
@@ -27,6 +28,7 @@ public class Channel {
 	public static final int chCountOppBrdCastingSoldiers = 65526;
 	public static final int chOppMilkQuantity = 65525;
 	public static final int chPastrCount = 65524;
+	public static final int chSelfDestruction = 65523;
 
 	/**
 	 * channels 10000 - 30020 contain info about reduced map
@@ -571,4 +573,40 @@ public class Channel {
 		return new MapLocation(-1, -1);
 	}
 
+	public static void broadcastSelfDestruction(RobotController rc,
+			MapLocation loc) {
+		try {
+			rc.broadcast(chSelfDestruction, toInt(loc));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static MapLocation getSelfDestructionLocation(RobotController rc) {
+		try {
+			return toMapLocation(rc.readBroadcast(chSelfDestruction));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return new MapLocation(-1, -1);
+	}
+
+	public static boolean needSelfDestruction(RobotController rc) {
+		try {
+			MapLocation loc = toMapLocation(rc.readBroadcast(chSelfDestruction));
+			if (loc.x == -1) {
+				return false;
+			} else if (rc.canSenseSquare(loc)) {
+				GameObject stillAlive = rc.senseObjectAtLocation(loc);
+				if (stillAlive == null) {
+					rc.broadcast(chSelfDestruction, toInt(-1, -1));
+					return false;
+				}
+				return true;
+			}
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
 }
