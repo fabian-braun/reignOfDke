@@ -20,18 +20,15 @@ public class PathFinderAStar extends PathFinder {
 	private MapLocation target = new MapLocation(0, 0);
 	private Stack<MapLocation> path; // = new Stack<MapLocation>();
 	public static final int weightedAStarMultiplicator = 3;
-	private int soldierId = -1;
 
 	public PathFinderAStar(RobotController rc, int soldierId) {
-		super(rc);
-		this.soldierId = soldierId;
+		super(rc, soldierId);
 	}
 
 	public PathFinderAStar(RobotController rc, int soldierId,
 			TerrainTile[][] map, MapLocation hqSelfLoc, MapLocation hqEnemLoc,
 			int ySize, int xSize) {
-		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize);
-		this.soldierId = soldierId;
+		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize, soldierId);
 	}
 
 	@Override
@@ -151,6 +148,7 @@ public class PathFinderAStar extends PathFinder {
 		return rc.getLocation().equals(target);
 	}
 
+	@SuppressWarnings("unused")
 	private void printPath(Stack<MapLocation> path) {
 		Iterator<MapLocation> iterator = path.iterator();
 		System.out.println(getClass().getSimpleName() + ":\n"

@@ -76,9 +76,9 @@ public class Soldier extends AbstractRobotType {
 		if (complexity.equals(MapComplexity.COMPLEX)) {
 			pathFinderComplex = new PathFinderAStarFast(rc, id);
 		} else {
-			pathFinderComplex = new PathFinderMLineBug(rc);
+			pathFinderComplex = new PathFinderMLineBug(rc, id);
 		}
-		pathFinderGreedy = new PathFinderGreedy(rc, randall);
+		pathFinderGreedy = new PathFinderGreedy(rc, randall, id);
 		enemyHq = pathFinderComplex.hqEnemLoc;
 	}
 

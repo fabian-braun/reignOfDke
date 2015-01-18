@@ -17,14 +17,11 @@ public class MapAnalyzer extends PathFinder {
 
 	private int yStep;
 
-	private final int soldierId;
-
 	public MapAnalyzer(RobotController rc, int soldierId) {
-		super(rc);
+		super(rc, soldierId);
 		type = MapSize.get(ySize, xSize);
 		xStep = xSize / 20 + 1;
 		yStep = ySize / 20 + 1;
-		this.soldierId = soldierId;
 	}
 
 	public MapSize getMapType() {
@@ -34,11 +31,10 @@ public class MapAnalyzer extends PathFinder {
 	public MapAnalyzer(RobotController rc, TerrainTile[][] map,
 			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize,
 			int soldierId) {
-		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize);
+		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize, soldierId);
 		type = MapSize.get(ySize, xSize);
 		xStep = xSize / 12 + 1;
 		yStep = ySize / 12 + 1;
-		this.soldierId = soldierId;
 	}
 
 	@Override

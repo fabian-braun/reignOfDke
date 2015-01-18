@@ -33,12 +33,10 @@ public class PathFinderAStarFast extends PathFinder {
 	private int xSizeR;
 	private int yDivisor = 1;
 	private int xDivisor = 1;
-	private int soldierId;
 	public static final int reducedDim = 20;
 
 	public PathFinderAStarFast(RobotController rc, int soldierId) {
-		super(rc);
-		this.soldierId = soldierId;
+		super(rc, soldierId);
 
 		// create reduced map
 		ySizeR = convertNyRy(ySize);
@@ -90,6 +88,7 @@ public class PathFinderAStarFast extends PathFinder {
 				} else {
 					mapR[y][x] = TerrainTile.VOID;
 				}
+
 				// cache the terrain for other soldiers
 				Channel.setReducedMapTerrain(rc, y, x, mapR[y][x]);
 			}
@@ -234,6 +233,7 @@ public class PathFinderAStarFast extends PathFinder {
 		internalPF.setTarget(tempTarget);
 	}
 
+	@SuppressWarnings("unused")
 	private void printPath(Stack<MapLocation> path) {
 		Iterator<MapLocation> iterator = path.iterator();
 		List<MapLocation> list = new ArrayList<MapLocation>();
@@ -245,6 +245,7 @@ public class PathFinderAStarFast extends PathFinder {
 				+ mapToString(map, list.iterator()));
 	}
 
+	@SuppressWarnings("unused")
 	private void printReducedPath(Stack<MapLocation> path) {
 		Iterator<MapLocation> iterator = path.iterator();
 		System.out.println(getClass().getSimpleName() + ":\n"
