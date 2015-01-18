@@ -27,6 +27,7 @@ public class Channel {
 	public static final int chOppMeanDistToCenter = 65527;
 	public static final int chCountOppBrdCastingSoldiers = 65526;
 	public static final int chOppMilkQuantity = 65525;
+	public static final int chPastrCount = 65524;
 
 	/**
 	 * channels 10000 - 30020 contain info about reduced map
@@ -515,6 +516,35 @@ public class Channel {
 			int quantity) {
 		try {
 			rc.broadcast(chOppMilkQuantity, quantity);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static int getPastrCount(RobotController rc) {
+		try {
+			return rc.readBroadcast(chPastrCount);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	public static void announceNewPastr(RobotController rc) {
+		try {
+			rc.broadcast(chPastrCount, rc.readBroadcast(chPastrCount) + 1);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void announcePastrDeath(RobotController rc) {
+		try {
+			int count = rc.readBroadcast(chPastrCount);
+			if (count > 0) {
+				count--;
+			}
+			rc.broadcast(chPastrCount, count);
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}

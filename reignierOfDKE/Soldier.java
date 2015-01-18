@@ -113,6 +113,7 @@ public class Soldier extends AbstractRobotType {
 				if (myLoc.equals(target)) {
 					Channel.broadcastTask(rc, Task.BUILD_NOISETOWER, target,
 							teamId);
+					Channel.announceNewPastr(rc);
 					rc.construct(RobotType.PASTR);
 					break;
 				}
