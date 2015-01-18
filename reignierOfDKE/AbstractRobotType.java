@@ -42,4 +42,16 @@ public abstract class AbstractRobotType {
 	 */
 	protected abstract void init() throws GameActionException;
 
+	/**
+	 * checks if the given array is null or empty
+	 * 
+	 * @param array
+	 * @return
+	 */
+	public static final <T> int size(T[] array) {
+		if (array == null) {
+			return 0;
+		}
+		return array.length;
+	}
 }

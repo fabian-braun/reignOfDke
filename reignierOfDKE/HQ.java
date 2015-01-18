@@ -3,7 +3,6 @@ package reignierOfDKE;
 import java.util.HashSet;
 import java.util.Set;
 
-import reignierOfDKE.C.MapType;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -60,7 +59,7 @@ public class HQ extends AbstractRobotType {
 			Channel.assignTeamId(rc, teamId);
 			Robot[] closeOpponents = rc.senseNearbyGameObjects(Robot.class,
 					RobotType.HQ.sensorRadiusSquared, rc.getTeam().opponent());
-			if (Soldier.size(closeOpponents) > 0) {
+			if (size(closeOpponents) > 0) {
 				Direction away = rc.senseLocationOf(closeOpponents[0])
 						.directionTo(myHq);
 				spawningDefault = away;
@@ -97,7 +96,7 @@ public class HQ extends AbstractRobotType {
 		MapLocation[] opponentPastrLocations = rc.sensePastrLocations(rc
 				.getTeam().opponent());
 		// If the opponent has any PASTRs
-		if (Soldier.size(opponentPastrLocations) > 0) {
+		if (size(opponentPastrLocations) > 0) {
 			// Send our teams 0 and 2 in for the kill
 			teams[0].setTask(Task.GOTO, opponentPastrLocations[0]);
 			if (oppMilkQuantity > 5000000) {
@@ -129,7 +128,7 @@ public class HQ extends AbstractRobotType {
 	}
 
 	private void assignBuildPastrTask(int teamId) {
-		if (Soldier.size(bestLocations) == 0) {
+		if (size(bestLocations) == 0) {
 			bestLocations = mapAnalyzer
 					.evaluateBestPastrLocs(MAXIMUM_OWN_PASTRS);
 		}
@@ -181,12 +180,12 @@ public class HQ extends AbstractRobotType {
 	}
 
 	private void initPastrTreshold() {
-		MapType size = mapAnalyzer.getMapType();
+		MapSize size = mapAnalyzer.getMapType();
 		switch (size) {
-		case Large:
+		case LARGE:
 			pastrThreshold = 2;
 			break;
-		case Medium:
+		case MEDIUM:
 			pastrThreshold = 2;
 			break;
 		default: // Small

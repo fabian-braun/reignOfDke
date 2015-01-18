@@ -1,6 +1,5 @@
 package reignierOfDKE;
 
-import reignierOfDKE.C.MapComplexity;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;

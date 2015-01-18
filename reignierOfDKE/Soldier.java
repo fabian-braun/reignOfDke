@@ -3,7 +3,6 @@ package reignierOfDKE;
 import java.util.ArrayList;
 import java.util.List;
 
-import reignierOfDKE.C.MapComplexity;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -224,19 +223,6 @@ public class Soldier extends AbstractRobotType {
 			}
 		}
 		return closeTeamMembers;
-	}
-
-	/**
-	 * checks if the given array is null or empty
-	 * 
-	 * @param array
-	 * @return
-	 */
-	public static final <T> int size(T[] array) {
-		if (array == null) {
-			return 0;
-		}
-		return array.length;
 	}
 
 	private void circulate(MapLocation center) {

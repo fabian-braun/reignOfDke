@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.PriorityQueue;
 
-import reignierOfDKE.C.MapType;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.TerrainTile;
@@ -18,7 +17,7 @@ public class MapAnalyzer {
 	private MapLocation otherHq;
 	private int ySize;
 	private int xSize;
-	private MapType mapType;
+	private MapSize mapType;
 
 	private MapLocation bestForPastr;
 	private MapLocation[][] best;
@@ -124,36 +123,36 @@ public class MapAnalyzer {
 		}
 	}
 
-	private MapType determineMapType() {
+	private MapSize determineMapType() {
 		if (ySize <= MAP_SIZE_SMALL_THRESHOLD
 				&& xSize <= MAP_SIZE_SMALL_THRESHOLD) {
 			// If both dimensions are smaller than the Small threshold
-			return MapType.Small;
+			return MapSize.SMALL;
 		}
 		if (ySize <= MAP_SIZE_MEDIUM_THRESHOLD
 				&& xSize <= MAP_SIZE_MEDIUM_THRESHOLD) {
 			// If both dimensions are smaller than the Medium threshold
-			return MapType.Medium;
+			return MapSize.MEDIUM;
 		}
 		if (ySize > MAP_SIZE_MEDIUM_THRESHOLD
 				&& xSize > MAP_SIZE_MEDIUM_THRESHOLD) {
 			// If both dimensions are larger than the Medium threshold
-			return MapType.Large;
+			return MapSize.LARGE;
 		}
 		// Get the largest of the two dimensions
 		int largestDimension = Math.max(ySize, xSize);
 		if (largestDimension < MAP_SIZE_NO_SQUARE_MEDIUM_THRESHOLD) {
 			// If the largest dimension is smaller than the 'no-square' medium
 			// threshold
-			return MapType.Medium;
+			return MapSize.MEDIUM;
 		} else {
 			// Otherwise it is a large map, because the largest dimension will
 			// be larger than the 'no-square' medium threshold
-			return MapType.Large;
+			return MapSize.LARGE;
 		}
 	}
 
-	public MapType getMapType() {
+	public MapSize getMapType() {
 		return mapType;
 	}
 

@@ -1,6 +1,5 @@
 package reignierOfDKE;
 
-import reignierOfDKE.C.MapType;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
@@ -9,31 +8,27 @@ import battlecode.common.TerrainTile;
 
 public class MapAnalyzer2 extends PathFinder {
 
-	private final MapType type;
+	private final MapSize type;
 
 	private double[][] mapCowGrowth;
 	private double[][] mapPastrRating;
-
-	private static final int MAP_SIZE_SMALL_THRESHOLD = 40;
-	private static final int MAP_SIZE_MEDIUM_THRESHOLD = 60;
-	private static final int MAP_SIZE_NO_SQUARE_MEDIUM_THRESHOLD = 50;
 
 	private final int MINIMUM_DISTANCE = 2 * GameConstants.NOISE_SCARE_RANGE_LARGE;
 	private MapLocation[] bestLocations;
 
 	public MapAnalyzer2(RobotController rc) {
 		super(rc);
-		type = determineMapType();
+		type = MapSize.get(ySize, xSize);
 	}
 
-	public MapType getMapType() {
+	public MapSize getMapType() {
 		return type;
 	}
 
 	public MapAnalyzer2(RobotController rc, TerrainTile[][] map,
 			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
 		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize);
-		type = determineMapType();
+		type = MapSize.get(ySize, xSize);
 	}
 
 	@Override
@@ -58,27 +53,6 @@ public class MapAnalyzer2 extends PathFinder {
 	@Override
 	public boolean isTargetReached() {
 		return false;
-	}
-
-	private MapType determineMapType() {
-		if (ySize < MAP_SIZE_SMALL_THRESHOLD
-				&& xSize < MAP_SIZE_SMALL_THRESHOLD) {
-			return MapType.Small;
-		}
-		if (ySize < MAP_SIZE_MEDIUM_THRESHOLD
-				&& xSize < MAP_SIZE_MEDIUM_THRESHOLD) {
-			return MapType.Medium;
-		}
-		if (ySize > MAP_SIZE_MEDIUM_THRESHOLD
-				&& xSize < MAP_SIZE_MEDIUM_THRESHOLD) {
-			return MapType.Large;
-		}
-		int largestDimension = Math.max(ySize, xSize);
-		if (largestDimension < MAP_SIZE_NO_SQUARE_MEDIUM_THRESHOLD) {
-			return MapType.Medium;
-		} else {
-			return MapType.Large;
-		}
 	}
 
 	public MapLocation[] evaluateBestPastrLocs(int maximum) {

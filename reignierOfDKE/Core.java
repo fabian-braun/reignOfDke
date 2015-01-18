@@ -1,6 +1,5 @@
 package reignierOfDKE;
 
-import reignierOfDKE.C.MapComplexity;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -92,7 +91,7 @@ public class Core extends Soldier {
 	private void analyzeOpponentBehavior() {
 		brdCastingOppSoldiersLocations = rc.senseBroadcastingRobotLocations(rc
 				.getTeam().opponent());
-		if (Soldier.size(brdCastingOppSoldiersLocations) < 1) {
+		if (size(brdCastingOppSoldiersLocations) < 1) {
 			// prevent NullPtrException
 			brdCastingOppSoldiersLocations = new MapLocation[0];
 		}
@@ -112,7 +111,7 @@ public class Core extends Soldier {
 	private MapLocation getCenter(MapLocation[] locations) {
 		int y = 0;
 		int x = 0;
-		if (Soldier.size(locations) < 1) {
+		if (size(locations) < 1) {
 			return pathFinderGreedy.hqEnemLoc;
 		}
 		for (MapLocation loc : locations) {
@@ -123,7 +122,7 @@ public class Core extends Soldier {
 	}
 
 	private int getMeanDistance(MapLocation[] locations, MapLocation to) {
-		if (Soldier.size(locations) < 1) {
+		if (size(locations) < 1) {
 			return 100000;
 		}
 		int dist = 0;
