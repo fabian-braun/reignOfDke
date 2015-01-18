@@ -1,5 +1,9 @@
 package reignierOfDKE;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -8,20 +12,38 @@ import battlecode.common.TerrainTile;
 
 public class Core extends Soldier {
 
+	private static final int pastrLocUpdateInterval = 70;
 	public static final int id = 500;
 	// for navigation to save place
 	private boolean reachedSavePlace = false;
 	private int encounteredObstacles = 0;
 	private MapLocation savePlace;
 	private boolean secondInitFinished = false;
-	private Team[] teams;
+	@SuppressWarnings("unused")
+	// is not used, but increases speed of init for soldiers
 	private PathFinderAStarFast pathFinderAStarFast;
+	private MapAnalyzer mapAnalyzer;
 
 	// information about opponent
 	private MapLocation[] brdCastingOppSoldiersLocations;
+	private MapLocation oppSoldiersCenter;
 
 	public Core(RobotController rc) {
 		super(rc);
+	}
+
+	private void updatePastrLocations() {
+		Set<MapLocation> avoidLenient = new HashSet<MapLocation>();
+		avoidLenient.add(pathFinderGreedy.hqEnemLoc);
+		avoidLenient.add(oppSoldiersCenter);
+		Set<MapLocation> avoidStrict = new HashSet<MapLocation>();
+		MapLocation loc1 = mapAnalyzer.getGoodPastrLocation(avoidStrict,
+				avoidLenient);
+		Channel.announcePastrLocation(rc, loc1, 1);
+		avoidStrict.add(loc1); // don't want to get that location again
+		MapLocation loc2 = mapAnalyzer.getGoodPastrLocation(avoidStrict,
+				avoidLenient);
+		Channel.announcePastrLocation(rc, loc2, 2);
 	}
 
 	@Override
@@ -33,10 +55,13 @@ public class Core extends Soldier {
 		Direction saveDir = oppHq.directionTo(ourHq);
 		savePlace = ourHq.add(saveDir, 3);
 		pathFinderGreedy = new PathFinderGreedy(rc, randall);
+		oppSoldiersCenter = pathFinderGreedy.hqEnemLoc;
 		pathFinderGreedy.setTarget(savePlace);
-		teams = Team.getTeams(rc);
 		Channel.signalAlive(rc, id);
 		determinePathFinder();
+		mapAnalyzer = new MapAnalyzer(rc, null, pathFinderGreedy.hqSelfLoc,
+				pathFinderGreedy.hqEnemLoc, pathFinderGreedy.ySize,
+				pathFinderGreedy.xSize, id);
 	}
 
 	@Override
@@ -55,6 +80,7 @@ public class Core extends Soldier {
 		} else if (!secondInitFinished) {
 			// do remaining initialization parts after reaching a save location
 			// init pathFinder to help other soldiers build the reduced map
+			updatePastrLocations();
 			if (Channel.getMapComplexity(rc).equals(MapComplexity.COMPLEX)) {
 				pathFinderAStarFast = new PathFinderAStarFast(rc, id);
 			}
@@ -62,6 +88,9 @@ public class Core extends Soldier {
 			secondInitFinished = true;
 		}
 		analyzeOpponentBehavior();
+		if (Clock.getRoundNum() % pastrLocUpdateInterval == 0) {
+			updatePastrLocations();
+		}
 	}
 
 	private void determinePathFinder() {
@@ -98,7 +127,7 @@ public class Core extends Soldier {
 		int countBrdCastingOppSoldiers = brdCastingOppSoldiersLocations.length;
 		Channel.broadcastCountOppBrdCastingSoldiers(rc,
 				countBrdCastingOppSoldiers);
-		MapLocation oppSoldiersCenter = getCenter(brdCastingOppSoldiersLocations);
+		oppSoldiersCenter = getCenter(brdCastingOppSoldiersLocations);
 		Channel.broadcastPositionalCenterOfOpponent(rc, oppSoldiersCenter);
 		int oppSoldiersMeanDistToCenter = getMeanDistance(
 				brdCastingOppSoldiersLocations, oppSoldiersCenter);
