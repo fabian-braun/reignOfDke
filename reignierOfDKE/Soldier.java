@@ -23,8 +23,8 @@ public class Soldier extends AbstractRobotType {
 	private Team opponent;
 	private MapLocation enemyHq;
 	private int fleeCounter = 0;
-	private final int MAX_CIRCULATE = 30;
-	private final int MIN_CIRCULATE = 10;
+	private static final int MAX_CIRCULATE = 30;
+	private static final int MIN_CIRCULATE = 10;
 
 	Task task = Task.GOTO;
 	MapLocation target = new MapLocation(10, 10);
@@ -87,21 +87,25 @@ public class Soldier extends AbstractRobotType {
 		Robot[] closeOpponents = rc.senseNearbyGameObjects(Robot.class,
 				RobotType.SOLDIER.sensorRadiusSquared, opponent);
 		boolean oppHqInRange = myLoc.distanceSquaredTo(enemyHq) <= RobotType.SOLDIER.sensorRadiusSquared;
-		if (Channel.needSelfDestruction(rc)) {
-			MapLocation toDestroy = Channel.getSelfDestructionLocation(rc);
-			if (rc.canAttackSquare(toDestroy)) {
-				rc.attackSquare(toDestroy);
-			} else if (rc.getLocation().distanceSquaredTo(toDestroy) < MAX_CIRCULATE) {
-				pathFinderComplex.setTarget(toDestroy);
-				pathFinderComplex.move();
+		if (fleeCounter > 0) {
+			if (Channel.needSelfDestruction(rc)) {
+				MapLocation toDestroy = Channel.getSelfDestructionLocation(rc);
+				if (rc.canAttackSquare(toDestroy)) {
+					rc.attackSquare(toDestroy);
+				} else if (rc.getLocation().distanceSquaredTo(toDestroy) < MAX_CIRCULATE
+						+ MIN_CIRCULATE) {
+					pathFinderGreedy.setTarget(toDestroy);
+					pathFinderGreedy.move();
+				}
+			} else {
+				if (fleeCounter == 1) {
+					// this adds a "random" factor, such that the robots not
+					// always
+					// go backwards and forward on the same line
+					pathFinderGreedy.setTarget(target);
+				}
+				pathFinderGreedy.move();
 			}
-		} else if (fleeCounter > 0) {
-			if (fleeCounter == 1) {
-				// this adds a "random" factor, such that the robots not always
-				// go backwards and forward on the same line
-				pathFinderGreedy.setTarget(target);
-			}
-			pathFinderGreedy.move();
 			fleeCounter--;
 			return;
 		}
