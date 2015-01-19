@@ -18,14 +18,15 @@ public class PathFinderMLineBug extends PathFinder {
 	private Set<MapLocation> mTiles = new HashSet<MapLocation>();
 	private MapLocation current;
 
-	public PathFinderMLineBug(RobotController rc) {
-		super(rc);
+	public PathFinderMLineBug(RobotController rc, int soldierId) {
+		super(rc, soldierId);
 		current = rc.getLocation();
 	}
 
 	public PathFinderMLineBug(RobotController rc, TerrainTile[][] map,
-			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
-		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize);
+			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize,
+			int soldierId) {
+		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize, soldierId);
 		current = rc.getLocation();
 	}
 

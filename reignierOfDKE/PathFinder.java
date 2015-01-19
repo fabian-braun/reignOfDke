@@ -18,14 +18,17 @@ public abstract class PathFinder {
 	protected final int xSize;
 	protected final RobotController rc;
 	protected TerrainTile[][] map;
+	protected final int soldierId;
 
 	public PathFinder(RobotController rc, TerrainTile[][] map,
-			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
+			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize,
+			int soldierId) {
 		this.rc = rc;
 		this.hqSelfLoc = hqSelfLoc;
 		this.hqEnemLoc = hqEnemLoc;
 		this.ySize = ySize;
 		this.xSize = xSize;
+		this.soldierId = soldierId;
 		if (map == null) {
 			initializeMap();
 		} else {
@@ -33,12 +36,13 @@ public abstract class PathFinder {
 		}
 	}
 
-	public PathFinder(RobotController rc) {
+	public PathFinder(RobotController rc, int soldierId) {
 		this.rc = rc;
 		ySize = rc.getMapHeight();
 		xSize = rc.getMapWidth();
 		hqSelfLoc = rc.senseHQLocation();
 		hqEnemLoc = rc.senseEnemyHQLocation();
+		this.soldierId = soldierId;
 		if (map == null) {
 			initializeMap();
 		}
@@ -250,6 +254,7 @@ public abstract class PathFinder {
 	public void initializeMap() {
 		map = new TerrainTile[ySize][xSize];
 		for (int y = 0; y < ySize; y++) {
+			Channel.signalAlive(rc, soldierId);
 			for (int x = 0; x < xSize; x++) {
 				map[y][x] = rc.senseTerrainTile(new MapLocation(x, y));
 			}

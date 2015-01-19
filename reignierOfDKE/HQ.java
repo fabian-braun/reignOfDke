@@ -145,7 +145,8 @@ public class HQ extends AbstractRobotType {
 		teams = Team.getTeams(rc);
 		int ySize = rc.getMapHeight();
 		int xSize = rc.getMapHeight();
-		mapAnalyzer = new MapAnalyzer(rc, null, otherHq, myHq, ySize, xSize, 0);
+		mapAnalyzer = new MapAnalyzer(rc, null, otherHq, myHq, ySize, xSize, 0,
+				null);
 
 		initPastrTreshold();
 		spawningDefault = myHq.directionTo(otherHq);

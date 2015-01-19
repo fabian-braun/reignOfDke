@@ -54,14 +54,14 @@ public class Core extends Soldier {
 		MapLocation ourHq = rc.senseHQLocation();
 		Direction saveDir = oppHq.directionTo(ourHq);
 		savePlace = ourHq.add(saveDir, 3);
-		pathFinderGreedy = new PathFinderGreedy(rc, randall);
+		pathFinderGreedy = new PathFinderGreedy(rc, randall, id);
 		oppSoldiersCenter = pathFinderGreedy.hqEnemLoc;
 		pathFinderGreedy.setTarget(savePlace);
 		Channel.signalAlive(rc, id);
 		determinePathFinder();
 		mapAnalyzer = new MapAnalyzer(rc, null, pathFinderGreedy.hqSelfLoc,
 				pathFinderGreedy.hqEnemLoc, pathFinderGreedy.ySize,
-				pathFinderGreedy.xSize, id);
+				pathFinderGreedy.xSize, id, randall);
 	}
 
 	@Override
