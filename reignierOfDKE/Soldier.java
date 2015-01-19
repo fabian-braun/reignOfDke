@@ -27,7 +27,7 @@ public class Soldier extends AbstractRobotType {
 	private final int MIN_CIRCULATE = 10;
 
 	Task task = Task.GOTO;
-	MapLocation target = new MapLocation(0, 0);
+	MapLocation target = new MapLocation(10, 10);
 	MapLocation myLoc;
 
 	private static final int CLOSE_TEAM_MEMBER_DISTANCE_THRESHOLD = 5;

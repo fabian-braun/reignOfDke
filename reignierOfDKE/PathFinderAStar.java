@@ -17,7 +17,7 @@ import battlecode.common.TerrainTile;
 
 public class PathFinderAStar extends PathFinder {
 
-	private MapLocation target = new MapLocation(0, 0);
+	private MapLocation target = new MapLocation(-1, -1);
 	private Stack<MapLocation> path; // = new Stack<MapLocation>();
 	public static final int weightedAStarMultiplicator = 3;
 
@@ -130,6 +130,10 @@ public class PathFinderAStar extends PathFinder {
 		while (!origin.equals(current)) {
 			path.push(current);
 			current = ancestors.get(current);
+		}
+		// save. fix bug
+		if (path.isEmpty()) {
+			path.push(target);
 		}
 		return path;
 	}

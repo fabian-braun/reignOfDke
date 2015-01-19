@@ -74,8 +74,7 @@ public class MapAnalyzer extends PathFinder {
 		for (int y = yStep / 2; y < ySize; y += yStep) {
 			inner: for (int x = xStep / 2; x < xSize; x += xStep) {
 				Channel.signalAlive(rc, soldierId);
-				TerrainTile tile = map[y][x];
-				if (tile.equals(TerrainTile.VOID)) {
+				if (!isTraversableAndNotHq(new MapLocation(x, y))) {
 					continue;
 				}
 				MapLocation current = new MapLocation(x, y);
