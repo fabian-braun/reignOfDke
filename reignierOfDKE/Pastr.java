@@ -1,6 +1,7 @@
 package reignierOfDKE;
 
 import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 
 public class Pastr extends AbstractRobotType {
@@ -23,6 +24,7 @@ public class Pastr extends AbstractRobotType {
 			if (!amIDead) {
 				amIDead = true;
 				Channel.announcePastrDeath(rc);
+				Channel.broadcastSelfDestruction(rc, rc.getLocation());
 				rc.setIndicatorString(0, "I'm dead");
 			}
 		} else if (dHealth < 0) {
@@ -30,6 +32,7 @@ public class Pastr extends AbstractRobotType {
 			if (amIDead) {
 				amIDead = false;
 				Channel.announceNewPastr(rc);
+				Channel.broadcastSelfDestruction(rc, new MapLocation(-1, -1));
 				rc.setIndicatorString(0, "I'm alive");
 			}
 		}
