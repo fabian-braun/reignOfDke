@@ -61,7 +61,7 @@ public class Core extends Soldier {
 		determinePathFinder();
 		mapAnalyzer = new MapAnalyzer(rc, null, pathFinderGreedy.hqSelfLoc,
 				pathFinderGreedy.hqEnemLoc, pathFinderGreedy.ySize,
-				pathFinderGreedy.xSize, id);
+				pathFinderGreedy.xSize, id, randall);
 	}
 
 	@Override
