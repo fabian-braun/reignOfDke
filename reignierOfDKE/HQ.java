@@ -116,7 +116,8 @@ public class HQ extends AbstractRobotType {
 	}
 
 	private void assignBuildPastrTask(int teamId) {
-		if (Channel.getTask(rc, teamId).equals(Task.BUILD_NOISETOWER)) {
+		if (Channel.getTask(rc, teamId).equals(Task.BUILD_NOISETOWER)
+				|| Channel.getTask(rc, teamId).equals(Task.BUILD_PASTR)) {
 			return;
 		}
 		if (rc.senseRobotCount() > pastrThreshold

@@ -1,5 +1,8 @@
 package reignierOfDKE;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -403,6 +406,22 @@ public class Channel {
 			e.printStackTrace();
 		}
 		return new MapLocation(-1, -1);
+	}
+
+	public static Set<MapLocation> getPastrLocations(RobotController rc) {
+		Set<MapLocation> locs = new HashSet<MapLocation>(3);
+		try {
+			for (int i = 0; i < 3; i++) {
+				int c = getTeamChannel(i) + 6;
+				MapLocation loc = toMapLocation(rc.readBroadcast(c));
+				if (loc.y > 0) {
+					locs.add(loc);
+				}
+			}
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return locs;
 	}
 
 	public static void broadcastSelfDestruction(RobotController rc,

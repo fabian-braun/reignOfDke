@@ -4,6 +4,7 @@ import java.util.Random;
 import java.util.Set;
 
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.TerrainTile;
@@ -79,12 +80,12 @@ public class MapAnalyzer extends PathFinder {
 		for (int y = randall.nextInt(yStep); y < ySize; y += yStep) {
 			inner: for (int x = randall.nextInt(xStep); x < xSize; x += xStep) {
 				Channel.signalAlive(rc, soldierId);
-				if (!isTraversableAndNotHq(new MapLocation(x, y))) {
+				MapLocation current = new MapLocation(x, y);
+				if (!isTraversableAndNotHq(current)) {
 					continue;
 				}
-				MapLocation current = new MapLocation(x, y);
 				for (MapLocation toBeAvoided : avoidStrict) {
-					if (getManhattanDist(current, toBeAvoided) < 6) {
+					if (getManhattanDist(current, toBeAvoided) < GameConstants.PASTR_RANGE * 2) {
 						// too close
 						continue inner;
 					}

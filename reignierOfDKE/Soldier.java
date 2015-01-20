@@ -62,8 +62,7 @@ public class Soldier extends AbstractRobotType {
 
 		teamId = Channel.requestTeamId(rc);
 		Channel.announceTeamId(rc, id, teamId);
-		// rc.setIndicatorString(0, "SOLDIER [" + id + "] TEAM [" + teamId +
-		// "]");
+		rc.setIndicatorString(0, "SOLDIER [" + id + "] TEAM [" + teamId + "]");
 		target = Channel.getTarget(rc, teamId);
 		task = Channel.getTask(rc, teamId);
 
@@ -85,6 +84,13 @@ public class Soldier extends AbstractRobotType {
 				RobotType.SOLDIER.sensorRadiusSquared, opponent);
 		boolean oppHqInRange = myLoc.distanceSquaredTo(enemyHq) <= RobotType.SOLDIER.sensorRadiusSquared;
 		if (fleeCounter > 0) {
+			if (task.equals(Task.BUILD_PASTR)
+					|| task.equals(Task.BUILD_NOISETOWER)) {
+				MapLocation tempTarget = new MapLocation(
+						(myLoc.x + pathFinderGreedy.hqSelfLoc.x) / 2,
+						(myLoc.y + pathFinderGreedy.hqSelfLoc.y) / 2);
+				Channel.broadcastTask(rc, Task.ACCUMULATE, tempTarget, teamId);
+			}
 			if (Channel.needSelfDestruction(rc)) {
 				MapLocation toDestroy = Channel.getSelfDestructionLocation(rc);
 				if (rc.canAttackSquare(toDestroy)) {
@@ -173,8 +179,7 @@ public class Soldier extends AbstractRobotType {
 			task = newTask;
 			target = newTarget;
 		}
-		// rc.setIndicatorString(1, "DOING TASK " + task + " ON TARGET " +
-		// target);
+		rc.setIndicatorString(1, "DOING TASK " + task + " ON TARGET " + target);
 	}
 
 	private void doRandomMove() {

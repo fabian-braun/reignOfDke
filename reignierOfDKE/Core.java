@@ -12,7 +12,7 @@ import battlecode.common.TerrainTile;
 
 public class Core extends Soldier {
 
-	private static final int pastrLocUpdateInterval = 70;
+	private static final int pastrLocUpdateInterval = 120;
 	public static final int id = 500;
 	// for navigation to save place
 	private boolean reachedSavePlace = false;
@@ -36,7 +36,7 @@ public class Core extends Soldier {
 		Set<MapLocation> avoidLenient = new HashSet<MapLocation>();
 		avoidLenient.add(pathFinderGreedy.hqEnemLoc);
 		avoidLenient.add(oppSoldiersCenter);
-		Set<MapLocation> avoidStrict = new HashSet<MapLocation>();
+		Set<MapLocation> avoidStrict = Channel.getPastrLocations(rc);
 		MapLocation loc1 = mapAnalyzer.getGoodPastrLocation(avoidStrict,
 				avoidLenient);
 		Channel.announcePastrLocation(rc, loc1, 1);
