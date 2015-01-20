@@ -22,10 +22,9 @@ public class HQ extends AbstractRobotType {
 	 */
 	private Team[] teams;
 	private Direction spawningDefault;
-	private int teamId = teamIdAssignment[0];
+	private int teamId;
 	private int pastrThreshold;
-
-	private static final int[] teamIdAssignment = new int[] { 2, 0, 1, 0 };
+	private int[] teamIdAssignment;
 	private int teamIndex = 0;
 
 	// info about opponent, is updated in updateInfoAboutOpponent()
@@ -146,6 +145,7 @@ public class HQ extends AbstractRobotType {
 		mapAnalyzer = new MapAnalyzer(rc, null, otherHq, myHq, ySize, xSize, 0,
 				null);
 
+		initTeamIdAssignment();
 		initPastrTreshold();
 		spawningDefault = myHq.directionTo(otherHq);
 		int i = 0;
@@ -172,6 +172,20 @@ public class HQ extends AbstractRobotType {
 			break;
 		default: // Small
 			pastrThreshold = 2;
+			break;
+		}
+	}
+
+	private void initTeamIdAssignment() {
+		MapSize size = mapAnalyzer.getMapType();
+		switch (size) {
+		case SMALL:
+			// On a small map, we want more members in Team 2
+			teamIdAssignment = new int[] { 2, 0, 1, 2 };
+			break;
+		default:
+			// This is the default team distribution
+			teamIdAssignment = new int[] { 2, 0, 1, 0 };
 			break;
 		}
 	}
