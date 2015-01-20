@@ -37,6 +37,12 @@ public class Core extends Soldier {
 		avoidLenient.add(pathFinderGreedy.hqEnemLoc);
 		avoidLenient.add(oppSoldiersCenter);
 		Set<MapLocation> avoidStrict = Channel.getPastrLocations(rc);
+		MapLocation[] pastrLocs = rc.sensePastrLocations(rc.getTeam());
+		if (size(pastrLocs) > 0) {
+			for (MapLocation pastrLoc : pastrLocs) {
+				avoidStrict.add(pastrLoc);
+			}
+		}
 		MapLocation loc1 = mapAnalyzer.getGoodPastrLocation(avoidStrict,
 				avoidLenient);
 		Channel.announcePastrLocation(rc, loc1, 1);
@@ -139,7 +145,7 @@ public class Core extends Soldier {
 			y += loc.y;
 			x += loc.x;
 		}
-		return new MapLocation(y / locations.length, x / locations.length);
+		return new MapLocation(x / locations.length, y / locations.length);
 	}
 
 }

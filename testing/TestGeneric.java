@@ -61,4 +61,25 @@ public class TestGeneric {
 				PathFinder.getRealDist(loc2, loc1), 0);
 	}
 
+	@Test
+	public void testMapLocationIntConversion() {
+		for (int y = 0; y < 100; y++) {
+			for (int x = 0; x < 100; x++) {
+				MapLocation testLoc = new MapLocation(x, y);
+				Assert.assertEquals(testLoc, toMapLocation(toInt(testLoc)));
+			}
+		}
+	}
+
+	private static int toInt(MapLocation location) {
+		return toInt(location.y, location.x);
+	}
+
+	private static int toInt(int y, int x) {
+		return x * 1000 + y;
+	}
+
+	private static MapLocation toMapLocation(int encoded) {
+		return new MapLocation(encoded / 1000, encoded % 1000);
+	}
 }
