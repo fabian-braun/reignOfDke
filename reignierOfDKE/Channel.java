@@ -6,17 +6,11 @@ import battlecode.common.GameConstants;
 import battlecode.common.GameObject;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
-import battlecode.common.RobotType;
 import battlecode.common.TerrainTile;
 
 public class Channel {
 
 	/* CHANNEL DEFINITIONS: [0..65535] */
-	public static final int chBestPastrLocation = 65535;
-	// count of soldier types
-	public static final int chCurrentPastrCount = 65534;
-	public static final int chCurrentNoiseTowerCount = 65533;
-	public static final int chCurrentSoldierCount = 65532;
 
 	public static final int chNextTeamId = 65531;
 	public static final int chNextSoldierId = 65530;
@@ -186,89 +180,11 @@ public class Channel {
 		return 0;
 	}
 
-	public static int getLeaderIdOfTeam(RobotController rc, int teamId) {
-		// Loop through all robots
-		for (int id = 0; id < GameConstants.MAX_ROBOTS; id++) {
-			// Check if the robot is alive
-			if (isAlive(rc, id)) {
-				// Check the alive robot is on the same team
-				if (teamId == getTeamIdOfSoldier(rc, id)) {
-					// The robot with the lowest ID is the leader
-					return id;
-				}
-			}
-		}
-		// Didn't find an alive robot in this team, return -1
-		return -1;
-	}
-
-	public static MapLocation getLocationOfSoldier(RobotController rc,
-			int soldierId) {
-		int c = getSoldierChannel(soldierId);
-		try {
-			return toMapLocation(rc.readBroadcast(c + 3));
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-		return new MapLocation(0, 0);
-	}
-
-	public static int getSoldierCountOfTeam(RobotController rc, int teamId) {
-		int c = getTeamChannel(teamId);
-		try {
-			return rc.readBroadcast(c + 1);
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-		return 0;
-	}
-
 	public static void broadcastSoldierCountOfTeam(RobotController rc,
 			int teamId, int members) {
 		int c = getTeamChannel(teamId);
 		try {
 			rc.broadcast(c + 1, members);
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static MapLocation getPositionalCenterOfTeam(RobotController rc,
-			int teamId) {
-		int c = getTeamChannel(teamId);
-		try {
-			return toMapLocation(rc.readBroadcast(c + 4));
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-		return new MapLocation(0, 0);
-	}
-
-	public static void broadcastPositionalCenterOfTeam(RobotController rc,
-			int teamId, MapLocation center) {
-		int c = getTeamChannel(teamId);
-		try {
-			rc.broadcast(c + 4, toInt(center));
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static MapLocation getTemporaryTarget(RobotController rc, int teamId) {
-		int c = getTeamChannel(teamId);
-		try {
-			return toMapLocation(rc.readBroadcast(c + 5));
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-		return new MapLocation(0, 0);
-	}
-
-	public static void broadcastTemporaryTarget(RobotController rc, int teamId,
-			MapLocation target) {
-		int c = getTeamChannel(teamId);
-		try {
-			rc.broadcast(c + 5, toInt(target));
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}
@@ -331,36 +247,6 @@ public class Channel {
 			e.printStackTrace();
 		}
 		return false;
-	}
-
-	/**
-	 * this method should be used by any robot. They have to announce the
-	 * {@link RobotType} that they incorporate.
-	 * 
-	 * @param rc
-	 * @param role
-	 */
-	public static void announceSoldierType(RobotController rc, RobotType type) {
-		int chCurrent;
-		switch (type) {
-		case SOLDIER:
-			chCurrent = chCurrentSoldierCount;
-			break;
-		case NOISETOWER:
-			chCurrent = chCurrentNoiseTowerCount;
-			break;
-		case PASTR:
-			chCurrent = chCurrentPastrCount;
-			break;
-		default: // case HQ
-			// should never happen... otherwise misc channel
-			chCurrent = chMisc;
-		}
-		try {
-			rc.broadcast(chCurrent, rc.readBroadcast(chCurrent) + 1);
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
 	}
 
 	private static int toInt(MapLocation location) {
@@ -450,60 +336,6 @@ public class Channel {
 		}
 		return MapComplexity.COMPLEX;
 
-	}
-
-	public static MapLocation getPositionalCenterOfOpponent(RobotController rc) {
-		try {
-			return toMapLocation(rc.readBroadcast(chOppCenter));
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-		return new MapLocation(0, 0);
-	}
-
-	public static void broadcastPositionalCenterOfOpponent(RobotController rc,
-			MapLocation center) {
-		try {
-			rc.broadcast(chOppCenter, toInt(center));
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static int getOpponentMeanDistToCenter(RobotController rc) {
-		try {
-			return rc.readBroadcast(chOppMeanDistToCenter);
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-		return 100000;
-	}
-
-	public static void broadcastOpponentMeanDistToCenter(RobotController rc,
-			int meanDist) {
-		try {
-			rc.broadcast(chOppMeanDistToCenter, meanDist);
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static int getCountOppBrdCastingSoldiers(RobotController rc) {
-		try {
-			return rc.readBroadcast(chCountOppBrdCastingSoldiers);
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
-		return 100000;
-	}
-
-	public static void broadcastCountOppBrdCastingSoldiers(RobotController rc,
-			int count) {
-		try {
-			rc.broadcast(chCountOppBrdCastingSoldiers, count);
-		} catch (GameActionException e) {
-			e.printStackTrace();
-		}
 	}
 
 	public static int getOpponentMilkQuantity(RobotController rc) {

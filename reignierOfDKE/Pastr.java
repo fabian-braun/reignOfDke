@@ -25,7 +25,7 @@ public class Pastr extends AbstractRobotType {
 				amIDead = true;
 				Channel.announcePastrDeath(rc);
 				Channel.broadcastSelfDestruction(rc, rc.getLocation());
-				rc.setIndicatorString(0, "I'm dead");
+				// rc.setIndicatorString(0, "I'm dead");
 			}
 		} else if (dHealth < 0) {
 			// health is increasing
@@ -33,7 +33,7 @@ public class Pastr extends AbstractRobotType {
 				amIDead = false;
 				Channel.announceNewPastr(rc);
 				Channel.broadcastSelfDestruction(rc, new MapLocation(-1, -1));
-				rc.setIndicatorString(0, "I'm alive");
+				// rc.setIndicatorString(0, "I'm alive");
 			}
 		}
 	}

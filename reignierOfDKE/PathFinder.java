@@ -48,6 +48,16 @@ public abstract class PathFinder {
 		}
 	}
 
+	public void initializeMap() {
+		map = new TerrainTile[ySize][xSize];
+		for (int y = 0; y < ySize; y++) {
+			Channel.signalAlive(rc, soldierId);
+			for (int x = 0; x < xSize; x++) {
+				map[y][x] = rc.senseTerrainTile(new MapLocation(x, y));
+			}
+		}
+	}
+
 	/**
 	 * dx > dy ? dx : dy
 	 */
@@ -251,13 +261,4 @@ public abstract class PathFinder {
 		return "(" + loc.y + ";" + loc.x + ")";
 	}
 
-	public void initializeMap() {
-		map = new TerrainTile[ySize][xSize];
-		for (int y = 0; y < ySize; y++) {
-			Channel.signalAlive(rc, soldierId);
-			for (int x = 0; x < xSize; x++) {
-				map[y][x] = rc.senseTerrainTile(new MapLocation(x, y));
-			}
-		}
-	}
 }

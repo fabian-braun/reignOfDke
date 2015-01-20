@@ -52,7 +52,6 @@ public class PathFinderGreedy extends PathFinder {
 
 	@Override
 	public boolean sneak() throws GameActionException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 

@@ -1,11 +1,8 @@
 package reignierOfDKE;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -79,6 +76,7 @@ public class PathFinderAStarFast extends PathFinder {
 				}
 				// if there are more traversable tiles than void, the
 				// square is treated as traversable.
+				// TODO: try if (norm + road > bloc*2) {
 				if (norm + road >= bloc) {
 					if (road * 2 > norm) {
 						mapR[y][x] = TerrainTile.ROAD;
@@ -93,10 +91,6 @@ public class PathFinderAStarFast extends PathFinder {
 				Channel.setReducedMapTerrain(rc, y, x, mapR[y][x]);
 			}
 		}
-		// System.out.println(mapToString(map));
-		// System.out.println(mapToString(mapR));
-		// System.out.println("yDivisor,xDivisor = " + yDivisor + "," +
-		// xDivisor);
 
 	}
 
@@ -131,38 +125,26 @@ public class PathFinderAStarFast extends PathFinder {
 				convertNyRy(current.y));
 		MapLocation tempTarget;
 
-		// System.out.println("currentR = " + locToString(currentR)
-		// + " ; targetR = " + locToString(new MapLocation(xR, yR)));
 		if (currentR.x < xR && currentR.y < yR) { // top left
-			// System.out.println("top left");
 			tempTarget = new MapLocation(xR * xDivisor, yR * yDivisor);
 		} else if (currentR.x == xR && currentR.y < yR) { // top
-			// System.out.println("top");
 			tempTarget = new MapLocation(current.x, yR * yDivisor);
 		} else if (currentR.x > xR && currentR.y < yR) { // top right
-			// System.out.println("top right");
 			tempTarget = new MapLocation((currentR.x * xDivisor) - 1, yR
 					* yDivisor);
 		} else if (currentR.x < xR && currentR.y == yR) { // left
-			// System.out.println("left");
 			tempTarget = new MapLocation(xR * xDivisor, current.y);
 		} else if (currentR.x > xR && currentR.y == yR) { // right
-			// System.out.println("right");
 			tempTarget = new MapLocation((currentR.x * xDivisor) - 1, current.y);
 		} else if (currentR.x < xR && currentR.y > yR) { // bottom left
-			// System.out.println("bottom left");
 			tempTarget = new MapLocation(xR * xDivisor,
 					(currentR.y * yDivisor) - 1);
 		} else if (currentR.x == xR && currentR.y > yR) { // bottom
-			// System.out.println("bottom");
 			tempTarget = new MapLocation(current.x, (currentR.y * yDivisor) - 1);
 		} else if (currentR.x > xR && currentR.y > yR) { // bottom right
-			// System.out.println("bottom right");
 			tempTarget = new MapLocation((currentR.x * xDivisor) - 1,
 					(currentR.y * yDivisor) - 1);
 		} else {
-			System.out
-					.println("this should not happen: relative position is wrong");
 			tempTarget = getCorrespondingTempTargetSimple(yR, xR);
 		}
 		if (!isTraversableAndNotHq(tempTarget)) {
@@ -172,7 +154,6 @@ public class PathFinderAStarFast extends PathFinder {
 	}
 
 	private MapLocation getCorrespondingTempTargetSimple(int yR, int xR) {
-		// System.out.println("call to getCorrespondingTempTargetSimple");
 		if (isCorresponding(target, yR, xR)) {
 			return target;
 		}
@@ -184,7 +165,6 @@ public class PathFinderAStarFast extends PathFinder {
 				}
 			}
 		}
-		// System.out.println("fallback case in getCorrespondingTempTargetSimple");
 		return target;
 	}
 
@@ -213,7 +193,6 @@ public class PathFinderAStarFast extends PathFinder {
 
 	@Override
 	public boolean sneak() throws GameActionException {
-		// TODO: implement
 		return false;
 	}
 
@@ -226,30 +205,9 @@ public class PathFinderAStarFast extends PathFinder {
 		MapLocation currentR = new MapLocation(convertNxRx(current.x),
 				convertNyRy(current.y));
 		pathR = aStar(currentR, targetR, mapR);
-		// printPath(pathR);
-		// printReducedPath(pathR);
 		tempTargetR = pathR.pop();
 		tempTarget = getCorrespondingTempTarget(tempTargetR.y, tempTargetR.x);
 		internalPF.setTarget(tempTarget);
-	}
-
-	@SuppressWarnings("unused")
-	private void printPath(Stack<MapLocation> path) {
-		Iterator<MapLocation> iterator = path.iterator();
-		List<MapLocation> list = new ArrayList<MapLocation>();
-		while (iterator.hasNext()) {
-			MapLocation locR = iterator.next();
-			list.add(getCorrespondingTempTarget(locR.y, locR.x));
-		}
-		System.out.println(getClass().getSimpleName() + ":\n"
-				+ mapToString(map, list.iterator()));
-	}
-
-	@SuppressWarnings("unused")
-	private void printReducedPath(Stack<MapLocation> path) {
-		Iterator<MapLocation> iterator = path.iterator();
-		System.out.println(getClass().getSimpleName() + ":\n"
-				+ mapToString(mapR, iterator));
 	}
 
 	@Override

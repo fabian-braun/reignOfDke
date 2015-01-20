@@ -5,7 +5,6 @@ import java.util.List;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
-import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
 import battlecode.common.RobotController;
@@ -29,8 +28,6 @@ public class Soldier extends AbstractRobotType {
 	Task task = Task.GOTO;
 	MapLocation target = new MapLocation(10, 10);
 	MapLocation myLoc;
-
-	private static final int CLOSE_TEAM_MEMBER_DISTANCE_THRESHOLD = 5;
 
 	public Soldier(RobotController rc) {
 		super(rc);
@@ -60,13 +57,13 @@ public class Soldier extends AbstractRobotType {
 	 */
 	@Override
 	protected void init() throws GameActionException {
-		Channel.announceSoldierType(rc, RobotType.SOLDIER);
 		id = Channel.requestSoldierId(rc);
 		Channel.signalAlive(rc, id);
 
 		teamId = Channel.requestTeamId(rc);
 		Channel.announceTeamId(rc, id, teamId);
-		rc.setIndicatorString(0, "SOLDIER [" + id + "] TEAM [" + teamId + "]");
+		// rc.setIndicatorString(0, "SOLDIER [" + id + "] TEAM [" + teamId +
+		// "]");
 		target = Channel.getTarget(rc, teamId);
 		task = Channel.getTask(rc, teamId);
 
@@ -98,12 +95,6 @@ public class Soldier extends AbstractRobotType {
 					pathFinderGreedy.move();
 				}
 			} else {
-				if (fleeCounter == 1) {
-					// this adds a "random" factor, such that the robots not
-					// always
-					// go backwards and forward on the same line
-					pathFinderGreedy.setTarget(target);
-				}
 				pathFinderGreedy.move();
 			}
 			fleeCounter--;
@@ -120,6 +111,7 @@ public class Soldier extends AbstractRobotType {
 					rc.construct(RobotType.NOISETOWER);
 					break;
 				}
+				// fall through is intended
 			case BUILD_PASTR:
 				if (myLoc.equals(target)) {
 					Channel.broadcastTask(rc, Task.BUILD_NOISETOWER, target,
@@ -128,6 +120,7 @@ public class Soldier extends AbstractRobotType {
 					rc.construct(RobotType.PASTR);
 					break;
 				}
+				// fall through is intended
 			case GOTO:
 				doAStarMoveTo(target);
 				break;
@@ -180,7 +173,8 @@ public class Soldier extends AbstractRobotType {
 			task = newTask;
 			target = newTarget;
 		}
-		rc.setIndicatorString(1, "DOING TASK " + task + " ON TARGET " + target);
+		// rc.setIndicatorString(1, "DOING TASK " + task + " ON TARGET " +
+		// target);
 	}
 
 	private void doRandomMove() {
@@ -213,28 +207,6 @@ public class Soldier extends AbstractRobotType {
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}
-	}
-
-	private int getNumberOfCloseTeamMembers() {
-		int closeTeamMembers = 0;
-		// Loop through all robots
-		for (int id = 0; id < GameConstants.MAX_ROBOTS; id++) {
-			// Check if the robot is alive
-			if (Channel.isAlive(rc, id)) {
-				// Check the alive robot is on the same team
-				if (teamId == Channel.getTeamIdOfSoldier(rc, id)) {
-					// Get the position of this robot
-					MapLocation teamMemberLocation = Channel
-							.getLocationOfSoldier(rc, id);
-					int distance = PathFinder.getRequiredMoves(myLoc,
-							teamMemberLocation);
-					if (distance <= CLOSE_TEAM_MEMBER_DISTANCE_THRESHOLD) {
-						closeTeamMembers++;
-					}
-				}
-			}
-		}
-		return closeTeamMembers;
 	}
 
 	private void circulate(MapLocation center) {

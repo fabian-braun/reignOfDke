@@ -29,9 +29,6 @@ public class HQ extends AbstractRobotType {
 	private int teamIndex = 0;
 
 	// info about opponent, is updated in updateInfoAboutOpponent()
-	private int countBrdCastingOppSoldiers = 0;
-	private MapLocation oppSoldiersCenter;
-	private int oppSoldiersMeanDistToCenter = 0;
 	private int oppMilkQuantity = 0;
 
 	public HQ(RobotController rc) {
@@ -157,6 +154,12 @@ public class HQ extends AbstractRobotType {
 		}
 	}
 
+	// against reference player this method does not lead to a better
+	// performance.
+	// We should always build 2 pastrs as soon as possible against the
+	// refPlayer, so the pastr threshold is set to a low value for all map
+	// sizes.
+	// Could be adjusted when playing against more advanced opponents.
 	private void initPastrTreshold() {
 		MapSize size = mapAnalyzer.getMapType();
 		switch (size) {
@@ -173,9 +176,6 @@ public class HQ extends AbstractRobotType {
 	}
 
 	private void updateInfoAboutOpponent() {
-		countBrdCastingOppSoldiers = Channel.getCountOppBrdCastingSoldiers(rc);
-		oppSoldiersCenter = Channel.getPositionalCenterOfOpponent(rc);
-		oppSoldiersMeanDistToCenter = Channel.getOpponentMeanDistToCenter(rc);
 		oppMilkQuantity = Channel.getOpponentMilkQuantity(rc);
 	}
 }

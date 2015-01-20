@@ -3,7 +3,6 @@ package reignierOfDKE;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -18,7 +17,7 @@ import battlecode.common.TerrainTile;
 public class PathFinderAStar extends PathFinder {
 
 	private MapLocation target = new MapLocation(-1, -1);
-	private Stack<MapLocation> path; // = new Stack<MapLocation>();
+	private Stack<MapLocation> path;
 	public static final int weightedAStarMultiplicator = 3;
 
 	public PathFinderAStar(RobotController rc, int soldierId) {
@@ -59,7 +58,6 @@ public class PathFinderAStar extends PathFinder {
 
 	@Override
 	public boolean sneak() throws GameActionException {
-		// TODO: implement
 		return false;
 	}
 
@@ -68,7 +66,6 @@ public class PathFinderAStar extends PathFinder {
 		this.target = target;
 		MapLocation current = rc.getLocation();
 		path = aStar(current, target);
-		// printPath(path);
 	}
 
 	@Override
@@ -150,13 +147,6 @@ public class PathFinderAStar extends PathFinder {
 	@Override
 	public boolean isTargetReached() {
 		return rc.getLocation().equals(target);
-	}
-
-	@SuppressWarnings("unused")
-	private void printPath(Stack<MapLocation> path) {
-		Iterator<MapLocation> iterator = path.iterator();
-		System.out.println(getClass().getSimpleName() + ":\n"
-				+ mapToString(map, iterator));
 	}
 
 }

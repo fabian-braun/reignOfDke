@@ -1,7 +1,5 @@
 package reignierOfDKE;
 
-import java.util.Arrays;
-
 import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
@@ -59,28 +57,6 @@ public class Team {
 		for (Team team : teams) {
 			Channel.broadcastSoldierCountOfTeam(rc, team.id, team.soldierCount);
 		}
-	}
-
-	public static void updateTeamLocation(RobotController rc, Team[] teams) {
-		int[] count = new int[teams.length];
-		MapLocation[] avgLoc = new MapLocation[teams.length];
-		Arrays.fill(avgLoc, new MapLocation(0, 0));
-		for (int id = 0; id < GameConstants.MAX_ROBOTS; id++) {
-			if (Channel.isAlive(rc, id)) {
-				int teamId = Channel.getTeamIdOfSoldier(rc, id);
-				count[teamId]++;
-				MapLocation loc = Channel.getLocationOfSoldier(rc, id);
-				avgLoc[teamId] = avgLoc[teamId].add(loc.x, loc.y);
-			}
-		}
-		for (int i = 0; i < avgLoc.length; i++) {
-			if (count[i] > 0) {
-				avgLoc[i] = new MapLocation(avgLoc[i].x / count[i], avgLoc[i].y
-						/ count[i]);
-				Channel.broadcastPositionalCenterOfTeam(rc, i, avgLoc[i]);
-			}
-		}
-		rc.setIndicatorString(2, avgLoc[0].toString());
 	}
 
 	public static Team[] getTeams(RobotController rc) {

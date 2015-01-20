@@ -48,7 +48,7 @@ public class Core extends Soldier {
 
 	@Override
 	protected void init() throws GameActionException {
-		rc.setIndicatorString(0, "DUALCORE - OOOOH YEAH");
+		// rc.setIndicatorString(0, "DUALCORE - OOOOH YEAH");
 		Channel.resetMapComplexity(rc);
 		MapLocation oppHq = rc.senseEnemyHQLocation();
 		MapLocation ourHq = rc.senseHQLocation();
@@ -124,15 +124,7 @@ public class Core extends Soldier {
 			// prevent NullPtrException
 			brdCastingOppSoldiersLocations = new MapLocation[0];
 		}
-		int countBrdCastingOppSoldiers = brdCastingOppSoldiersLocations.length;
-		Channel.broadcastCountOppBrdCastingSoldiers(rc,
-				countBrdCastingOppSoldiers);
 		oppSoldiersCenter = getCenter(brdCastingOppSoldiersLocations);
-		Channel.broadcastPositionalCenterOfOpponent(rc, oppSoldiersCenter);
-		int oppSoldiersMeanDistToCenter = getMeanDistance(
-				brdCastingOppSoldiersLocations, oppSoldiersCenter);
-		Channel.broadcastOpponentMeanDistToCenter(rc,
-				oppSoldiersMeanDistToCenter);
 		int milk = (int) rc.senseTeamMilkQuantity(rc.getTeam().opponent());
 		Channel.broadcastOpponentMilkQuantity(rc, milk);
 	}
@@ -150,14 +142,4 @@ public class Core extends Soldier {
 		return new MapLocation(y / locations.length, x / locations.length);
 	}
 
-	private int getMeanDistance(MapLocation[] locations, MapLocation to) {
-		if (size(locations) < 1) {
-			return 100000;
-		}
-		int dist = 0;
-		for (MapLocation loc : locations) {
-			dist += PathFinder.getManhattanDist(loc, to);
-		}
-		return dist / locations.length;
-	}
 }
