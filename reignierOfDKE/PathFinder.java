@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.TerrainTile;
@@ -17,14 +18,17 @@ public abstract class PathFinder {
 	protected final int xSize;
 	protected final RobotController rc;
 	protected TerrainTile[][] map;
+	protected final int soldierId;
 
 	public PathFinder(RobotController rc, TerrainTile[][] map,
-			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
+			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize,
+			int soldierId) {
 		this.rc = rc;
 		this.hqSelfLoc = hqSelfLoc;
 		this.hqEnemLoc = hqEnemLoc;
 		this.ySize = ySize;
 		this.xSize = xSize;
+		this.soldierId = soldierId;
 		if (map == null) {
 			initializeMap();
 		} else {
@@ -32,12 +36,13 @@ public abstract class PathFinder {
 		}
 	}
 
-	public PathFinder(RobotController rc) {
+	public PathFinder(RobotController rc, int soldierId) {
 		this.rc = rc;
 		ySize = rc.getMapHeight();
 		xSize = rc.getMapWidth();
 		hqSelfLoc = rc.senseHQLocation();
 		hqEnemLoc = rc.senseEnemyHQLocation();
+		this.soldierId = soldierId;
 		if (map == null) {
 			initializeMap();
 		}
@@ -57,12 +62,26 @@ public abstract class PathFinder {
 	}
 
 	/**
+	 * dx > dy ? dx : dy
+	 */
+	public static final int getRequiredMoves(MapLocation loc1, MapLocation loc2) {
+		return getRequiredMoves(loc1.y, loc1.x, loc2.y, loc2.x);
+	}
+
+	/**
 	 * sqrt(dx^2 + dy^2)
 	 */
 	public static final int getEuclidianDist(int y1, int x1, int y2, int x2) {
 		int dx = x1 - x2;
 		int dy = y1 - y2;
 		return (int) Math.sqrt(dx * dx + dy * dy);
+	}
+
+	/**
+	 * sqrt(dx^2 + dy^2)
+	 */
+	public static final int getEuclidianDist(MapLocation loc1, MapLocation loc2) {
+		return getEuclidianDist(loc1.y, loc1.x, loc2.y, loc2.x);
 	}
 
 	/**
@@ -79,24 +98,35 @@ public abstract class PathFinder {
 	}
 
 	/**
-	 * dx > dy ? dx : dy
-	 */
-	public static final int getRequiredMoves(MapLocation loc1, MapLocation loc2) {
-		return getRequiredMoves(loc1.y, loc1.x, loc2.y, loc2.x);
-	}
-
-	/**
-	 * sqrt(dx^2 + dy^2)
-	 */
-	public static final int getEuclidianDist(MapLocation loc1, MapLocation loc2) {
-		return getEuclidianDist(loc1.y, loc1.x, loc2.y, loc2.x);
-	}
-
-	/**
 	 * dx + dy
 	 */
 	public static final int getManhattanDist(MapLocation loc1, MapLocation loc2) {
 		return getManhattanDist(loc1.y, loc1.x, loc2.y, loc2.x);
+	}
+
+	/**
+	 * the real costs for the direct path
+	 */
+	public static final double getRealDist(int y1, int x1, int y2, int x2) {
+		int dx = x1 - x2;
+		int dy = y1 - y2;
+		if (dx < 0)
+			dx *= -1;
+		if (dy < 0)
+			dy *= -1;
+		if (dy > dx) {
+			return (dy - dx + (dx * GameConstants.SOLDIER_DIAGONAL_MOVEMENT_ACTION_DELAY_FACTOR));
+		} else {
+			// dx >= dy
+			return (dx - dy + (dy * GameConstants.SOLDIER_DIAGONAL_MOVEMENT_ACTION_DELAY_FACTOR));
+		}
+	}
+
+	/**
+	 * the real costs for the direct path
+	 */
+	public static final double getRealDist(MapLocation loc1, MapLocation loc2) {
+		return getRealDist(loc1.y, loc1.x, loc2.y, loc2.x);
 	}
 
 	public boolean isHqLocation(MapLocation loc) {
@@ -224,6 +254,7 @@ public abstract class PathFinder {
 	public void initializeMap() {
 		map = new TerrainTile[ySize][xSize];
 		for (int y = 0; y < ySize; y++) {
+			Channel.signalAlive(rc, soldierId);
 			for (int x = 0; x < xSize; x++) {
 				map[y][x] = rc.senseTerrainTile(new MapLocation(x, y));
 			}

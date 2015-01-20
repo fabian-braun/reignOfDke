@@ -1,9 +1,9 @@
 package reignierOfDKE;
 
-import reignierOfDKE.C.MapComplexity;
 import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
+import battlecode.common.GameObject;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
@@ -27,6 +27,8 @@ public class Channel {
 	public static final int chOppMeanDistToCenter = 65527;
 	public static final int chCountOppBrdCastingSoldiers = 65526;
 	public static final int chOppMilkQuantity = 65525;
+	public static final int chPastrCount = 65524;
+	public static final int chSelfDestruction = 65523;
 
 	/**
 	 * channels 10000 - 30020 contain info about reduced map
@@ -41,6 +43,7 @@ public class Channel {
 	 * (+3) target of the team;<br\>
 	 * (+4) positional center of the team;<br\>
 	 * (+5) temporary target of the team, set by leader;<br\>
+	 * (+6) best pastr location for this team<br\>
 	 */
 	public static final int chTeam = 1001;
 	private static final int teamChannelCount = 10;
@@ -70,6 +73,7 @@ public class Channel {
 	 * (+3) target of the team;<br\>
 	 * (+4) positional center of the team;<br\>
 	 * (+5) temporary target of the team, set by leader;<br\>
+	 * (+6) best pastr location for this team<br\>
 	 * 
 	 * @param teamId
 	 * @return
@@ -518,5 +522,91 @@ public class Channel {
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static int getPastrCount(RobotController rc) {
+		try {
+			return rc.readBroadcast(chPastrCount);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	public static void announceNewPastr(RobotController rc) {
+		try {
+			rc.broadcast(chPastrCount, rc.readBroadcast(chPastrCount) + 1);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void announcePastrDeath(RobotController rc) {
+		try {
+			int count = rc.readBroadcast(chPastrCount);
+			if (count > 0) {
+				count--;
+			}
+			rc.broadcast(chPastrCount, count);
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void announcePastrLocation(RobotController rc,
+			MapLocation location, int teamId) {
+		int c = getTeamChannel(teamId) + 6;
+		try {
+			rc.broadcast(c, toInt(location));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static MapLocation getPastrLocation(RobotController rc, int teamId) {
+		int c = getTeamChannel(teamId) + 6;
+		try {
+			return toMapLocation(rc.readBroadcast(c));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return new MapLocation(-1, -1);
+	}
+
+	public static void broadcastSelfDestruction(RobotController rc,
+			MapLocation loc) {
+		try {
+			rc.broadcast(chSelfDestruction, toInt(loc));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static MapLocation getSelfDestructionLocation(RobotController rc) {
+		try {
+			return toMapLocation(rc.readBroadcast(chSelfDestruction));
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return new MapLocation(-1, -1);
+	}
+
+	public static boolean needSelfDestruction(RobotController rc) {
+		try {
+			MapLocation loc = toMapLocation(rc.readBroadcast(chSelfDestruction));
+			if (loc.x == -1) {
+				return false;
+			} else if (rc.canSenseSquare(loc)) {
+				GameObject stillAlive = rc.senseObjectAtLocation(loc);
+				if (stillAlive == null) {
+					rc.broadcast(chSelfDestruction, toInt(-1, -1));
+					return false;
+				}
+				return true;
+			}
+		} catch (GameActionException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 }

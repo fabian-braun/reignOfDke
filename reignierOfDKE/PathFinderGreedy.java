@@ -14,14 +14,15 @@ public class PathFinderGreedy extends PathFinder {
 	private int moveRandom = 0;
 	private Random randall;
 
-	public PathFinderGreedy(RobotController rc, Random randall) {
-		super(rc);
+	public PathFinderGreedy(RobotController rc, Random randall, int soldierId) {
+		super(rc, soldierId);
 		this.randall = randall;
 	}
 
 	public PathFinderGreedy(RobotController rc, TerrainTile[][] map,
-			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
-		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize);
+			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize,
+			int soldierId) {
+		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize, soldierId);
 		this.randall = new Random();
 	}
 

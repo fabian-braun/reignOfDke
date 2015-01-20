@@ -17,13 +17,14 @@ public class PathFinderSnailTrail extends PathFinder {
 	private MapLocation current;
 
 	public PathFinderSnailTrail(RobotController rc, TerrainTile[][] map,
-			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize) {
-		super(rc, map, hqEnemLoc, hqEnemLoc, ySize, xSize);
+			MapLocation hqSelfLoc, MapLocation hqEnemLoc, int ySize, int xSize,
+			int soldierId) {
+		super(rc, map, hqEnemLoc, hqEnemLoc, ySize, xSize, soldierId);
 		current = rc.getLocation();
 	}
 
-	public PathFinderSnailTrail(RobotController rc) {
-		super(rc);
+	public PathFinderSnailTrail(RobotController rc, int soldierId) {
+		super(rc, soldierId);
 		current = rc.getLocation();
 	}
 
