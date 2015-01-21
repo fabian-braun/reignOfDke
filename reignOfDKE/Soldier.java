@@ -114,6 +114,7 @@ public class Soldier extends AbstractRobotType {
 				if (myLoc.isAdjacentTo(target)
 						&& rc.senseObjectAtLocation(target) != null) {
 					Channel.broadcastTask(rc, Task.CIRCULATE, target, teamId);
+					rc.yield();
 					rc.construct(RobotType.NOISETOWER);
 					break;
 				}
@@ -123,6 +124,7 @@ public class Soldier extends AbstractRobotType {
 					Channel.broadcastTask(rc, Task.BUILD_NOISETOWER, target,
 							teamId);
 					Channel.announceNewPastr(rc);
+					rc.yield();
 					rc.construct(RobotType.PASTR);
 					break;
 				}

@@ -84,7 +84,6 @@ public class HQ extends AbstractRobotType {
 				.getTeam().opponent());
 		// If the opponent has any PASTRs
 		if (size(opponentPastrLocations) > 0) {
-			// Send our teams 0 and 2 in for the kill
 			teams[0].setTask(Task.GOTO, opponentPastrLocations[0]);
 			if (oppMilkQuantity > 4000000) {
 				teams[1].setTask(Task.GOTO, opponentPastrLocations[0]);
@@ -128,8 +127,7 @@ public class HQ extends AbstractRobotType {
 	}
 
 	private void assignDefendIfNotBuilding(int teamId, MapLocation target) {
-		if (Channel.getTask(rc, teamId).equals(Task.BUILD_PASTR)
-				|| Channel.getTask(rc, teamId).equals(Task.BUILD_NOISETOWER)) {
+		if (Channel.getTask(rc, teamId).equals(Task.BUILD_NOISETOWER)) {
 			return;
 		}
 		teams[teamId].setTask(Task.CIRCULATE, target);
