@@ -65,9 +65,9 @@ public class Core extends Soldier {
 		pathFinderGreedy.setTarget(savePlace);
 		Channel.signalAlive(rc, id);
 		determinePathFinder();
-		mapAnalyzer = new MapAnalyzer(rc, null, pathFinderGreedy.hqSelfLoc,
-				pathFinderGreedy.hqEnemLoc, pathFinderGreedy.ySize,
-				pathFinderGreedy.xSize, id, randall);
+		mapAnalyzer = new MapAnalyzer(rc, pathFinderGreedy.map,
+				pathFinderGreedy.hqSelfLoc, pathFinderGreedy.hqEnemLoc,
+				pathFinderGreedy.ySize, pathFinderGreedy.xSize, id, randall);
 	}
 
 	@Override

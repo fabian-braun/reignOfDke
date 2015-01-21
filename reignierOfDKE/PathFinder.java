@@ -29,11 +29,7 @@ public abstract class PathFinder {
 		this.ySize = ySize;
 		this.xSize = xSize;
 		this.soldierId = soldierId;
-		if (map == null) {
-			initializeMap();
-		} else {
-			this.map = map;
-		}
+		this.map = map;
 	}
 
 	public PathFinder(RobotController rc, int soldierId) {
@@ -43,9 +39,7 @@ public abstract class PathFinder {
 		hqSelfLoc = rc.senseHQLocation();
 		hqEnemLoc = rc.senseEnemyHQLocation();
 		this.soldierId = soldierId;
-		if (map == null) {
-			initializeMap();
-		}
+		initializeMap();
 	}
 
 	public void initializeMap() {
