@@ -1,4 +1,4 @@
-package reignierOfDKE;
+package reignOfDKE;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;

@@ -1,4 +1,4 @@
-package reignierOfDKE;
+package reignOfDKE;
 
 import java.util.Comparator;
 import java.util.HashMap;

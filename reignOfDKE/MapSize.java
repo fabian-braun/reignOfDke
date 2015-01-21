@@ -1,4 +1,4 @@
-package reignierOfDKE;
+package reignOfDKE;
 
 public enum MapSize {
 	SMALL, MEDIUM, LARGE;

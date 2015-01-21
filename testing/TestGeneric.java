@@ -3,7 +3,7 @@ package testing;
 import org.junit.Assert;
 import org.junit.Test;
 
-import reignierOfDKE.PathFinder;
+import reignOfDKE.PathFinder;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;

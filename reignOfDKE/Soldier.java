@@ -1,4 +1,4 @@
-package reignierOfDKE;
+package reignOfDKE;
 
 import java.util.ArrayList;
 import java.util.List;

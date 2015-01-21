@@ -1,4 +1,4 @@
-package reignierOfDKE;
+package reignOfDKE;
 
 import java.util.Random;
 import java.util.Set;

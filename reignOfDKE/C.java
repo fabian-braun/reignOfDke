@@ -1,4 +1,4 @@
-package reignierOfDKE;
+package reignOfDKE;
 
 import battlecode.common.Direction;
 
