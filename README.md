@@ -12,3 +12,8 @@ These are denoted by "ext_" in their package names:
 * ext_paddlegoats - https://github.com/u--/PaddleGoats2014
 * ext_referenceplayer - reference bot provided of MIT. Required to beat to earn credits.
 * ext_zephyr - https://github.com/TheDuck314/battlecode2014
+
+Our project team consisted of:
+A. Ludermann
+A.J.J. Valkenberg
+F. Braun
