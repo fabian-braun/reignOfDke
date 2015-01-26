@@ -17,5 +17,6 @@ Our project team consisted of:
 * A. Ludermann - https://github.com/Anita219
 * A.J.J. Valkenberg
 * F. Braun
+* S. Rao
 
 This project was moved to github after the project's end and initially hosted on bitbucket
