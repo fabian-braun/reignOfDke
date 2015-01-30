@@ -40,7 +40,6 @@ public class Soldier extends AbstractRobotType {
 	 */
 	@Override
 	protected void act() throws GameActionException {
-		Channel.signalAlive(rc, id);
 		myLoc = rc.getLocation();
 		updateTask();
 		if (rc.isActive()) {

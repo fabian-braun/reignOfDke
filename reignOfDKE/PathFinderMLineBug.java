@@ -1,8 +1,5 @@
 package reignOfDKE;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -15,12 +12,13 @@ public class PathFinderMLineBug extends PathFinder {
 	private int minDistance = Integer.MAX_VALUE;
 	private MapLocation target = new MapLocation(-1, -1);
 	private boolean obstacleMode = false;
-	private Set<MapLocation> mTiles = new HashSet<MapLocation>();
+	private MapLocationSet mTiles;
 	private MapLocation current;
 
 	public PathFinderMLineBug(RobotController rc, int soldierId) {
 		super(rc, soldierId);
 		current = rc.getLocation();
+		mTiles = new MapLocationSet(ySize * xSize);
 	}
 
 	public PathFinderMLineBug(RobotController rc, TerrainTile[][] map,
@@ -28,6 +26,7 @@ public class PathFinderMLineBug extends PathFinder {
 			int soldierId) {
 		super(rc, map, hqSelfLoc, hqEnemLoc, ySize, xSize, soldierId);
 		current = rc.getLocation();
+		mTiles = new MapLocationSet(ySize * xSize);
 	}
 
 	@Override

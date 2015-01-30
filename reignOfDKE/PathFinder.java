@@ -1,8 +1,6 @@
 package reignOfDKE;
 
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -153,8 +151,8 @@ public abstract class PathFinder {
 		return y >= 0 && y < map.length;
 	}
 
-	public Set<MapLocation> getNeighbours(MapLocation loc) {
-		Set<MapLocation> neighbours = new HashSet<MapLocation>();
+	public MapLocationSet getNeighbours(MapLocation loc) {
+		MapLocationSet neighbours = new MapLocationSet(C.DIRECTIONS.length);
 		for (int i = 0; i < C.DIRECTIONS.length; i++) {
 			MapLocation n = loc.add(C.DIRECTIONS[i]);
 			if (isTraversableAndNotHq(n)) {

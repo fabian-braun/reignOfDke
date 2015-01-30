@@ -1,11 +1,7 @@
 package reignOfDKE;
 
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Set;
 import java.util.Stack;
 
 import battlecode.common.GameActionException;
@@ -61,11 +57,13 @@ public class PathFinderAStarFast extends PathFinder {
 					mapR[y][x] = cachedTerrain;
 					continue;
 				}
-				Set<MapLocation> corresp = getCorresponding(y, x);
+				MapLocationSet corresp = getCorresponding(y, x);
 				int norm = 0; // traversable tiles
 				int road = 0; // road tiles
 				int bloc = 0; // blocked tiles
-				for (MapLocation loc : corresp) {
+				for (MapLocation loc : corresp.array) {
+					if (loc == null)
+						continue;
 					if (map[loc.y][loc.x].equals(TerrainTile.NORMAL)) {
 						norm++;
 					} else if (map[loc.y][loc.x].equals(TerrainTile.ROAD)) {
@@ -104,8 +102,8 @@ public class PathFinderAStarFast extends PathFinder {
 		return (x / xDivisor);
 	}
 
-	private Set<MapLocation> getCorresponding(int yR, int xR) {
-		Set<MapLocation> corresp = new HashSet<MapLocation>();
+	private MapLocationSet getCorresponding(int yR, int xR) {
+		MapLocationSet corresp = new MapLocationSet(ySizeR * xSizeR);
 		for (int y = yR * yDivisor; y < yR * yDivisor + yDivisor; y++) {
 			for (int x = xR * xDivisor; x < xR * xDivisor + xDivisor; x++) {
 				if (isXonMap(x) && isYonMap(y)) {
@@ -220,19 +218,13 @@ public class PathFinderAStarFast extends PathFinder {
 		Map<MapLocation, MapLocation> ancestors = new HashMap<MapLocation, MapLocation>();
 		Map<MapLocation, Integer> gScore = new HashMap<MapLocation, Integer>();
 		final Map<MapLocation, Integer> fScore = new HashMap<MapLocation, Integer>();
-		Comparator<MapLocation> comparator = new Comparator<MapLocation>() {
-			@Override
-			public int compare(MapLocation o1, MapLocation o2) {
-				return Integer.compare(fScore.get(o1), fScore.get(o2));
-			}
-		};
-		PriorityQueue<MapLocation> open = new PriorityQueue<MapLocation>(20,
-				comparator);
-		Set<MapLocation> closed = new HashSet<MapLocation>();
+		MapLocationPriorityQueue open = new MapLocationPriorityQueue(ySizeR
+				* xSizeR, fScore);
+		MapLocationSet closed = new MapLocationSet(ySizeR * xSizeR);
 
-		open.add(start);
 		gScore.put(start, 0);
 		fScore.put(start, calcFScore(start, target));
+		open.add(start);
 
 		// start algorithm
 		while (!open.isEmpty()) {
@@ -242,9 +234,9 @@ public class PathFinderAStarFast extends PathFinder {
 			if (current.equals(target))
 				return PathFinderAStar.getPath(ancestors, target, start);
 			closed.add(current);
-			Set<MapLocation> neighbours = getNeighboursR(current);
-			for (MapLocation neighbour : neighbours) {
-				if (closed.contains(neighbour))
+			MapLocationSet neighbours = getNeighboursR(current);
+			for (MapLocation neighbour : neighbours.array) {
+				if (neighbour == null || closed.contains(neighbour))
 					continue;
 				int tentative = gScore.get(current)
 						+ getManhattanDist(current, neighbour);
@@ -271,8 +263,8 @@ public class PathFinderAStarFast extends PathFinder {
 	}
 
 	// for reduced map
-	protected Set<MapLocation> getNeighboursR(MapLocation locR) {
-		Set<MapLocation> neighbours = new HashSet<MapLocation>();
+	protected MapLocationSet getNeighboursR(MapLocation locR) {
+		MapLocationSet neighbours = new MapLocationSet(C.DIRECTIONS.length);
 		for (int i = 0; i < C.DIRECTIONS.length; i++) {
 			MapLocation n = locR.add(C.DIRECTIONS[i]);
 			if (isTraversableR(n)) {

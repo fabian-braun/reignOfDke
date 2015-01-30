@@ -28,8 +28,8 @@ public class TestPlayers {
 			.getProtectionDomain().getCodeSource().getLocation().getPath()
 			.replace("bin/", "");
 	// Define player to test
-	private static final String playerA = "reignierOfDKE";
-	private static final String playerB = "boring";
+	// private static final String playerA = "reignOfDKE";
+	// private static final String playerB = "ext_referenceplayer";
 	// Define a list of all maps (88)
 	private static final String[] all_maps = new String[] { "acht", "almsman",
 			"apartments", "ascent", "babble", "backdoor", "bakedpotato",
@@ -95,13 +95,14 @@ public class TestPlayers {
 
 	public static void main(String[] args) {
 		// testMaps(all_maps);
-		// testMaps(evaluation_maps);
-		testMaps(small_maps);
-		testMaps(medium_maps);
-		testMaps(large_maps);
+		testMaps(evaluation_maps, "reignOfDKE", "ext_referenceplayer");
+		testMaps(evaluation_maps, "ext_referenceplayer", "reignOfDKE");
+		// testMaps(small_maps);
+		// testMaps(medium_maps);
+		// testMaps(large_maps);
 	}
 
-	private static void testMaps(String[] maps) {
+	private static void testMaps(String[] maps, String playerA, String playerB) {
 		// Open the default 'bc.conf' file
 		File confFile = new File(String.format("%s%s", executingLocation,
 				defaultConfigurationFilename));

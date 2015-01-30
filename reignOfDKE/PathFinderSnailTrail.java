@@ -1,7 +1,6 @@
 package reignOfDKE;
 
 import java.util.HashMap;
-import java.util.Set;
 
 import battlecode.common.Clock;
 import battlecode.common.Direction;
@@ -31,10 +30,12 @@ public class PathFinderSnailTrail extends PathFinder {
 	private Direction getNextDirection() {
 		MapLocation current = rc.getLocation();
 		lastVisited.put(current, Clock.getRoundNum());
-		Set<MapLocation> neighbours = getNeighbours(current);
+		MapLocationSet neighbours = getNeighbours(current);
 		Direction dir = Direction.NONE;
 		int bestRating = Integer.MAX_VALUE;
-		for (MapLocation next : neighbours) {
+		for (MapLocation next : neighbours.array) {
+			if (next == null)
+				continue;
 			int dist = getRequiredMoves(next, target);
 			if (lastVisited.containsKey(next)) {
 				// this tile has been visited. Make the rating worse: increase

@@ -1,11 +1,7 @@
 package reignOfDKE;
 
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Set;
 import java.util.Stack;
 
 import battlecode.common.Direction;
@@ -77,19 +73,13 @@ public class PathFinderAStar extends PathFinder {
 		Map<MapLocation, MapLocation> ancestors = new HashMap<MapLocation, MapLocation>();
 		Map<MapLocation, Integer> gScore = new HashMap<MapLocation, Integer>();
 		final Map<MapLocation, Integer> fScore = new HashMap<MapLocation, Integer>();
-		Comparator<MapLocation> comparator = new Comparator<MapLocation>() {
-			@Override
-			public int compare(MapLocation o1, MapLocation o2) {
-				return Integer.compare(fScore.get(o1), fScore.get(o2));
-			}
-		};
-		PriorityQueue<MapLocation> open = new PriorityQueue<MapLocation>(20,
-				comparator);
-		Set<MapLocation> closed = new HashSet<MapLocation>();
+		MapLocationPriorityQueue open = new MapLocationPriorityQueue(ySize
+				* xSize, fScore);
+		MapLocationSet closed = new MapLocationSet(ySize * xSize);
 
-		open.add(start);
 		gScore.put(start, 0);
 		fScore.put(start, calcFScore(start, target));
+		open.add(start);
 
 		// start algorithm
 		while (!open.isEmpty()) {
@@ -99,9 +89,9 @@ public class PathFinderAStar extends PathFinder {
 			if (current.equals(target))
 				return getPath(ancestors, target, start);
 			closed.add(current);
-			Set<MapLocation> neighbours = getNeighbours(current);
-			for (MapLocation neighbour : neighbours) {
-				if (closed.contains(neighbour))
+			MapLocationSet neighbours = getNeighbours(current);
+			for (MapLocation neighbour : neighbours.array) {
+				if (neighbour == null || closed.contains(neighbour))
 					continue;
 				int tentative = gScore.get(current)
 						+ getManhattanDist(current, neighbour);
