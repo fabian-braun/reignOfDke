@@ -42,9 +42,11 @@ public class MapLocationSet {
 	// rehashes the sequence of elements!=null right after index
 	private void rehashFrom(int index) {
 		index++;
+		index %= array.length;
 		int initialIndex = index;
 		while (array[index] != null) {
 			index++;
+			index %= array.length;
 		}
 		MapLocation[] temp = new MapLocation[index - initialIndex];
 		index = initialIndex;
@@ -52,6 +54,7 @@ public class MapLocationSet {
 			temp[index - initialIndex] = array[index];
 			array[index] = null;
 			index++;
+			index %= array.length;
 		}
 		for (MapLocation loc : temp) {
 			add(loc);
