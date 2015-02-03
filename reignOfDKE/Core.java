@@ -136,11 +136,11 @@ public class Core extends Soldier {
 	}
 
 	private MapLocation getCenter(MapLocation[] locations) {
+		if (size(locations) < 1) {
+			return oppSoldiersCenter;
+		}
 		int y = 0;
 		int x = 0;
-		if (size(locations) < 1) {
-			return pathFinderGreedy.hqEnemLoc;
-		}
 		for (MapLocation loc : locations) {
 			y += loc.y;
 			x += loc.x;
